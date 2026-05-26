@@ -1035,10 +1035,12 @@ createApp({
             try {
                 const res = await fetch(`${WORKER_URL}/load/${id}`);
                 if (!res.ok) return false;
-                _applySharedData(await res.json());
-                isViewingSharedPlan.value = true;
+                const data = await res.json();
+                isViewingSharedPlan.value = true;   // 必須在 _applySharedData 之前設定，確保 watcher 觸發時已有 flag
+                _applySharedData(data);
                 return true;
             } catch (e) {
+                isViewingSharedPlan.value = false;
                 console.error('載入分享連結失敗', e);
                 return false;
             }

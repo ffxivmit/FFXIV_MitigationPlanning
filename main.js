@@ -63,6 +63,9 @@ const newCustomId = () => `cr${Date.now()}${_crCounter++}`;
 
 let _insertHideTimer = null;
 
+// ── Worker URL（部署後請替換為你的 Worker 網址）────────────────
+const WORKER_URL = 'https://mit-planner.ffxivmit.workers.dev';
+
 createApp({
     setup() {
         const categoryDb = ref({});
@@ -79,6 +82,8 @@ createApp({
         const settingsOpen = ref(false);
         const selectedVariants = ref({});
         const expandedPersonalMembers = ref([]);
+        const shareToastVisible = ref(false);
+        const shareLoading = ref(false);
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
@@ -737,7 +742,6 @@ createApp({
         });
 
         onMounted(async () => {
-            readUrlParams();
             try {
                 const [catRes, skillsRes, indexRes] = await Promise.all([
                     fetch('src/jobs.json'),
@@ -748,14 +752,17 @@ createApp({
                 jobDb.value = await skillsRes.json();
                 dutyIndex.value = await indexRes.json();
 
-                const saved = localStorage.getItem('ffxiv_planner_data');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    selectedDutyKey.value = parsed.selectedDutyKey || '';
-                    party.value = parsed.party || [];
-                    selectedVariants.value = parsed.selectedVariants || {};
-                    customRowsByDuty.value = parsed.customRowsByDuty || {};
-                    mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
+                if (!await loadFromShareParam()) {
+                    readUrlParams();
+                    const saved = localStorage.getItem('ffxiv_planner_data');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        selectedDutyKey.value = parsed.selectedDutyKey || '';
+                        party.value = parsed.party || [];
+                        selectedVariants.value = parsed.selectedVariants || {};
+                        customRowsByDuty.value = parsed.customRowsByDuty || {};
+                        mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
+                    }
                 }
                 initDefaultAetherflowForParty();
             } catch (err) {
@@ -1010,6 +1017,68 @@ createApp({
             initDefaultAetherflowForParty();
         };
 
+        // ── Share via Cloudflare Worker + KV ─────────────────
+        const _applySharedData = (data) => {
+            selectedDutyKey.value = data.duty || '';
+            party.value = data.party || [];
+            mitMap.value = migrateLegacyMitMap(data.mits || {});
+            selectedVariants.value = data.selectedVariants || {};
+            customRowsByDuty.value = data.customRowsByDuty || {};
+            if (data.hideNonDmg !== undefined) hideNonDmg.value = data.hideNonDmg;
+            if (data.hideTargeted !== undefined) hideTargeted.value = data.hideTargeted;
+        };
+
+        const loadFromShareParam = async () => {
+            const id = new URLSearchParams(window.location.search).get('s');
+            if (!id) return false;
+            try {
+                const res = await fetch(`${WORKER_URL}/load/${id}`);
+                if (!res.ok) return false;
+                _applySharedData(await res.json());
+                return true;
+            } catch (e) {
+                console.error('載入分享連結失敗', e);
+                return false;
+            }
+        };
+
+        let _toastTimer = null;
+        const copyShareUrl = async () => {
+            if (shareLoading.value) return;
+            shareLoading.value = true;
+            try {
+                const payload = JSON.stringify({
+                    duty: selectedDutyKey.value,
+                    party: party.value,
+                    mits: mitMap.value,
+                    selectedVariants: selectedVariants.value,
+                    customRowsByDuty: customRowsByDuty.value,
+                    hideNonDmg: hideNonDmg.value,
+                    hideTargeted: hideTargeted.value,
+                });
+                const res = await fetch(`${WORKER_URL}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const { id } = await res.json();
+                const url = `${window.location.origin}${window.location.pathname}?s=${id}`;
+                try {
+                    await navigator.clipboard.writeText(url);
+                } catch {
+                    prompt('複製以下連結：', url);
+                }
+                if (_toastTimer) clearTimeout(_toastTimer);
+                shareToastVisible.value = true;
+                _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2500);
+            } catch (e) {
+                alert('分享連結產生失敗，請確認 Worker 是否已部署。');
+            } finally {
+                shareLoading.value = false;
+            }
+        };
+
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
         watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty], () => {
@@ -1096,7 +1165,8 @@ createApp({
             hideNonDmg, hideTargeted, settingsOpen, currentCat,
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage,
-            exportData, importData, hasOriginalDamage, isTargetedAttack,
+            exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
+            hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
             selectedVariants, switchVariant, getSelectedVariantIdx, getDamageTypeIcon,
             isSkillActive, isSkillOnCooldown, isSkillCastOrigin, toggleSkillCast,

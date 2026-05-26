@@ -1,0 +1,7 @@
+name = "mit-planner"
+main = "worker/index.js"
+compatibility_date = "2024-11-01"
+
+[[kv_namespaces]]
+binding = "PLANS"
+id = "e75615436d1642a0b0b4d7e2d10f26bb"

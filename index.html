@@ -161,6 +161,17 @@
         </div>
     </div>
 
+    <!-- ── 分享預覽 Banner ── -->
+    <div v-if="isViewingSharedPlan"
+         class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 mb-3 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="text-xs text-amber-700 flex-1">您正在預覽分享的規劃，尚未覆蓋您本機的儲存資料。如要採用此規劃，請點右側按鈕。</span>
+        <button @click="saveSharedPlanToLocal"
+                class="text-xs px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-medium shrink-0">
+            儲存為我的規劃
+        </button>
+    </div>
+
     <!-- ── 浮動插入按鈕 ── -->
     <div v-if="hoverInsert"
          class="fixed z-[9999] pointer-events-none"

@@ -84,6 +84,7 @@ createApp({
         const expandedPersonalMembers = ref([]);
         const shareToastVisible = ref(false);
         const shareLoading = ref(false);
+        const isViewingSharedPlan = ref(false);
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
@@ -1035,11 +1036,27 @@ createApp({
                 const res = await fetch(`${WORKER_URL}/load/${id}`);
                 if (!res.ok) return false;
                 _applySharedData(await res.json());
+                isViewingSharedPlan.value = true;
                 return true;
             } catch (e) {
                 console.error('載入分享連結失敗', e);
                 return false;
             }
+        };
+
+        const saveSharedPlanToLocal = () => {
+            isViewingSharedPlan.value = false;
+            localStorage.setItem('ffxiv_planner_data', JSON.stringify({
+                selectedDutyKey: selectedDutyKey.value,
+                party: party.value,
+                mitMap: mitMap.value,
+                selectedVariants: selectedVariants.value,
+                customRowsByDuty: customRowsByDuty.value,
+            }));
+            const params = new URLSearchParams(window.location.search);
+            params.delete('s');
+            const qs = params.toString();
+            history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
         };
 
         let _toastTimer = null;
@@ -1082,6 +1099,7 @@ createApp({
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
         watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty], () => {
+            if (isViewingSharedPlan.value) return;
             localStorage.setItem('ffxiv_planner_data', JSON.stringify({
                 selectedDutyKey: selectedDutyKey.value,
                 party: party.value,
@@ -1166,6 +1184,7 @@ createApp({
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage,
             exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
+            isViewingSharedPlan, saveSharedPlanToLocal,
             hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
             selectedVariants, switchVariant, getSelectedVariantIdx, getDamageTypeIcon,

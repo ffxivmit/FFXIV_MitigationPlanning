@@ -1,0 +1,53 @@
+{
+  "Tank": {
+    "name": "坦克",
+    "jobs": ["騎士", "戰士", "暗黑騎士", "絕槍戰士"],
+    "links": [
+      { "id": "PLD", "name": "騎士", "icon": "src/Job_icons/01_TANK/Job/Paladin.png" },
+      { "id": "WAR", "name": "戰士", "icon": "src/Job_icons/01_TANK/Job/Warrior.png" },
+      { "id": "DRK", "name": "暗黑騎士", "icon": "src/Job_icons/01_TANK/Job/DarkKnight.png" },
+      { "id": "GNB", "name": "絕槍戰士", "icon": "src/Job_icons/01_TANK/Job/Gunbreaker.png" }
+    ]
+  },
+  "Healer": {
+    "name": "治療",
+    "jobs": ["白魔道士", "占星術師", "學者", "賢者"],
+    "links": [
+      { "id": "WHM", "name": "白魔道士", "icon": "src/Job_icons/02_HEALER/Job/WhiteMage.png" },
+      { "id": "AST", "name": "占星術師", "icon": "src/Job_icons/02_HEALER/Job/Astrologian.png" },
+      { "id": "SCH", "name": "學者", "icon": "src/Job_icons/02_HEALER/Job/Scholar.png" },
+      { "id": "SGE", "name": "賢者", "icon": "src/Job_icons/02_HEALER/Job/Sage.png" }
+    ]
+  },
+  "Melee": {
+    "name": "近戰",
+    "jobs": ["武僧", "龍騎士", "忍者", "毒蛇劍士", "奪魂者", "武士"],
+    "links": [
+      { "id": "MNK", "name": "武僧", "icon": "src/Job_icons/03_DPS/Job/Monk.png" },
+      { "id": "DRG", "name": "龍騎士", "icon": "src/Job_icons/03_DPS/Job/Dragoon.png" },
+      { "id": "NIN", "name": "忍者", "icon": "src/Job_icons/03_DPS/Job/Ninja.png" },
+      { "id": "VPR", "name": "毒蛇劍士", "icon": "src/Job_icons/03_DPS/Job/Viper.png" },
+      { "id": "RPR", "name": "奪魂者", "icon": "src/Job_icons/03_DPS/Job/Reaper.png" },
+      { "id": "SAM", "name": "武士", "icon": "src/Job_icons/03_DPS/Job/Samurai.png" }
+    ]
+  },
+  "Ranged": {
+    "name": "遠程",
+    "jobs": ["吟遊詩人", "機工士", "舞者"],
+    "links": [
+      { "id": "BRD", "name": "吟遊詩人", "icon": "src/Job_icons/03_DPS/Job/Bard.png" },
+      { "id": "MCH", "name": "機工士", "icon": "src/Job_icons/03_DPS/Job/Machinist.png" },
+      { "id": "DNC", "name": "舞者", "icon": "src/Job_icons/03_DPS/Job/Dancer.png" }
+    ]
+  },
+  "Caster": {
+    "name": "法系",
+    "jobs": ["黑魔道士", "召喚師", "赤魔道士", "繪靈法師"],
+    "links": [
+      { "id": "BLM", "name": "黑魔道士", "icon": "src/Job_icons/03_DPS/Job/BlackMage.png" },
+      { "id": "SMN", "name": "召喚士", "icon": "src/Job_icons/03_DPS/Job/Summoner.png" },
+      { "id": "RDM", "name": "赤魔道士", "icon": "src/Job_icons/03_DPS/Job/RedMage.png" },
+      { "id": "PCT", "name": "繪靈法師", "icon": "src/Job_icons/03_DPS/Job/Pictomancer.png" }
+    ]
+  }
+}

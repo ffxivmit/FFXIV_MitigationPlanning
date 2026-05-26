@@ -1,0 +1,162 @@
+/* ──────────────────────────────────────────
+    容器與基礎表格
+────────────────────────────────────────── */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+    border-radius: 8px;
+    background: white;
+}
+
+.mit-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* ──────────────────────────────────────────
+    左側固定欄位
+────────────────────────────────────────── */
+.sticky-col {
+    position: sticky;
+    background-color: white;
+    z-index: 10;
+}
+
+.col-phase { left: 0;    width: 80px;  min-width: 80px;  max-width: 80px; }
+.col-hit  { left: 80px; width: 80px;  min-width: 80px;  max-width: 80px; }
+.col-name { left: 160px;width: 200px; min-width: 200px; max-width: 200px; }
+
+/* 原始傷害欄 — 帶陰影當右邊線 */
+.col-orig {
+    left: 360px;
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    box-shadow: 2px 0 0 0 #cbd5e1, 4px 0 6px -2px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+/* ──────────────────────────────────────────
+    右側固定欄位
+────────────────────────────────────────── */
+.sticky-right {
+    position: sticky;
+    right: 0;
+    z-index: 15;
+    background-color: #f0f9ff;
+    box-shadow: -2px 0 0 0 #cbd5e1, -4px 0 6px -2px rgba(0,0,0,0.08);
+}
+
+/* ──────────────────────────────────────────
+    凍結標題列 (雙列)
+────────────────────────────────────────── */
+thead tr.row-group th {
+    position: sticky;
+    top: 0;
+    z-index: 35;
+    height: 48px;
+    background-color: #f8fafc;
+}
+thead tr.row-skills th {
+    position: sticky;
+    top: 48px;
+    z-index: 30;
+    background-color: #f8fafc;
+}
+
+thead tr.row-group  th.sticky-col { z-index: 50; }
+thead tr.row-skills th.sticky-col { z-index: 45; }
+
+thead tr.row-group  th.sticky-right { z-index: 50; }
+thead tr.row-skills th.sticky-right { z-index: 45; background-color: #eff6ff; }
+
+/* ──────────────────────────────────────────
+    資料列
+────────────────────────────────────────── */
+tr:hover td.sticky-col  { background-color: #f1f5f9 !important; }
+tr:hover td.sticky-right{ background-color: #e0f2fe !important; }
+
+.skill-cell { transition: filter 0.1s; }
+tr:hover .skill-cell { filter: brightness(0.96); }
+
+/* ──────────────────────────────────────────
+    技能狀態格
+────────────────────────────────────────── */
+.skill-btn {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    border: 2px solid #cbd5e1;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex; align-items: center; justify-content: center;
+}
+.skill-btn:hover { border-color: #64748b; background: #f8fafc; }
+
+.skill-cast {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px; font-weight: 700; color: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.15s;
+}
+.skill-cast:hover { opacity: 0.75; }
+
+.skill-covered {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.skill-cooldown {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    opacity: 0.45;
+}
+
+.skill-blocked {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    border: 2px solid #cbd5e1;
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.skill-cond {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    background: repeating-linear-gradient(
+        45deg,
+        #f1f5f9 0px, #f1f5f9 2px,
+        #e2e8f0 2px, #e2e8f0 4px
+    );
+    opacity: 0.6;
+}
+
+/* ──────────────────────────────────────────
+    成員分隔線
+────────────────────────────────────────── */
+.member-first-col {
+    border-left-width: 2px !important;
+    border-left-style: solid !important;
+}
+
+/* ──────────────────────────────────────────
+    設定面板動畫
+────────────────────────────────────────── */
+.settings-panel {
+    animation: panelIn 0.15s ease-out;
+    transform-origin: top right;
+    z-index: 70; /* 確保高於點外部關閉的遮罩與表格標頭 */
+}
+@keyframes panelIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}

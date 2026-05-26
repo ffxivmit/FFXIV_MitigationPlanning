@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFXIV 團減模擬器</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="main.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<div id="app" class="p-3 lg:p-4">
+
+    <!-- ── 工具列 ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-2 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+
+        <span class="text-xs font-black text-slate-600 tracking-widest shrink-0 uppercase">⚔️FFXIV MIT Planner</span>
+        <div class="w-px h-4 bg-slate-200 shrink-0"></div>
+
+        <!-- 自訂副本下拉 -->
+        <div class="relative shrink-0">
+            <button @click="openDutyDropdown"
+                    class="text-sm px-2 py-1 border border-slate-200 rounded-lg bg-slate-50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-400 flex items-center gap-1.5 min-w-[120px] max-w-[200px]"
+                    :class="selectedDutyKey ? 'text-slate-700' : 'text-slate-400'">
+                <span class="flex-1 text-left truncate">{{ selectedDutyName }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 shrink-0 transition-transform" :class="dutyDropdownOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+            <div v-if="dutyDropdownOpen" class="fixed inset-0 z-[60]" @click="dutyDropdownOpen = false"></div>
+            <div v-if="dutyDropdownOpen" class="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] w-64 max-h-[70vh] overflow-y-auto">
+                <template v-for="(cat, catKey) in dutyIndex.categories" :key="catKey">
+                    <template v-if="dutyIndex.duties.some(d => d.category === catKey)">
+                        <button @click.stop="toggleDutyCategory(catKey)"
+                                class="w-full flex items-center justify-between px-3 py-2 text-xs font-black text-slate-500 bg-slate-50 hover:bg-slate-100 border-b border-slate-100 transition-colors sticky top-0">
+                            <span>{{ cat.label }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 transition-transform" :class="expandedCategories[catKey] ? '' : '-rotate-90'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <template v-if="expandedCategories[catKey]">
+                            <button v-for="duty in dutyIndex.duties.filter(d => d.category === catKey)"
+                                    :key="duty.key"
+                                    @click="selectDuty(duty.key)"
+                                    :class="['w-full text-left px-4 py-1.5 text-sm border-b border-slate-50 transition-colors',
+                                             selectedDutyKey === duty.key
+                                               ? 'bg-slate-800 text-white font-semibold'
+                                               : 'text-slate-700 hover:bg-slate-100']">
+                                {{ duty.name }}
+                            </button>
+                        </template>
+                    </template>
+                </template>
+            </div>
+        </div>
+
+        <template v-if="selectedDutyKey">
+            <div class="w-px h-4 bg-slate-200 shrink-0"></div>
+            <div class="flex gap-1 shrink-0">
+                <button v-for="(cat, catKey) in categoryDb" :key="catKey"
+                        @click="currentCat = catKey"
+                        :class="['px-2 py-0.5 text-xs font-semibold rounded transition',
+                                 currentCat === catKey ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200']">
+                    {{ cat.name }}
+                </button>
+            </div>
+            <div class="flex flex-wrap gap-0.5">
+                <button v-for="jobs in categoryDb[currentCat]?.links" :key="jobs.id"
+                        @click="addToParty(jobs.id)" :disabled="party.length >= 8"
+                        class="rounded hover:scale-110 transition-transform disabled:opacity-30 disabled:cursor-not-allowed">
+                    <img :src="jobs.icon" class="w-7 h-7" :title="jobs.name">
+                </button>
+            </div>
+            <div class="w-px h-4 bg-slate-200 shrink-0"></div>
+            <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-[10px] text-slate-400 font-medium shrink-0">{{ party.length }}/8</span>
+                <div v-for="(jobKey, pIdx) in party" :key="pIdx"
+                     @click="removeFromParty(pIdx)" class="group relative cursor-pointer">
+                    <img v-if="jobDb[jobKey]" :src="jobDb[jobKey].icon" :alt="jobDb[jobKey].name"
+                         class="w-7 h-7 object-contain rounded hover:scale-110 transition-transform" :title="jobDb[jobKey].name">
+                    <span class="absolute -bottom-0.5 -right-1 text-white text-[7px] px-0.5 rounded-full font-extrabold leading-tight"
+                          :style="`background:${MEMBER_COLORS[pIdx % 8].border}`">P{{ pIdx+1 }}</span>
+                    <div class="absolute inset-0 bg-red-500 bg-opacity-0 group-hover:bg-opacity-60 rounded flex items-center justify-center transition-all">
+                        <span class="text-white text-[10px] font-black opacity-0 group-hover:opacity-100">×</span>
+                    </div>
+                </div>
+                <div v-if="party.length === 0" class="text-[10px] text-slate-300 italic">點職業加入</div>
+            </div>
+        </template>
+
+        <!-- 匯入 / 匯出 -->
+        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+            <button @click="exportData" class="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg transition font-medium">匯出</button>
+            <label class="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg transition font-medium cursor-pointer">
+                匯入<input type="file" accept=".json" @change="importData" class="hidden">
+            </label>
+            <button v-if="selectedDutyKey" @click="clearAll"
+                    class="text-xs px-2 py-1 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 border border-red-200 rounded-lg transition font-medium">
+                清除全部
+            </button>
+            <div class="w-px h-4 bg-slate-200 shrink-0"></div>
+
+            <!-- ⚙️ 顯示設定 -->
+            <div class="relative shrink-0">
+                <button @click="settingsOpen = !settingsOpen"
+                        :class="['flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition font-semibold',
+                                 settingsOpen || hideNonDmg || hideTargeted
+                                   ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                                   : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100']">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    顯示設定
+                    <span v-if="hideNonDmg || hideTargeted" class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                </button>
+                <div v-if="settingsOpen" class="fixed inset-0 z-60" @click="settingsOpen = false"></div>
+                <div v-if="settingsOpen" class="settings-panel absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-70 w-64 overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                        <span class="text-xs font-black text-slate-600 uppercase tracking-widest">顯示設定</span>
+                        <button @click="settingsOpen = false" class="text-slate-400 hover:text-slate-600 transition text-lg leading-none font-light">×</button>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <div class="relative mt-0.5 shrink-0">
+                                <input type="checkbox" v-model="hideNonDmg" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-slate-700 leading-tight">隱藏無傷害招式</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">移除時間軸中沒有傷害數值的列</div>
+                            </div>
+                        </label>
+                        <div class="border-t border-slate-100"></div>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <div class="relative mt-0.5 shrink-0">
+                                <input type="checkbox" v-model="hideTargeted" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-slate-700 leading-tight">隱藏單體／點名攻擊</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">隱藏 AA、死刑、點名等非全體傷害</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="px-4 pb-3">
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-[10px] text-slate-400 font-mono break-all leading-relaxed">
+                            {{ (hideNonDmg || hideTargeted) ? '目前篩選已記錄在網址中，可直接分享連結' : '啟用篩選後網址會自動更新' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 浮動插入按鈕 ── -->
+    <div v-if="hoverInsert"
+         class="fixed z-[9999] pointer-events-none"
+         :style="`left:${hoverInsert.x}px; top:${hoverInsert.y}px; transform:translate(-50%,-50%)`">
+        <button class="pointer-events-auto px-2.5 py-0.5 text-xs font-bold text-slate-500 bg-white border border-slate-300 rounded-md shadow-md hover:bg-slate-50 hover:text-slate-700 hover:border-slate-400 transition-all leading-5 select-none"
+                @mouseenter="onInsertBtnEnter"
+                @mouseleave="onInsertBtnLeave"
+                @click.stop="insertCustomRowBetween(hoverInsert.timeBefore, hoverInsert.timeAfter)">
+            + 插入
+        </button>
+    </div>
+
+    <!-- ── 主表格 ── -->
+    <div v-if="selectedDutyKey" class="bg-white rounded-xl shadow-lg" style="overflow: clip;">
+        <div class="table-container">
+            <table class="w-full mit-table">
+                <thead>
+                    <tr class="row-group border-b border-slate-200">
+                        <th class="sticky-col col-phase" style="background:#f8fafc;"></th>
+                        <th class="sticky-col col-hit"   style="background:#f8fafc;"></th>
+                        <th class="sticky-col col-name"  style="background:#f8fafc;"></th>
+                        <th class="sticky-col col-orig"  style="background:#f8fafc;"></th>
+                        <th v-for="member in activeSkillsByMember" :key="member.pIdx"
+                            :colspan="member.skills.length"
+                            :style="`background:${member.color.headerBg}; border-left:2px solid ${member.color.border}; border-bottom:2px solid ${member.color.border};`"
+                            class="px-3 py-1.5 text-center relative group/mbr">
+                            <button v-if="memberHasAnyCast(member.pIdx)"
+                                    @click.stop="clearMember(member.pIdx, member.jobName)"
+                                    class="absolute top-1 right-1 opacity-0 group-hover/mbr:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all text-xs" title="清除此職業所有施放">🗑</button>
+                            <div class="relative inline-block"
+                                 :class="member.hasPersonalSkills ? 'cursor-pointer' : ''"
+                                 @click.stop="member.hasPersonalSkills && togglePersonalSkills(member.pIdx)"
+                                 :title="member.hasPersonalSkills ? (member.showPersonal ? '收合個人技能' : '展開個人技能') : ''">
+                                <img :src="member.jobIcon" class="w-8 h-8 object-contain transition-opacity" :class="member.hasPersonalSkills ? 'hover:opacity-75' : ''">
+                                <span class="absolute -bottom-1 -right-2 text-white text-[9px] px-1 rounded-full font-extrabold border border-white" :style="`background:${member.color.border}`">P{{ member.memberIndex }}</span>
+                                <span v-if="member.hasPersonalSkills && member.showPersonal"
+                                      class="absolute -top-1 -left-1 w-3 h-3 rounded-full border border-white flex items-center justify-center text-[7px] font-black text-white"
+                                      :style="`background:${member.color.border}`">▲</span>
+                            </div>
+                        </th>
+                        <th class="sticky-right" style="background:#eff6ff; border-bottom:1px solid #e2e8f0;"></th>
+                    </tr>
+                    <tr class="row-skills border-b-2 border-slate-300">
+                        <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-phase">時間軸階段</th>
+                        <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-hit">判定時間</th>
+                        <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-name">招式名稱</th>
+                        <th class="p-3 text-right text-xs font-bold text-slate-500 sticky-col col-orig">原始傷害</th>
+                        <th v-for="skill in activeSkills" :key="skill.instanceId"
+                            :style="`background:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.06);'}`"
+                            class="p-1 text-center min-w-[85px] relative group/skill">
+                            <button v-if="!skill._isAetherIndicator && skillHasAnyCast(skill.instanceId)"
+                                    @click.stop="clearSkill(skill.instanceId, skill.name)"
+                                    class="absolute top-1 right-1 opacity-0 group-hover/skill:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all text-xs" title="清除此技能所有施放">🗑</button>
+                            <div v-if="skill._isAetherIndicator" class="flex flex-col items-center gap-1 py-1">
+                                <img src="src/Skill_icons/19_SCH/Aether.png" class="w-14 h-10 object-contain">
+                                <span class="text-xs font-bold text-sky-600 leading-tight">乙太超流</span>
+                            </div>
+                            <div v-else class="flex flex-col items-center gap-1">
+                                <img :src="skill.icon" class="w-10 h-10 rounded shadow-sm border border-slate-200" :title="skill.title">
+                                <span class="text-xs font-bold text-slate-700 leading-tight break-keep">{{ skill.name }}</span>
+                                <div class="flex items-center gap-1">
+                                    <span v-if="skill.conditionSkillId" class="text-[9px] font-bold text-amber-500 bg-amber-50 border border-amber-200 px-1 rounded leading-none py-0.5" title="條件技能">條件</span>
+                                    <span v-if="skill.blockedBySkillId" class="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1 rounded leading-none py-0.5" title="互斥技能">互斥</span>
+                                    <span v-if="skill.charges > 1" class="text-[9px] font-bold text-sky-500 bg-sky-50 border border-sky-200 px-1 rounded leading-none py-0.5" :title="`累計次數 ×${skill.charges}，冷卻 ${skill.cooldown}s`">×{{ skill.charges }}</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="p-3 text-right text-xs font-bold text-blue-600 sticky-right">預計傷害</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template v-for="(row, _di) in currentTimeline" :key="'r-' + row._internalIdx">
+                        <!-- Data row -->
+                        <tr v-show="isRowVisible(row, row._internalIdx)"
+                            :class="['border-b border-slate-100 transition group', row._isCustom ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50']"
+                            @mousemove="onRowMouseMove(row, _di, $event)"
+                            @mouseleave="onRowMouseLeave()">
+
+                            <!-- 階段 -->
+                            <td class="p-2 font-mono text-sm sticky-col col-phase" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+                                <span v-if="!row._isCustom" class="text-slate-500">{{ row.phase }}</span>
+                                <span v-else class="text-[10px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded">自訂</span>
+                            </td>
+
+                            <!-- 判定時間 -->
+                            <td class="p-2 font-mono text-sm sticky-col col-hit" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+                                <span v-if="!row._isCustom" class="text-slate-500">{{ row.hitTime }}</span>
+                                <input v-else
+                                       :value="customRowDraftTimes[row._customId] ?? row.hitTime"
+                                       :data-time-id="row._customId"
+                                       @input="onCustomRowTimeInput(row._customId, $event.target.value)"
+                                       @blur="onCustomRowTimeBlur(row._customId, $event.target.value)"
+                                       class="w-16 px-1 border border-amber-200 rounded text-xs font-mono bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                       placeholder="M:SS">
+                            </td>
+
+                            <!-- 招式名稱 -->
+                            <td class="p-2 font-bold text-slate-700 text-sm sticky-col col-name hover:z-[60]" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+                                <!-- 自訂列：可編輯名稱 + 刪除 -->
+                                <div v-if="row._isCustom" class="flex items-center gap-1.5">
+                                    <input :value="row.skill"
+                                           @input="updateCustomRow(row._customId, 'skill', $event.target.value)"
+                                           class="flex-1 min-w-0 px-1.5 py-0.5 border border-amber-200 rounded text-sm font-bold bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                           placeholder="招式名稱">
+                                    <button @click="removeCustomRow(row._customId)"
+                                            class="shrink-0 w-5 h-5 flex items-center justify-center rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all font-bold text-base leading-none"
+                                            title="刪除此時間點">×</button>
+                                </div>
+                                <!-- 一般固定招式 -->
+                                <div v-else-if="!row.isRandom" class="flex items-center gap-1.5">
+                                    <img v-if="getDamageTypeIcon(row, row._internalIdx)" :src="getDamageTypeIcon(row, row._internalIdx)" :title="row.type" class="w-4 h-4 shrink-0 object-contain">
+                                    <template v-if="row.desc">
+                                        <div class="relative group/tip inline-block cursor-help select-none shrink-0">
+                                            <div class="w-4 h-4 rounded-full bg-slate-400 hover:bg-slate-500 text-white text-[10px] flex items-center justify-center font-black shadow-sm transition-colors">?</div>
+                                            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-56 p-3 bg-white/95 backdrop-blur-sm text-slate-700 text-xs font-normal rounded-lg shadow-xl border border-slate-200 z-50 hidden group-hover/tip:block pointer-events-none normal-case tracking-normal leading-relaxed">
+                                                <div class="font-bold text-slate-800 border-b border-slate-100 pb-1 mb-1.5">💡 機制說明</div>
+                                                <div class="text-amber-700 font-medium bg-amber-50/60 p-2 rounded border border-amber-100/70">{{ row.desc }}</div>
+                                                <div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-white"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <span>{{ row.skill }}</span>
+                                </div>
+                                <!-- 隨機選擇列 -->
+                                <div v-else class="flex flex-col gap-1.5 py-1">
+                                    <div class="flex items-start gap-2">
+                                        <div class="relative group/tip inline-block cursor-help select-none mt-1 shrink-0">
+                                            <div class="w-4 h-4 rounded-full bg-slate-400 hover:bg-slate-500 text-white text-[10px] flex items-center justify-center font-black shadow-sm transition-colors">?</div>
+                                            <div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-64 p-3 bg-white/95 backdrop-blur-sm text-slate-700 text-xs font-normal rounded-lg shadow-xl border border-slate-200 z-50 hidden group-hover/tip:block pointer-events-none normal-case tracking-normal leading-relaxed">
+                                                <div class="font-bold text-slate-800 border-b border-slate-100 pb-1 mb-1.5">💡 機制說明</div>
+                                                <div v-if="row.commonDesc" class="text-amber-700 font-medium bg-amber-50/60 p-2 rounded border border-amber-100/70 mb-2">{{ row.commonDesc }}</div>
+                                                <div class="space-y-1.5">
+                                                    <div v-for="(v, vIdx) in row.variants" :key="vIdx" class="text-slate-600 flex flex-col">
+                                                        <span v-if="v.desc" class="text-slate-900 font-bold">【{{ v.skill }}】</span>
+                                                        <span v-if="v.desc" class="text-slate-600 pl-2 mt-0.5 border-l-2 border-slate-200">{{ v.desc }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-white"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <button v-for="(v, vIdx) in row.variants" :key="vIdx"
+                                                    @click="switchVariant(row._internalIdx, vIdx)"
+                                                    :class="['py-1 pr-4 pl-2 text-sm rounded border font-bold transition-all w-max text-left truncate flex items-center gap-1.5',
+                                                             getSelectedVariantIdx(row._internalIdx) === vIdx
+                                                               ? 'bg-slate-700 text-white border-slate-700 shadow-sm'
+                                                               : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100']">
+                                                <img v-if="v.type === '物理'" src="src/Damage_type/physical.png" class="w-4 h-4 shrink-0 object-contain">
+                                                <img v-else-if="v.type === '魔法'" src="src/Damage_type/magical.png" class="w-4 h-4 shrink-0 object-contain">
+                                                <img v-else-if="v.type === '特殊' || v.type === '即死'" src="src/Damage_type/unique.png" class="w-4 h-4 shrink-0 object-contain">
+                                                <span>{{ v.skill }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 原始傷害 -->
+                            <td class="p-2 text-sm sticky-col col-orig" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+                                <div v-if="!row._isCustom && !row.isRandom && row.damage && row.damage.length > 0">
+                                    <div v-for="(hit, hIdx) in row.damage" :key="hIdx" class="flex items-center justify-end gap-1 text-slate-500">
+                                        <img v-if="getDamageTypeIconByType(hit.type)" :src="getDamageTypeIconByType(hit.type)" :title="hit.type" class="w-3.5 h-3.5 object-contain shrink-0 opacity-70">
+                                        <span class="font-mono">{{ hit.amount.toLocaleString() }}</span>
+                                    </div>
+                                </div>
+                                <div v-else-if="!row._isCustom && row.isRandom">
+                                    <div v-for="(hit, hIdx) in row.variants[getSelectedVariantIdx(row._internalIdx)]?.damage" :key="hIdx" class="flex items-center justify-end gap-1 text-slate-500">
+                                        <img v-if="getDamageTypeIconByType(hit.type)" :src="getDamageTypeIconByType(hit.type)" :title="hit.type" class="w-3.5 h-3.5 object-contain shrink-0 opacity-70">
+                                        <span class="font-mono">{{ hit.amount.toLocaleString() }}</span>
+                                    </div>
+                                </div>
+                                <div v-else class="text-slate-300 text-right">-</div>
+                            </td>
+
+                            <!-- 技能勾選格 -->
+                            <td v-for="skill in activeSkills" :key="skill.instanceId"
+                                :style="`background-color:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.05);'}`"
+                                class="p-1 text-center skill-cell">
+                                <div v-if="skill._isAetherIndicator"
+                                     class="flex items-center justify-center gap-0.5 py-0.5"
+                                     :title="`乙太存量：${getAetherStacksAt(skill._pIdx, row._internalIdx)}/3`">
+                                    <div v-for="i in 3" :key="i"
+                                         :class="['w-3 h-3 rounded-full border-2', i <= getAetherStacksAt(skill._pIdx, row._internalIdx) ? 'bg-green-400 border-green-500' : 'bg-slate-100 border-slate-300']"></div>
+                                </div>
+                                <div v-else class="flex items-center justify-center">
+                                    <button v-if="isSkillCastOrigin(skill.instanceId, row._internalIdx)"
+                                            class="skill-cast" :style="`background:${skill.memberBorder}; border:2px solid ${skill.memberBorder}`"
+                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消">✓</button>
+                                    <div v-else-if="isSkillOnCooldown(skill.instanceId, row._internalIdx, skill)" class="skill-cooldown" title="冷卻中"></div>
+                                    <div v-else-if="isSkillActive(skill.instanceId, row._internalIdx, skill)"
+                                         class="skill-covered" :style="`background:${skill.memberBorder}28; border:2px solid ${skill.memberBorder}70; color:${skill.memberBorder}`" title="技能覆蓋中">✓</div>
+                                    <div v-else-if="!isSkillConditionMet(skill, row._internalIdx)" class="skill-cond" title="條件未滿足"></div>
+                                    <div v-else-if="isSkillBlocked(skill, row._internalIdx)" class="skill-blocked" title="互斥技能持續中"></div>
+                                    <div v-else-if="isSkillAetherDepleted(skill, row._internalIdx)" class="skill-blocked" title="乙太存量不足"></div>
+                                    <button v-else class="skill-btn" @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊施放"></button>
+                                </div>
+                            </td>
+
+                            <!-- 預計傷害 -->
+                            <td class="p-3 sticky-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <img v-if="hasOriginalDamage(row, row._internalIdx) && getDamageTypeIcon(row, row._internalIdx)"
+                                         :src="getDamageTypeIcon(row, row._internalIdx)"
+                                         :title="row.isRandom ? row.variants[getSelectedVariantIdx(row._internalIdx)]?.type : row.type"
+                                         class="w-4 h-4 object-contain shrink-0 opacity-80">
+                                    <span v-if="hasOriginalDamage(row, row._internalIdx)" class="font-bold text-blue-700 font-mono tabular-nums">
+                                        {{ calculateDamage(row, row._internalIdx).toLocaleString() }}
+                                    </span>
+                                    <span v-else class="text-slate-300 text-sm">-</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

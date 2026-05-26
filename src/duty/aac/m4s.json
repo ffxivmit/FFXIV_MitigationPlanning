@@ -1,0 +1,366 @@
+{
+    "name": "至天之座 M4S",
+    "timeline": [
+        {"phase": "OP", "castingTime": "00:00", "hitTime": "00:00", "skill": "戰鬥開始！", "damage": [], "type": ""},
+        {"phase": "OP", "castingTime": "00:00", "hitTime": "00:00", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:03", "hitTime": "00:03", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:06", "hitTime": "00:06", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:10", "hitTime": "00:10", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:16", "hitTime": "00:16", "skill": "宙斯之怒", "damage": [{"label": "傷害", "amount": 158000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:18", "hitTime": "00:18", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:21", "hitTime": "00:21", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:24", "hitTime": "00:24", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP", "castingTime": "00:39", "hitTime": "00:39", "skill": "魔女迴翔", "damage": [], "type": ""},
+        {"phase": "OP", "castingTime": "00:50", "hitTime": "00:50", "skill": "爆炸", "damage": [], "type": ""},
+        {"phase": "OP", "castingTime": "00:50", "hitTime": "00:50", "skill": "驚電魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "OP", "castingTime": "00:58", "hitTime": "00:58", "skill": "魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "OP", "castingTime": "00:58", "hitTime": "00:58", "skill": "爆炸", "damage": [], "type": ""},
+        {
+            "phase": "P1", "castingTime": "01:15", "hitTime": "01:15", "isRandom": true,
+            "variants": [
+              { "desc":"先鋼鐵後月環", "skill": "圓環式魔女狩獵", "damage": [], "type": "" },
+              { "desc":"先月環後鋼鐵", "skill": "環圓式魔女狩獵", "damage": [], "type": "" }
+            ]
+        },
+        {"phase": "P1", "castingTime": "01:16", "hitTime": "01:16", "skill": "魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "P1", "castingTime": "01:20", "hitTime": "01:20", "skill": "魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "P1", "castingTime": "01:23", "hitTime": "01:23", "skill": "魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "P1", "castingTime": "01:27", "hitTime": "01:27", "skill": "魔女狩獵", "damage": [{"label": "傷害", "amount": 126000, "type": "物理"}], "type": "物理"},
+        {"phase": "P1", "castingTime": "01:34", "hitTime": "01:34", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P1", "castingTime": "01:39", "hitTime": "01:39", "skill": "宙斯之怒", "damage": [{"label": "傷害", "amount": 158000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P1", "castingTime": "01:42", "hitTime": "01:42", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P1", "castingTime": "01:45", "hitTime": "01:45", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "01:51", "hitTime": "01:51", "skill": "雷轉質展開", "damage": [], "type": ""},
+        {"phase": "P2", "castingTime": "01:52", "hitTime": "01:52", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "01:55", "hitTime": "01:55", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "01:58", "hitTime": "01:58", "skill": "閃耀電火花", "damage": [], "type": ""},
+        {"phase": "P2", "castingTime": "02:01", "hitTime": "02:01", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:06", "hitTime": "02:06", "skill": "幻想交響曲", "damage": [], "type": ""},
+        {"phase": "P2", "castingTime": "02:07", "hitTime": "02:07", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:16", "hitTime": "02:16", "skill": "側方電火花", "damage": [], "type": ""},
+        {
+            "phase": "P2", "castingTime": "02:16", "hitTime": "02:16", "isRandom": true,
+            "variants": [
+              { "desc":"兩人分攤", "skill": "四雷星", "damage": [{"label": "傷害", "amount": 130000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"八人散開", "skill": "八雷星", "damage": [{"label": "傷害", "amount": 130000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P2", "castingTime": "02:24", "hitTime": "02:24", "skill": "狡詭搖盪", "damage": [{"label": "死刑", "amount": 460000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:27", "hitTime": "02:27", "skill": "狡詭搖盪", "damage": [{"label": "死刑", "amount": 460000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:31", "hitTime": "02:31", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:34", "hitTime": "02:34", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:39", "hitTime": "02:39", "skill": "雷轉質展開", "damage": [], "type": ""},
+        {"phase": "P2", "castingTime": "02:46", "hitTime": "02:46", "skill": "閃耀電火花", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:48", "hitTime": "02:48", "skill": "閃耀電火花", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:49", "hitTime": "02:49", "skill": "閃耀電火花", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:51", "hitTime": "02:51", "skill": "閃耀電火花", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "02:54", "hitTime": "02:54", "skill": "電牢籠", "damage": [], "type": ""},
+        {"phase": "P2", "castingTime": "03:02", "hitTime": "03:02", "skill": "電火花 II", "damage": [{"label": "傷害", "amount": 110000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:11", "hitTime": "03:11", "skill": "側方電火花", "damage": [], "type": ""},
+        {
+            "phase": "P2", "castingTime": "03:11", "hitTime": "03:11", "isRandom": true,
+            "variants": [
+              { "desc":"兩人分攤", "skill": "四雷星", "damage": [{"label": "傷害", "amount": 130000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"八人散開", "skill": "八雷星", "damage": [{"label": "傷害", "amount": 130000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P2", "castingTime": "03:22", "hitTime": "03:22", "skill": "電火花 III", "damage": [{"label": "傷害", "amount": 110000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:24", "hitTime": "03:24", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:30", "hitTime": "03:30", "skill": "狡詭落雷", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:31", "hitTime": "03:31", "skill": "狡詭落雷", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:32", "hitTime": "03:32", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:32", "hitTime": "03:32", "skill": "狡詭落雷", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:33", "hitTime": "03:33", "skill": "狡詭落雷", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:34", "hitTime": "03:34", "skill": "狡詭落雷", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:35", "hitTime": "03:35", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P2", "castingTime": "03:38", "hitTime": "03:38", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "03:41", "hitTime": "03:41", "skill": "離子簇", "damage": [], "type": ""},
+        {"phase": "P3", "castingTime": "03:44", "hitTime": "03:44", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "03:55", "hitTime": "03:55", "skill": "奔雷炮", "damage": [{"label": "傷害", "amount": 60000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "03:56", "hitTime": "03:56", "skill": "奔雷炮", "damage": [{"label": "傷害", "amount": 60000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "03:57", "hitTime": "03:57", "skill": "奔雷炮", "damage": [], "type": ""},
+        {"phase": "P3", "castingTime": "03:58", "hitTime": "03:58", "skill": "奔雷炮", "damage": [], "type": ""},
+        {"phase": "P3", "castingTime": "03:59", "hitTime": "03:59", "skill": "奔雷炮", "damage": [], "type": ""},
+        {"phase": "P3", "castingTime": "04:02", "hitTime": "04:02", "skill": "奔雷炮", "damage": [], "type": ""},
+        {
+            "phase": "P3", "castingTime": "04:12", "hitTime": "04:12", "isRandom": true,
+            "commonDesc": "必定附帶隨機一種導雷流Debuff",
+            "variants": [
+              { "skill": "電子流(擋槍)", "damage": [{"label": "傷害", "amount": 300000, "type": "魔法"}], "type": "魔法" },
+              { "skill": "電子流(人群)", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P3", "castingTime": "04:17", "hitTime": "04:17", "skill": "導雷流", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P3", "castingTime": "04:25", "hitTime": "04:25", "isRandom": true,
+            "commonDesc": "必定附帶隨機一種導雷流Debuff",
+            "variants": [
+              { "skill": "電子流(擋槍)", "damage": [{"label": "傷害", "amount": 300000, "type": "魔法"}], "type": "魔法" },
+              { "skill": "電子流(人群)", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P3", "castingTime": "04:30", "hitTime": "04:30", "skill": "導雷流", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P3", "castingTime": "04:38", "hitTime": "04:38", "isRandom": true,
+            "commonDesc": "必定附帶隨機一種導雷流Debuff",
+            "variants": [
+              { "skill": "電子流(擋槍)", "damage": [{"label": "傷害", "amount": 300000, "type": "魔法"}], "type": "魔法" },
+              { "skill": "電子流(人群)", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P3", "castingTime": "04:43", "hitTime": "04:43", "skill": "導雷流", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "04:52", "hitTime": "04:52", "skill": "狡詭搖盪", "damage": [{"label": "死刑", "amount": 460000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "04:55", "hitTime": "04:55", "skill": "狡詭搖盪", "damage": [{"label": "死刑", "amount": 460000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "04:59", "hitTime": "04:59", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "05:02", "hitTime": "05:02", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "05:05", "hitTime": "05:05", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P4", "castingTime": "05:17", "hitTime": "05:17", "skill": "雷轉質移植", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:24", "hitTime": "05:24", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:27", "hitTime": "05:27", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:30", "hitTime": "05:30", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:33", "hitTime": "05:33", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:36", "hitTime": "05:36", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "desc":"附帶魔法受傷加重", "castingTime": "05:36", "hitTime": "05:36", "skill": "指向雷", "damage": [{"label": "傷害", "amount": 90000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P4", "castingTime": "05:39", "hitTime": "05:39", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {
+            "phase": "P4", "castingTime": "05:39", "hitTime": "05:39", "isRandom": true,
+            "commonDesc": "附帶雷屬性耐性大幅降低",
+            "variants": [
+              { "skill": "驚電裂隙(擋槍)", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法" },
+              { "skill": "驚電裂隙(背後)", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P4", "castingTime": "05:42", "hitTime": "05:42", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:50", "hitTime": "05:50", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:53", "hitTime": "05:53", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:56", "hitTime": "05:56", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "05:59", "hitTime": "05:59", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "06:03", "hitTime": "06:03", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "desc":"附帶魔法受傷加重", "castingTime": "06:03", "hitTime": "06:03", "skill": "指向雷", "damage": [{"label": "傷害", "amount": 90000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P4", "castingTime": "06:06", "hitTime": "06:06", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {
+            "phase": "P4", "castingTime": "06:06", "hitTime": "06:06", "isRandom": true,
+            "commonDesc": "附帶雷屬性耐性大幅降低",
+            "variants": [
+              { "skill": "驚電裂隙(擋槍)", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法" },
+              { "skill": "驚電裂隙(背後)", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P4", "castingTime": "06:09", "hitTime": "06:09", "skill": "旋轉閃電", "damage": [], "type": ""},
+        {"phase": "P4", "castingTime": "06:19", "hitTime": "06:19", "skill": "靈魂震盪", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P4", "castingTime": "06:22", "hitTime": "06:22", "skill": "衝擊", "damage": [{"label": "傷害", "amount": 50000, "type": "物理"}], "type": "物理"},
+        {"phase": "P4", "castingTime": "06:25", "hitTime": "06:25", "skill": "衝擊", "damage": [{"label": "傷害", "amount": 50000, "type": "物理"}], "type": "物理"},
+        {"phase": "P4", "castingTime": "06:27", "hitTime": "06:27", "skill": "聚雷加農砲", "damage": [{"label": "傷害", "amount": 160000, "type": "物理"}], "type": "物理"},
+        {"phase": "OP2", "castingTime": "06:53", "hitTime": "06:53", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:54", "hitTime": "06:54", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:55", "hitTime": "06:55", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:56", "hitTime": "06:56", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:57", "hitTime": "06:57", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:58", "hitTime": "06:58", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "06:59", "hitTime": "06:59", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:00", "hitTime": "07:00", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:01", "hitTime": "07:01", "skill": "交叉亂尾擊", "damage": [{"label": "傷害", "amount": 120000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:10", "hitTime": "07:10", "skill": "劍尾 (讀條)", "damage": [], "type": ""},
+        {"phase": "OP2", "castingTime": "07:10", "hitTime": "07:10", "skill": "狡詭熾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:11", "hitTime": "07:11", "skill": "狡詭熾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:13", "hitTime": "07:13", "skill": "狡詭熾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:13", "hitTime": "07:13", "skill": "劍尾 (判定)", "damage": [], "type": ""},
+        {"phase": "OP2", "castingTime": "07:15", "hitTime": "07:15", "skill": "狡詭熾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:21", "hitTime": "07:21", "desc":"火刀往兩側躲，紫炮往中間躲", "skill": "狡詭特技", "damage": [], "type": ""},
+        {"phase": "OP2", "castingTime": "07:23", "hitTime": "07:23", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:26", "hitTime": "07:26", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "OP2", "castingTime": "07:37", "hitTime": "07:37", "isRandom": true,
+            "variants": [
+              { "desc":"接線傷害，附帶火屬性耐性大幅下降", "skill": "芥末炸彈", "damage": [{"label": "接線傷害", "amount": 460000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"火屬性傷害", "skill": "激火爆燃", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "OP2", "castingTime": "07:37", "hitTime": "07:37", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:40", "hitTime": "07:40", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:43", "hitTime": "07:43", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:46", "hitTime": "07:46", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:47", "hitTime": "07:47", "skill": "芥末炸彈", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "07:54", "hitTime": "07:54", "skill": "屬性轉換", "damage": [], "type": ""},
+        {"phase": "OP2", "castingTime": "07:56", "hitTime": "07:56", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "OP2", "castingTime": "08:04", "hitTime": "08:04", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "OP2", "castingTime": "08:04", "hitTime": "08:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:07", "hitTime": "08:07", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "OP2", "castingTime": "08:08", "hitTime": "08:08", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "OP2", "castingTime": "08:10", "hitTime": "08:10", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:13", "hitTime": "08:13", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:17", "hitTime": "08:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:20", "hitTime": "08:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:25", "hitTime": "08:25", "skill": "青雷", "damage": [{"label": "傷害", "amount": 160000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "OP2", "castingTime": "08:28", "hitTime": "08:28", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P5", "castingTime": "08:31", "hitTime": "08:31", "skill": "黑色安息日的日落", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:34", "hitTime": "08:34", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P5", "castingTime": "08:39", "hitTime": "08:39", "skill": "狡詭火焰 (預兆出現)", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:41", "hitTime": "08:41", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P5", "castingTime": "08:42", "hitTime": "08:42", "skill": "側方電火花", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:43", "hitTime": "08:43", "skill": "狡詭火焰 (傷害判定)", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:44", "hitTime": "08:44", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P5", "castingTime": "08:50", "hitTime": "08:50", "skill": "側方電火花", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:50", "hitTime": "08:50", "desc":"火刀往兩側躲，紫炮往中間躲", "skill": "狡詭特技", "damage": [], "type": ""},
+        {"phase": "P5", "castingTime": "08:52", "hitTime": "08:52", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P5", "castingTime": "08:55", "hitTime": "08:55", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:01", "hitTime": "09:01", "skill": "黑色安息日的午夜", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "09:01", "hitTime": "09:01", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:04", "hitTime": "09:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P6", "castingTime": "09:12", "hitTime": "09:12", "isRandom": true,
+            "variants": [
+              { "desc":"先分攤，再散開", "skill": "集散式衝擊炮", "damage": [], "type": "" },
+              { "desc":"先散開，再分攤", "skill": "散集式衝擊炮", "damage": [], "type": "" }
+            ]
+        },
+        {
+            "phase": "P6", "castingTime": "09:12", "hitTime": "09:12", "isRandom": true,
+            "variants": [
+              { "desc":"集散式", "skill": "狡詭火光", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"散集式", "skill": "狡詭電火花", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P6", "castingTime": "09:12", "hitTime": "09:12", "skill": "狡詭加農砲 or 狡詭燃燒彈", "damage": [], "type": ""},
+        {
+            "phase": "P6", "castingTime": "09:16", "hitTime": "09:16", "isRandom": true,
+            "variants": [
+              { "desc":"集散式", "skill": "狡詭電火花", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"散集式", "skill": "狡詭火光", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P6", "castingTime": "09:16", "hitTime": "09:16", "skill": "狡詭加農砲 or 狡詭燃燒彈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "09:21", "hitTime": "09:21", "desc":"火刀往兩側躲，紫炮往中間躲", "skill": "狡詭特技", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "09:23", "hitTime": "09:23", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:28", "hitTime": "09:28", "skill": "狡詭雷電", "damage": [{"label": "傷害", "amount": 130000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:31", "hitTime": "09:31", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:39", "hitTime": "09:39", "skill": "屬性轉換", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "09:41", "hitTime": "09:41", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "desc":"拆地板", "castingTime": "09:49", "hitTime": "09:49", "skill": "火焰斬", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "09:50", "hitTime": "09:50", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:54", "hitTime": "09:54", "skill": "劍雨", "damage": [{"label": "傷害", "amount": 26000, "type": "物理"}], "type": "物理"},
+        {"phase": "P6", "castingTime": "09:55", "hitTime": "09:55", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "09:58", "hitTime": "09:58", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:15", "hitTime": "10:15", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:17", "hitTime": "10:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:18", "hitTime": "10:18", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:20", "hitTime": "10:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:21", "hitTime": "10:21", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:23", "hitTime": "10:23", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:24", "hitTime": "10:24", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:26", "hitTime": "10:26", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:26", "hitTime": "10:26", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:29", "hitTime": "10:29", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:29", "hitTime": "10:29", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:32", "hitTime": "10:32", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:32", "hitTime": "10:32", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:34", "hitTime": "10:34", "skill": "雷光鏈", "damage": [], "type": ""},
+        {"phase": "P6", "castingTime": "10:35", "hitTime": "10:35", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P6", "castingTime": "10:42", "hitTime": "10:42", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P6", "castingTime": "10:43", "hitTime": "10:43", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P6", "castingTime": "10:46", "hitTime": "10:46", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P6", "castingTime": "10:46", "hitTime": "10:46", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "10:57", "hitTime": "10:57", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P6", "castingTime": "10:58", "hitTime": "10:58", "isRandom": true,
+            "variants": [
+              { "desc":"接線傷害，附帶火屬性耐性大幅下降", "skill": "芥末炸彈", "damage": [{"label": "接線傷害", "amount": 460000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"火屬性傷害", "skill": "激火爆燃", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P6", "castingTime": "11:01", "hitTime": "11:01", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "11:04", "hitTime": "11:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "11:07", "hitTime": "11:07", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P6", "castingTime": "11:07", "hitTime": "11:07", "skill": "芥末炸彈", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:15", "hitTime": "11:15", "skill": "屬性轉換", "damage": [], "type": ""},
+        {"phase": "P7", "castingTime": "11:17", "hitTime": "11:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:23", "hitTime": "11:23", "skill": "青雷", "damage": [{"label": "傷害", "amount": 160000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:25", "hitTime": "11:25", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:29", "hitTime": "11:29", "skill": "離子簇", "damage": [], "type": ""},
+        {"phase": "P7", "castingTime": "11:31", "hitTime": "11:31", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:36", "hitTime": "11:36", "skill": "黑色安息日的日出", "damage": [], "type": ""},
+        {"phase": "P7", "castingTime": "11:37", "hitTime": "11:37", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:40", "hitTime": "11:40", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:43", "hitTime": "11:43", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:46", "hitTime": "11:46", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "11:49", "hitTime": "11:49", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P7", "castingTime": "11:49", "hitTime": "11:49", "isRandom": true,
+            "variants": [
+              { "desc":"雙人踩塔", "skill": "碎魂躍", "damage": [{"label": "傷害", "amount": 100000, "type": "物理"}], "type": "物理" },
+              { "desc":"需要按照Debuff對應顏色，引誘四方位的炮台", "skill": "正/負電子流", "damage": [{"label": "傷害", "amount": 100000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P7", "castingTime": "11:57", "hitTime": "11:57", "desc":"火刀往兩側躲，紫炮往中間躲", "skill": "狡詭特技", "damage": [], "type": ""},
+        {"phase": "P7", "castingTime": "11:57", "hitTime": "11:57", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "12:00", "hitTime": "12:00", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "12:03", "hitTime": "12:03", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P7", "castingTime": "12:06", "hitTime": "12:06", "isRandom": true,
+            "variants": [
+              { "desc":"雙人踩塔", "skill": "碎魂躍", "damage": [{"label": "傷害", "amount": 100000, "type": "物理"}], "type": "物理" },
+              { "desc":"需要按照Debuff對應顏色，引誘四方位的炮台", "skill": "正/負電子流", "damage": [{"label": "傷害", "amount": 100000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P7", "castingTime": "12:06", "hitTime": "12:06", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P7", "castingTime": "12:13", "hitTime": "12:13", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P7", "castingTime": "12:14", "hitTime": "12:14", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {
+            "phase": "P7", "castingTime": "12:17", "hitTime": "12:17", "isRandom": true,
+            "variants": [
+              { "desc":"擊退塔", "skill": "尖尾濺", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" },
+              { "desc":"大範圍圓型AOE", "skill": "尖尾焰", "damage": [{"label": "傷害", "amount": 40000, "type": "魔法"}], "type": "魔法" }
+            ]
+        },
+        {"phase": "P7", "castingTime": "12:17", "hitTime": "12:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P7", "castingTime": "12:20", "hitTime": "12:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P8", "castingTime": "12:29", "hitTime": "12:29", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:30", "hitTime": "12:30", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:31", "hitTime": "12:31", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:32", "hitTime": "12:32", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:37", "hitTime": "12:37", "skill": "斬擊", "damage": [{"label": "傷害", "amount": 140000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:46", "hitTime": "12:46", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:47", "hitTime": "12:47", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:48", "hitTime": "12:48", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:50", "hitTime": "12:50", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "12:54", "hitTime": "12:54", "skill": "斬擊", "damage": [{"label": "傷害", "amount": 140000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:04", "hitTime": "13:04", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:05", "hitTime": "13:05", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:05", "hitTime": "13:05", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:07", "hitTime": "13:07", "skill": "劍舞", "damage": [{"label": "傷害", "amount": 40000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:11", "hitTime": "13:11", "skill": "斬擊", "damage": [{"label": "傷害", "amount": 140000, "type": "物理"}], "type": "物理"},
+        {"phase": "P8", "castingTime": "13:17", "hitTime": "13:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P8", "castingTime": "13:20", "hitTime": "13:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 79000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P8", "castingTime": "13:31", "hitTime": "13:31", "skill": "狡雷", "damage": [{"label": "傷害", "amount": 9999999, "type": "即死"}], "type": "即死"}
+    ]
+}

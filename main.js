@@ -89,15 +89,20 @@ createApp({
         const expandedCategories = ref({});
 
         const skillTooltip = ref({ skill: null, x: 0, y: 0 });
+        let _tooltipHideTimer = null;
         const showSkillTooltip = (skill, event) => {
             if (!skill.title && !skill.conditionSkillId && !skill.blockedBySkillId && skill.charges <= 1 && !skill.duration && !skill.cooldown) return;
+            clearTimeout(_tooltipHideTimer);
             const rect = event.currentTarget.getBoundingClientRect();
             const tooltipWidth = 240;
             let x = rect.left + rect.width / 2;
             x = Math.max(tooltipWidth / 2 + 8, Math.min(x, window.innerWidth - tooltipWidth / 2 - 8));
             skillTooltip.value = { skill, x, y: rect.bottom + 8 };
         };
-        const hideSkillTooltip = () => { skillTooltip.value.skill = null; };
+        const hideSkillTooltip = () => {
+            _tooltipHideTimer = setTimeout(() => { skillTooltip.value.skill = null; }, 50);
+        };
+        const keepSkillTooltip = () => { clearTimeout(_tooltipHideTimer); };
 
         // 自訂時間軸列，以副本 key 為索引分別儲存
         const customRowsByDuty = ref({});
@@ -830,6 +835,14 @@ createApp({
             return activeSkillsByMember.value.flatMap(m => m.skills);
         });
 
+        const skillNameById = computed(() => {
+            const map = {};
+            for (const job of Object.values(jobDb.value)) {
+                for (const s of (job.skills || [])) map[s.id] = s.name;
+            }
+            return map;
+        });
+
         // ── Damage calculation ────────────────────────────────
         // 計算套用所有作用中減傷技能後的剩餘傷害總量
         // 同名技能只計算一次（appliedNames 去重）；效果有 duration 限制時需檢查是否仍在效果窗內
@@ -1189,7 +1202,7 @@ createApp({
             isRowVisible,
             // Floating insert button
             hoverInsert, onRowMouseMove, onRowMouseLeave, onInsertBtnEnter, onInsertBtnLeave,
-            skillTooltip, showSkillTooltip, hideSkillTooltip,
+            skillTooltip, showSkillTooltip, hideSkillTooltip, keepSkillTooltip, skillNameById,
         };
     }
 }).mount('#app');

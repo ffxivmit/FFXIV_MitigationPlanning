@@ -3,108 +3,108 @@
         "name": "騎士",
         "icon": "src/Job_icons/01_TANK/Job/Paladin.png",
         "skills": [
-            { "id": "pld_rep", "name": "雪仇", "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/01_PLD/Role_Actions/Reprisal.png" },
-            { "id": "pld_poa", "name": "武裝戍衛", "title":"效果時間內自身的格擋發動率變為100%，範圍內的隊員受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.15 }], "duration": 18, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Passage_of_Arms.png" },
-            { "id": "pld_div", "name": "聖光幕簾", "title":"為自身與周圍隊員附加騎士最大HP10%的護盾","effects": [{ "type": "shield_maxhp", "val": 0.10 }], "duration": 30, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Divine_Veil.png" },
+            { "id": "pld_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/01_PLD/Role_Actions/Reprisal.png" },
+            { "id": "pld_poa", "name": "武裝戍衛", "tags": ["減傷"], "title":"效果時間內自身的格擋發動率變為100%，範圍內的隊員受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.15 }], "duration": 18, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Passage_of_Arms.png" },
+            { "id": "pld_div", "name": "聖光幕簾", "tags": ["護盾"], "title":"為自身與周圍隊員附加騎士最大HP10%的護盾","effects": [{ "type": "shield_maxhp", "val": 0.10 }], "duration": 30, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Divine_Veil.png" },
             { "id": "pld_clm",  "name": "深仁厚澤", "title":"恢復目標的HP，恢復力：1000\n追加效果：對小隊隊員發動該技能時，自身恢復目標所恢復HP的一半", "effects": [], "duration": 1, "cooldown": 2.5, "icon": "src/Skill_icons/01_PLD/Clemency.png", "personal": true },
-            { "id": "pld_hs",  "name": "聖盾陣", "title":"8秒內，自身受到的傷害減輕15%\n前4秒額外再減輕15%（乘算共減輕27.75%）\n12秒內，令目標HP持續恢復，恢復力:250", "effects": [{ "type": "mit_all", "val": 0.15 }, { "type": "mit_all", "val": 0.15, "duration": 4 }], "duration": 8, "cooldown": 5, "icon": "src/Skill_icons/01_PLD/Holy_Sheltron.png", "personal": true },
-            { "id": "pld_invt",  "name": "干預", "title":"指定一名隊員，令其受到的傷害減輕10%，持續時間：8秒\n追加效果：自身處於鐵壁、極致防禦狀態時，效果提高10%\n追加效果：前4秒令目標受到的傷害額外減輕10%\n追加效果：令目標HP持續恢復，恢復力：250，持續時間：12秒", "effects": [{ "type": "mit_all", "val": 0.10, "bonusVal": 0.10, "bonusRequiresIds": ["pld_ramp", "pld_grd"] }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 10, "icon": "src/Skill_icons/01_PLD/Intervention.png", "personal": true },
-            { "id": "pld_ramp",  "name": "鐵壁", "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Role_Actions/Rampart.png", "personal": true },
-            { "id": "pld_grd",  "name": "極致防禦", "title":"15秒內，將自身所受的傷害減輕40%\n追加效果：為自身附加能夠抵消相當於恢復力1000的傷害量的防護罩", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Guardian.png", "personal": true },
+            { "id": "pld_hs",  "name": "聖盾陣", "tags": ["減傷", "HOT"], "title":"8秒內，自身受到的傷害減輕15%\n前4秒額外再減輕15%（乘算共減輕27.75%）\n12秒內，令目標HP持續恢復，恢復力:250", "effects": [{ "type": "mit_all", "val": 0.15 }, { "type": "mit_all", "val": 0.15, "duration": 4 }], "duration": 8, "cooldown": 5, "icon": "src/Skill_icons/01_PLD/Holy_Sheltron.png", "personal": true },
+            { "id": "pld_invt",  "name": "干預", "tags": ["減傷", "HOT"], "title":"指定一名隊員，令其受到的傷害減輕10%，持續時間：8秒\n追加效果：自身處於鐵壁、極致防禦狀態時，效果提高10%\n追加效果：前4秒令目標受到的傷害額外減輕10%\n追加效果：令目標HP持續恢復，恢復力：250，持續時間：12秒", "effects": [{ "type": "mit_all", "val": 0.10, "bonusVal": 0.10, "bonusRequiresIds": ["pld_ramp", "pld_grd"] }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 10, "icon": "src/Skill_icons/01_PLD/Intervention.png", "personal": true },
+            { "id": "pld_ramp",  "name": "鐵壁", "tags": ["減傷"], "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Role_Actions/Rampart.png", "personal": true },
+            { "id": "pld_grd",  "name": "極致防禦", "tags": ["減傷", "護盾"], "title":"15秒內，將自身所受的傷害減輕40%\n追加效果：為自身附加能夠抵消相當於恢復力1000的傷害量的防護罩", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Guardian.png", "personal": true },
             { "id": "pld_cvr",  "name": "保護", "title":"替目標承受攻擊", "effects": [], "duration": 12, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Cover.png", "personal": true },
-            { "id": "pld_hg",  "name": "神聖領域", "title":"10秒內，除特定攻擊之外其他所有對自身發動的攻擊均無效", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 420, "icon": "src/Skill_icons/01_PLD/Hallowed_Ground.png", "personal": true }
+            { "id": "pld_hg",  "name": "神聖領域", "tags": ["無敵"], "title":"10秒內，除特定攻擊之外其他所有對自身發動的攻擊均無效", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 420, "icon": "src/Skill_icons/01_PLD/Hallowed_Ground.png", "personal": true }
         ]
     },
     "WAR": {
         "name": "戰士",
         "icon": "src/Job_icons/01_TANK/Job/Warrior.png",
         "skills": [
-            { "id": "war_rep", "name": "雪仇", "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Role_Actions/Reprisal.png" },
-            { "id": "war_sio", "name": "擺脫", "title":"為自身與周圍隊員附加能夠抵禦一定傷害的防護罩,\n該防護罩能夠抵消相當於目標最大HP15%的傷害量\n另外，若自身處於戰慄、戮罪、原初的血氣狀態，發動該技能會解除這些狀態\n每解除一個狀態，防護罩的效果量上升2%", "effects": [{ "type": "shield_maxhp", "val": 0.15 }, { "type": "hot", "val": 300 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Shake_It_Off.png" },
-            { "id": "war_ramp",  "name": "鐵壁", "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Role_Actions/Rampart.png", "personal": true },
-            { "id": "war_eqb",  "name": "泰然自若", "title":"恢復自身HP，恢復力：1200\n追加效果：持續恢復自身的HP，恢復力：200", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Equilibrium.png", "personal": true },
+            { "id": "war_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Role_Actions/Reprisal.png" },
+            { "id": "war_sio", "name": "擺脫", "tags": ["護盾", "HOT"], "title":"為自身與周圍隊員附加能夠抵禦一定傷害的防護罩,\n該防護罩能夠抵消相當於目標最大HP15%的傷害量\n另外，若自身處於戰慄、戮罪、原初的血氣狀態，發動該技能會解除這些狀態\n每解除一個狀態，防護罩的效果量上升2%", "effects": [{ "type": "shield_maxhp", "val": 0.15 }, { "type": "hot", "val": 300 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Shake_It_Off.png" },
+            { "id": "war_ramp",  "name": "鐵壁", "tags": ["減傷"], "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Role_Actions/Rampart.png", "personal": true },
+            { "id": "war_eqb",  "name": "泰然自若", "tags": ["HOT"], "title":"恢復自身HP，恢復力：1200\n追加效果：持續恢復自身的HP，恢復力：200", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Equilibrium.png", "personal": true },
             { "id": "war_tob",  "name": "戰慄", "title":"10秒內，自身的最大HP提高20%，\n同時自身所受的HP恢復效果提高20%\n發動時恢復最大HP的20%", "effects": [], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Thrill_of_Battle.png", "personal": true },
-            { "id": "war_nf",  "name": "原初的勇猛", "title":"8秒內，自身受到的傷害減輕10%\n追加效果:前4秒額外再減輕10%\n追加效果:自身發動的戰技命中時恢復HP\n與原初的血氣共用冷卻時間", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 25, "sharedCooldownId": "war_bldw", "icon": "src/Skill_icons/02_WAR/Nascent_Flash.png", "personal": true },
-            { "id": "war_bldw",  "name": "原初的血氣", "title":"8秒內，自身受到的傷害減輕10%\n追加效果:前4秒額外再減輕10%\n追加效果:自身發動的戰技命中時恢復HP\n與原初的勇猛共用冷卻時間", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 25, "sharedCooldownId": "war_nf", "icon": "src/Skill_icons/02_WAR/Bloodwhetting.png", "personal": true },
-            { "id": "war_damn",  "name": "戮罪", "title":"15秒內，令自身所受到的傷害減輕40%，\n同時受到物理攻擊時會給予對方反擊傷害\n追加效果：受到攻擊或持續時間結束後，為自身附加持續恢復HP的效果，恢復力：300", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/02_WAR/Damnation.png", "personal": true },
-            { "id": "war_hm",  "name": "死鬥", "title":"除特定攻擊之外，其他所有對自身發動的攻擊，\n均無法令HP減少到1以下，當目標為敵人時，禁止目標移動", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 240, "icon": "src/Skill_icons/02_WAR/Holmgang.png", "personal": true }
+            { "id": "war_nf",  "name": "原初的勇猛", "tags": ["減傷"], "title":"8秒內，自身受到的傷害減輕10%\n追加效果:前4秒額外再減輕10%\n追加效果:自身發動的戰技命中時恢復HP\n與原初的血氣共用冷卻時間", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 25, "sharedCooldownId": "war_bldw", "icon": "src/Skill_icons/02_WAR/Nascent_Flash.png", "personal": true },
+            { "id": "war_bldw",  "name": "原初的血氣", "tags": ["減傷"], "title":"8秒內，自身受到的傷害減輕10%\n追加效果:前4秒額外再減輕10%\n追加效果:自身發動的戰技命中時恢復HP\n與原初的勇猛共用冷卻時間", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "mit_all", "val": 0.10, "duration": 4 }], "duration": 8, "cooldown": 25, "sharedCooldownId": "war_nf", "icon": "src/Skill_icons/02_WAR/Bloodwhetting.png", "personal": true },
+            { "id": "war_damn",  "name": "戮罪", "tags": ["減傷", "HOT"], "title":"15秒內，令自身所受到的傷害減輕40%，\n同時受到物理攻擊時會給予對方反擊傷害\n追加效果：受到攻擊或持續時間結束後，為自身附加持續恢復HP的效果，恢復力：300", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/02_WAR/Damnation.png", "personal": true },
+            { "id": "war_hm",  "name": "死鬥", "tags": ["無敵"], "title":"除特定攻擊之外，其他所有對自身發動的攻擊，\n均無法令HP減少到1以下，當目標為敵人時，禁止目標移動", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 240, "icon": "src/Skill_icons/02_WAR/Holmgang.png", "personal": true }
         ]
     },
     "DRK": {
         "name": "暗黑騎士",
         "icon": "src/Job_icons/01_TANK/Job/DarkKnight.png",
         "skills": [
-            { "id": "drk_rep", "name": "雪仇", "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Role_Actions/Reprisal.png" },
-            { "id": "drk_dmissi",  "name": "暗黑佈道", "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/03_DRK/Dark_Missionary.png" },
-            { "id": "drk_tbn",  "name": "至黑之夜", "title":"為自身或一名隊員附加能夠抵禦目標最大HP25%傷害的防護罩，持續時間：7秒", "effects": [{ "type": "shield_maxhp", "val": 0.25 }], "duration": 7, "cooldown": 15, "icon": "src/Skill_icons/03_DRK/The_Blackest_Night.png", "personal": true },
-            { "id": "drk_obl",  "name": "獻奉", "title":"令自身或一名隊員受到的傷害減輕10%，持續時間：10秒", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "charges": 2, "icon": "src/Skill_icons/03_DRK/Oblation.png", "personal": true },
-            { "id": "drk_dmind",  "name": "棄明投暗", "title":"10秒內，令自身所受到的物理傷害減輕10%、魔法傷害減輕20%", "effects": [{ "type": "mit_magic", "val": 0.20 }, { "type": "mit_physical", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Dark_Mind.png", "personal": true },
-            { "id": "drk_ramp",  "name": "鐵壁", "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/03_DRK/Role_Actions/Rampart.png", "personal": true },
-            { "id": "drk_sv",  "name": "暗影衛", "title":"15秒內，將自身所受的傷害減輕40%，\n追加效果：HP低於50%時或持續時間結束後自動恢復，恢復力1200", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/03_DRK/Shadowed_Vigil.png", "personal": true },
-            { "id": "drk_ld",  "name": "行屍走肉", "title":"對自身附加行屍走肉持續10秒，\n時間內受到致命傷轉變為死而不僵狀態，並刷新10秒buff時間，\n死而不僵狀態內，若發動戰技或魔法攻擊，命中後將恢復自身HP，\n效果中得到相當於自身最大HP100%的恢復量後，該效果變為出死入生；\n如時間內恢復量不足，沒有轉換成出死入生狀態則死亡。", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 300, "icon": "src/Skill_icons/03_DRK/Living_Dead.png", "personal": true }
+            { "id": "drk_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Role_Actions/Reprisal.png" },
+            { "id": "drk_dmissi",  "name": "暗黑佈道", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/03_DRK/Dark_Missionary.png" },
+            { "id": "drk_tbn",  "name": "至黑之夜", "tags": ["護盾"], "title":"為自身或一名隊員附加能夠抵禦目標最大HP25%傷害的防護罩，持續時間：7秒", "effects": [{ "type": "shield_maxhp", "val": 0.25 }], "duration": 7, "cooldown": 15, "icon": "src/Skill_icons/03_DRK/The_Blackest_Night.png", "personal": true },
+            { "id": "drk_obl",  "name": "獻奉", "tags": ["減傷"], "title":"令自身或一名隊員受到的傷害減輕10%，持續時間：10秒", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "charges": 2, "icon": "src/Skill_icons/03_DRK/Oblation.png", "personal": true },
+            { "id": "drk_dmind",  "name": "棄明投暗", "tags": ["減傷"], "title":"10秒內，令自身所受到的物理傷害減輕10%、魔法傷害減輕20%", "effects": [{ "type": "mit_magic", "val": 0.20 }, { "type": "mit_physical", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Dark_Mind.png", "personal": true },
+            { "id": "drk_ramp",  "name": "鐵壁", "tags": ["減傷"], "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/03_DRK/Role_Actions/Rampart.png", "personal": true },
+            { "id": "drk_sv",  "name": "暗影衛", "tags": ["減傷"], "title":"15秒內，將自身所受的傷害減輕40%，\n追加效果：HP低於50%時或持續時間結束後自動恢復，恢復力1200", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/03_DRK/Shadowed_Vigil.png", "personal": true },
+            { "id": "drk_ld",  "name": "行屍走肉", "tags": ["無敵"], "title":"對自身附加行屍走肉持續10秒，\n時間內受到致命傷轉變為死而不僵狀態，並刷新10秒buff時間，\n死而不僵狀態內，若發動戰技或魔法攻擊，命中後將恢復自身HP，\n效果中得到相當於自身最大HP100%的恢復量後，該效果變為出死入生；\n如時間內恢復量不足，沒有轉換成出死入生狀態則死亡。", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 300, "icon": "src/Skill_icons/03_DRK/Living_Dead.png", "personal": true }
         ]
     },
     "GNB": {
         "name": "絕槍戰士",
         "icon": "src/Job_icons/01_TANK/Job/Gunbreaker.png",
         "skills": [
-            { "id": "gnb_rep", "name": "雪仇", "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Role_Actions/Reprisal.png" },
-            { "id": "gnb_hol", "name": "光之心",  "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Heart_of_Light.png" },
-            { "id": "gnb_hoc",  "name": "剛玉之心", "title":"8秒內，自身受到的傷害減輕15%\n前4秒額外再減輕15%（乘算共減輕27.75%）\nHP 低於50%時或持續時間結束後自動恢復，恢復力：900。", "effects": [{ "type": "mit_all", "val": 0.15 }, { "type": "mit_all", "val": 0.15, "duration": 4 }], "duration": 8, "cooldown": 25, "icon": "src/Skill_icons/04_GNB/Heart_of_Corundum.png", "personal": true },
-            { "id": "gnb_aura",  "name": "極光", "title":"令目標HP持續恢復，恢復力：300\n持續時間：18秒，累積次數：2", "effects": [], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Aurora.png", "personal": true },
-            { "id": "gnb_cmf", "name": "偽裝",  "title":"20秒內，自身的招架發動率提高50%，所受的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Camouflage.png" },
-            { "id": "gnb_ramp",  "name": "鐵壁", "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Role_Actions/Rampart.png", "personal": true },
-            { "id": "gnb_gn",  "name": "大星雲", "title":"15秒內，將自身所受的傷害減輕40%，追加效果：自身的最大HP提高20%", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/04_GNB/Great_Nebula.png", "personal": true },
-            { "id": "gnb_sb",  "name": "超火流星", "title":"自身的HP降至最大HP的50%，同時在持續時間內，\n除一部分特定攻擊之外，免除自身受到的任何傷害", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 360, "icon": "src/Skill_icons/04_GNB/Superbolide.png", "personal": true }
+            { "id": "gnb_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Role_Actions/Reprisal.png" },
+            { "id": "gnb_hol", "name": "光之心", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Heart_of_Light.png" },
+            { "id": "gnb_hoc",  "name": "剛玉之心", "tags": ["減傷"], "title":"8秒內，自身受到的傷害減輕15%\n前4秒額外再減輕15%（乘算共減輕27.75%）\nHP 低於50%時或持續時間結束後自動恢復，恢復力：900。", "effects": [{ "type": "mit_all", "val": 0.15 }, { "type": "mit_all", "val": 0.15, "duration": 4 }], "duration": 8, "cooldown": 25, "icon": "src/Skill_icons/04_GNB/Heart_of_Corundum.png", "personal": true },
+            { "id": "gnb_aura",  "name": "極光", "tags": ["HOT"], "title":"令目標HP持續恢復，恢復力：300\n持續時間：18秒，累積次數：2", "effects": [], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Aurora.png", "personal": true },
+            { "id": "gnb_cmf", "name": "偽裝", "tags": ["減傷"], "title":"20秒內，自身的招架發動率提高50%，所受的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Camouflage.png" },
+            { "id": "gnb_ramp",  "name": "鐵壁", "tags": ["減傷"], "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Role_Actions/Rampart.png", "personal": true },
+            { "id": "gnb_gn",  "name": "大星雲", "tags": ["減傷"], "title":"15秒內，將自身所受的傷害減輕40%，追加效果：自身的最大HP提高20%", "effects": [{ "type": "mit_all", "val": 0.40 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/04_GNB/Great_Nebula.png", "personal": true },
+            { "id": "gnb_sb",  "name": "超火流星", "tags": ["無敵"], "title":"自身的HP降至最大HP的50%，同時在持續時間內，\n除一部分特定攻擊之外，免除自身受到的任何傷害", "effects": [{ "type": "invincible" }], "duration": 10, "cooldown": 360, "icon": "src/Skill_icons/04_GNB/Superbolide.png", "personal": true }
         ]
     },
     "MNK": {
         "name": "武僧",
         "icon": "src/Job_icons/03_DPS/Job/Monk.png",
         "skills": [
-            { "id": "mnk_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/05_MNK/Role_Actions/Feint.png" }
+            { "id": "mnk_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/05_MNK/Role_Actions/Feint.png" }
         ]
     },
     "SAM": {
         "name": "武士",
         "icon": "src/Job_icons/03_DPS/Job/Samurai.png",
         "skills": [
-            { "id": "sam_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/06_SAM/Role_Actions/Feint.png" }
+            { "id": "sam_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/06_SAM/Role_Actions/Feint.png" }
         ]
     },
     "DRG": {
         "name": "龍騎士",
         "icon": "src/Job_icons/03_DPS/Job/Dragoon.png",
         "skills": [
-            { "id": "drg_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/07_DRG/Role_Actions/Feint.png" }
+            { "id": "drg_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/07_DRG/Role_Actions/Feint.png" }
         ]
     },
     "RPR": {
         "name": "奪魂者",
         "icon": "src/Job_icons/03_DPS/Job/Reaper.png",
         "skills": [
-            { "id": "rpr_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/08_RPR/Role_Actions/Feint.png" }
+            { "id": "rpr_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/08_RPR/Role_Actions/Feint.png" }
         ]
     },
     "NIN": {
         "name": "忍者",
         "icon": "src/Job_icons/03_DPS/Job/Ninja.png",
         "skills": [
-            { "id": "nin_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/09_NIN/Role_Actions/Feint.png" }
+            { "id": "nin_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/09_NIN/Role_Actions/Feint.png" }
         ]
     },
     "VPR": {
         "name": "毒蛇劍士",
         "icon": "src/Job_icons/03_DPS/Job/Viper.png",
         "skills": [
-            { "id": "vpr_feint", "name": "牽制", "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/10_VPR/Role_Actions/Feint.png" }
+            { "id": "vpr_feint", "name": "牽制", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/10_VPR/Role_Actions/Feint.png" }
         ]
     },
     "BRD": {
         "name": "吟遊詩人",
         "icon": "src/Job_icons/03_DPS/Job/Bard.png",
         "skills": [
-            { "id": "brd_troub", "name": "行吟", "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/11_BRD/Troubadour.png" },
+            { "id": "brd_troub", "name": "行吟", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/11_BRD/Troubadour.png" },
             { "id": "brd_nature", "name": "大地神的抒情戀歌", "title":"15秒內，自身與周圍隊員所受的HP恢復效果提高15%", "effects": [{ "type": "heal_out_magic", "val": 0.10 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/11_BRD/Nature's_Minne.png" }
         ]
     },
@@ -112,60 +112,60 @@
         "name": "機工士",
         "icon": "src/Job_icons/03_DPS/Job/Machinist.png",
         "skills": [
-            { "id": "mch_tact", "name": "策動", "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/12_MCH/Tactician.png" },
-            { "id": "mch_dism", "name": "武器解除", "title":"10秒內，目標攻擊造成的傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/12_MCH/Dismantle.png" }
+            { "id": "mch_tact", "name": "策動", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/12_MCH/Tactician.png" },
+            { "id": "mch_dism", "name": "武器解除", "tags": ["減傷"], "title":"10秒內，目標攻擊造成的傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/12_MCH/Dismantle.png" }
         ]
     },
     "DNC": {
         "name": "舞者",
         "icon": "src/Job_icons/03_DPS/Job/Dancer.png",
         "skills": [
-            { "id": "dnc_samba", "name": "防守之桑巴", "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/13_DNC/Shield_Samba.png" }
+            { "id": "dnc_samba", "name": "防守之桑巴", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/13_DNC/Shield_Samba.png" }
         ]
     },
     "BLM": {
         "name": "黑魔道士",
         "icon": "src/Job_icons/03_DPS/Job/BlackMage.png",
         "skills": [
-            { "id": "blm_addle", "name": "昏亂 ", "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png" }
+            { "id": "blm_addle", "name": "昏亂", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png" }
         ]
     },
     "SMN": {
         "name": "召喚士",
         "icon": "src/Job_icons/03_DPS/Job/Summoner.png",
         "skills": [
-            { "id": "smn_addle", "name": "昏亂 ", "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png" }
+            { "id": "smn_addle", "name": "昏亂", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png" }
         ]
     },
     "RDM": {
         "name": "赤魔道士",
         "icon": "src/Job_icons/03_DPS/Job/RedMage.png",
         "skills": [
-            { "id": "rdm_addle", "name": "昏亂 ", "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png" },
-            { "id": "rdm_kera", "name": "抗死", "title":"15秒內，令自身和周圍隊員所受到的魔法傷害減輕10%，並且所受的HP恢復效果提高5%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "heal_in", "val": 0.05 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/16_RDM/Magick_Barrier.png" }
+            { "id": "rdm_addle", "name": "昏亂", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png" },
+            { "id": "rdm_kera", "name": "抗死", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的魔法傷害減輕10%，並且所受的HP恢復效果提高5%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "heal_in", "val": 0.05 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/16_RDM/Magick_Barrier.png" }
         ]
     },
     "PCT": {
         "name": "繪靈法師",
         "icon": "src/Job_icons/03_DPS/Job/Pictomancer.png",
         "skills": [
-            { "id": "pct_addle", "name": "昏亂 ", "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" }
+            { "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" }
         ]
     },
     "WHM": {
         "name": "白魔道士",
         "icon": "src/Job_icons/02_HEALER/Job/WhiteMage.png",
         "skills": [
-            { "id": "whm_tmp",  "name": "節制",    "title":"15秒內，自身發動治癒魔法的治療量提高20%，自身與50米以內的隊員受到的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.20 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/18_WHM/Temperance.png" },
-            { "id": "whm_divi", "name": "神愛撫",  "title":"10秒內，為自身與周圍隊員附加能夠抵禦恢復力400傷害量的防護罩\n防護罩消失後，為目標附加神愛環狀態(HOT)", "effects": [], "duration": 10, "cooldown": 1,   "icon": "src/Skill_icons/18_WHM/Divine_Caress.png", "conditionSkillId": "whm_tmp" },
-            { "id": "whm_aqv",  "name": "水流幕",  "title":"8秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [], "duration": 8,  "cooldown": 60,  "icon": "src/Skill_icons/18_WHM/Aquaveil.png", "personal": true },
-            { "id": "whm_db",   "name": "神祝禱",  "title":"為自身或一名隊員附加能夠抵禦500恢復力傷害量的防護罩，持續15秒", "effects": [], "duration": 15, "cooldown": 30,  "icon": "src/Skill_icons/18_WHM/Divine_Benison.png", "charges": 2, "personal": true },
+            { "id": "whm_tmp",  "name": "節制",    "tags": ["減傷"], "title":"15秒內，自身發動治癒魔法的治療量提高20%，自身與50米以內的隊員受到的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.20 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/18_WHM/Temperance.png" },
+            { "id": "whm_divi", "name": "神愛撫",  "tags": ["護盾", "HOT"], "title":"10秒內，為自身與周圍隊員附加能夠抵禦恢復力400傷害量的防護罩\n防護罩消失後，為目標附加神愛環狀態(HOT)，持續15秒", "effects": [], "duration": 10, "cooldown": 1,   "icon": "src/Skill_icons/18_WHM/Divine_Caress.png", "conditionSkillId": "whm_tmp", "conditionOnce": true },
+            { "id": "whm_aqv",  "name": "水流幕",  "tags": ["減傷"], "title":"8秒內，令自身和周圍隊員所受到的傷害減輕15%", "effects": [], "duration": 8,  "cooldown": 60,  "icon": "src/Skill_icons/18_WHM/Aquaveil.png", "personal": true },
+            { "id": "whm_db",   "name": "神祝禱",  "tags": ["護盾"], "title":"為自身或一名隊員附加能夠抵禦500恢復力傷害量的防護罩，持續15秒", "effects": [], "duration": 15, "cooldown": 30,  "icon": "src/Skill_icons/18_WHM/Divine_Benison.png", "charges": 2, "personal": true },
             { "id": "whm_ass",  "name": "法令",    "title":"對周圍的敵人發動無屬性範圍魔法攻擊\n追加效果：恢復自身及周圍隊員的HP", "effects": [], "duration": 10, "cooldown": 40,  "icon": "src/Skill_icons/18_WHM/Assize.png", "personal": true },
             { "id": "whm_pli",  "name": "全大赦",  "title":"為自身與周圍隊員附加告解狀態，持續10秒\n在狀態中使用醫治、大療傷、醫養、狂喜之心，會使目標產生額外的恢復效果", "effects": [], "duration": 10, "cooldown": 60,  "icon": "src/Skill_icons/18_WHM/Plenary_Indulgence.png", "personal": true },
             { "id": "whm_tet",  "name": "神名",    "title":"恢復目標的HP，恢復力：700", "effects": [], "duration": 1,  "cooldown": 60,  "icon": "src/Skill_icons/18_WHM/Tetragrammaton.png", "charges": 2, "personal": true },
-            { "id": "whm_asy",  "name": "庇護所",  "title":"以指定地點為中心產生治療區域\n24秒內，持續恢復進入該區域的自身及隊員的HP", "effects": [], "duration": 10, "cooldown": 90,  "icon": "src/Skill_icons/18_WHM/Asylum.png", "personal": true },
+            { "id": "whm_asy",  "name": "庇護所",  "tags": ["HOT"], "title":"以指定地點為中心產生治療區域\n24秒內，持續恢復進入該區域的自身及隊員的HP", "effects": [], "duration": 10, "cooldown": 90,  "icon": "src/Skill_icons/18_WHM/Asylum.png", "personal": true },
             { "id": "whm_pom",  "name": "神速詠唱", "title":"15秒內，自身的自動攻擊間隔、魔法的詠唱及冷卻時間縮短20%\n追加效果：3階閃颯預備，持續30秒", "effects": [], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/18_WHM/Presence_of_Mind.png", "personal": true },
-            { "id": "whm_bell", "name": "禮儀之鈴", "title":"在指定地點設置禮儀之鈴，同時為自身附加5階禮儀之鈴狀態\n持續時間內自身受到傷害時，消耗1階禮儀之鈴狀態為自身及禮儀之鈴周圍隊員恢復HP\n該效果每秒只能發動一次，禮儀之鈴持續時間結束時，或持續時間內再次使用時，\n消耗剩餘禮儀之鈴等階為效果範圍內的自身和隊員恢復HP", "effects": [], "duration": 20, "cooldown": 180, "icon": "src/Skill_icons/18_WHM/Liturgy_of_the_Bell.png", "personal": true },
+            { "id": "whm_bell", "name": "禮儀之鈴", "tags": ["HOT"], "title":"在指定地點設置禮儀之鈴，同時為自身附加5階禮儀之鈴狀態\n持續時間內自身受到傷害時，消耗1階禮儀之鈴狀態為自身及禮儀之鈴周圍隊員恢復HP\n該效果每秒只能發動一次，禮儀之鈴持續時間結束時，或持續時間內再次使用時，\n消耗剩餘禮儀之鈴等階為效果範圍內的自身和隊員恢復HP", "effects": [], "duration": 20, "cooldown": 180, "icon": "src/Skill_icons/18_WHM/Liturgy_of_the_Bell.png", "personal": true },
             { "id": "whm_ben",  "name": "天賜祝福", "title":"令目標HP完全恢復", "effects": [], "duration": 1,  "cooldown": 180, "icon": "src/Skill_icons/18_WHM/Benediction.png", "personal": true }
         ]
     },
@@ -173,15 +173,15 @@
         "name": "學者",
         "icon": "src/Job_icons/02_HEALER/Job/Scholar.png",
         "skills": [
-            { "id": "sch_ss",  "name": "野戰治療陣", "title":"所受到的傷害會減輕10%，同時持續恢復隊員HP", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "icon": "src/Skill_icons/19_SCH/Sacred_Soil.png", "aetherCost": 1 },
-            { "id": "sch_fi",  "name": "異想的幻光", "title":"治療魔法的治療量提高10%，受到魔法傷害減輕5%", "effects": [{ "type": "mit_magic", "val": 0.05 }, { "type": "heal_out_magic", "val": 0.10 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/19_SCH/Fey_Illumination.png" },
-            { "id": "sch_exp", "name": "疾風怒濤之計", "title":"提高目標的移動速度10秒、減輕傷害10%持續20秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "speed", "duration": 10 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/19_SCH/Expedient.png" },
+            { "id": "sch_ss",  "name": "野戰治療陣", "tags": ["減傷", "HOT"], "title":"所受到的傷害會減輕10%，同時持續恢復隊員HP", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "icon": "src/Skill_icons/19_SCH/Sacred_Soil.png", "aetherCost": 1 },
+            { "id": "sch_fi",  "name": "異想的幻光", "tags": ["減傷"], "title":"治療魔法的治療量提高10%，受到魔法傷害減輕5%", "effects": [{ "type": "mit_magic", "val": 0.05 }, { "type": "heal_out_magic", "val": 0.10 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/19_SCH/Fey_Illumination.png" },
+            { "id": "sch_exp", "name": "疾風怒濤之計", "tags": ["減傷"], "title":"提高目標的移動速度10秒、減輕傷害10%持續20秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "speed", "duration": 10 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/19_SCH/Expedient.png" },
             { "id": "sch_rec", "name": "秘策", "title":"效果時間內，自身發動的1次鼓舞激勵之策、意氣軒昂之策、\n不屈不撓之策、深謀遠慮之策可以不消耗MP及乙太超流，並且必定暴擊", "effects": [], "duration": 1, "cooldown": 60, "icon": "src/Skill_icons/19_SCH/Recitation.png" , "personal": true },
-            { "id": "sch_dt",  "name": "展開戰術", "title":"令目標所帶的鼓舞狀態向周圍隊員身上擴散\n持續時間：擴散時狀態的剩餘持續時間", "effects": [], "duration": 1, "cooldown": 90, "icon": "src/Skill_icons/19_SCH/Deployment_Tactics.png" , "personal": true },
-            { "id": "sch_con", "name": "意氣軒昂之策", "title":"恢復自身及周圍隊員的HP，\n附加能夠抵消治療量180%傷害的防護罩", "effects": [], "duration": 30, "cooldown": 2.5, "icon": "src/Skill_icons/19_SCH/Concitation.png" , "personal": true, "aetherCost": 1 },
+            { "id": "sch_dt",  "name": "展開戰術", "tags": ["護盾"], "title":"令目標所帶的鼓舞狀態向周圍隊員身上擴散\n持續時間：擴散時狀態的剩餘持續時間", "effects": [], "duration": 1, "cooldown": 90, "icon": "src/Skill_icons/19_SCH/Deployment_Tactics.png" , "personal": true },
+            { "id": "sch_con", "name": "意氣軒昂之策", "tags": ["護盾"], "title":"恢復自身及周圍隊員的HP，\n附加能夠抵消治療量180%傷害的防護罩", "effects": [], "duration": 30, "cooldown": 2.5, "icon": "src/Skill_icons/19_SCH/Concitation.png" , "personal": true, "aetherCost": 1 },
             { "id": "sch_sum", "name": "熾天召喚", "title":"回收小仙女，召喚熾天使", "effects": [], "duration": 22, "cooldown": 120, "icon": "src/Skill_icons/19_SCH/Summon_Seraph.png" , "personal": true },
-            { "id": "sch_csl", "name": "慰藉", "title":"恢復周圍隊員250恢復力的HP，\n為目標附加能夠抵消治療量100%傷害的防護罩", "effects": [], "duration": 1, "cooldown": 30, "icon": "src/Skill_icons/19_SCH/Consolation.png" , "personal": true , "charges": 2 , "conditionSkillId": "sch_sum" },
-            { "id": "sch_ser", "name": "熾天附體", "title":"20秒內持續恢復自身及周圍50米以內的隊員的HP", "effects": [], "duration": 20, "cooldown": 180, "icon": "src/Skill_icons/19_SCH/Seraphism.png" , "personal": true },
+            { "id": "sch_csl", "name": "慰藉", "tags": ["護盾"], "title":"恢復周圍隊員250恢復力的HP，\n為目標附加能夠抵消治療量100%傷害的防護罩", "effects": [], "duration": 1, "cooldown": 30, "icon": "src/Skill_icons/19_SCH/Consolation.png" , "personal": true , "charges": 2 , "conditionSkillId": "sch_sum" },
+            { "id": "sch_ser", "name": "熾天附體", "tags": ["HOT"], "title":"20秒內持續恢復自身及周圍50米以內的隊員的HP", "effects": [], "duration": 20, "cooldown": 180, "icon": "src/Skill_icons/19_SCH/Seraphism.png" , "personal": true, "blockedBySkillId": "sch_dis" },
             { "id": "sch_dis", "name": "轉化", "title":"回收小仙女，同時為自身附加最大等階的乙太超流狀態\n並且自身發動治療魔法的治療量提高20%", "effects": [{ "type": "heal_out_magic", "val": 0.20 }], "duration": 30, "cooldown": 180, "icon": "src/Skill_icons/19_SCH/Dissipation.png" , "personal": true, "blockedBySkillId": "sch_ser", "aetherProvide": 3 },
             { "id": "sch_ed",  "name": "吸取能量", "title":"對目標發動無屬性魔法攻擊\n追加效果：恢復傷害量一定比例的HP\n追加效果：獲得10點異想乙太", "effects": [{ "type": "heal_out_magic", "val": 0.20 }], "duration": 1, "cooldown": 1, "icon": "src/Skill_icons/19_SCH/Energy_Drain.png" , "personal": true , "aetherCost": 1},
             { "id": "sch_af",  "name": "乙太超流", "title":"恢復自身最大MP的20%\n追加三階的乙太超流", "effects": [], "duration": 1, "cooldown": 60,  "icon": "src/Skill_icons/19_SCH/Aetherflow.png" , "personal": true, "aetherProvide": 3 }
@@ -191,24 +191,24 @@
         "name": "占星術師",
         "icon": "src/Job_icons/02_HEALER/Job/Astrologian.png",
         "skills": [
-            { "id": "ast_colt", "name": "命運之輪", "title":"以自身為中心產生覆蓋範圍8米的命運之輪，持續18秒\n使用時自身及周圍30米內的隊員所受到的傷害減輕10%，持續5秒\n同時，範圍內的自身及隊員還會附加HP持續恢復的效果，持續15秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100, "duration": 15 }], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Collective_Unconscious.png" },
+            { "id": "ast_colt", "name": "命運之輪", "tags": ["減傷", "HOT"], "title":"以自身為中心產生覆蓋範圍8米的命運之輪，持續18秒\n使用時自身及周圍30米內的隊員所受到的傷害減輕10%，持續5秒\n同時，範圍內的自身及隊員還會附加HP持續恢復的效果，持續15秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100, "duration": 15 }], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Collective_Unconscious.png" },
             { "id": "ast_netl_S", "name": "中間學派", "title":"20秒內，自身發動治療魔法的治療量提高20%\n追加效果：太陽星座預備，持續30秒", "effects": [{ "type": "mit_all", "val": 0.10 },{ "type": "heal_out_magic", "val": 0.20 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/20_AST/Neutral_Sect.png"},
-            { "id": "ast_sunsign", "name": "太陽星座", "title":"15秒內，令自身和周圍隊員所受到的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 1, "icon": "src/Skill_icons/20_AST/Sun_Sign.png", "conditionSkillId": "ast_netl_S", "conditionDuration": 30, "conditionOnce": true},
-            { "id": "ast_hel_C", "name": "陽星合相", "title":"恢復自身及周圍隊員的HP，恢復力：250\n追加效果：令目標HP持續恢復", "effects": [], "duration": 15, "cooldown": 2.5, "icon": "src/Skill_icons/20_AST/Helios_Conjunction.png", "personal": true},
+            { "id": "ast_sunsign", "name": "太陽星座", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 1, "icon": "src/Skill_icons/20_AST/Sun_Sign.png", "conditionSkillId": "ast_netl_S", "conditionDuration": 30, "conditionOnce": true},
+            { "id": "ast_hel_C", "name": "陽星合相", "tags": ["HOT"], "title":"恢復自身及周圍隊員的HP，恢復力：250\n追加效果：令目標HP持續恢復", "effects": [], "duration": 15, "cooldown": 2.5, "icon": "src/Skill_icons/20_AST/Helios_Conjunction.png", "personal": true},
             { "id": "ast_astldraw", "name": "星極抽卡", "title":"抽取太陽神之衡、放浪神之箭、建築神之塔、王冠之領主奧秘卡\n出卡I變為太陽神之衡、出卡II變為放浪神之箭、出卡III變為建築神之塔、小奧秘卡變為王冠之領主\n追加效果：恢復自身最大MP的20%，\n發動後，該技能變為靈極抽卡，與靈極抽卡共用冷卻時間", "effects": [], "duration": 1, "cooldown": 55, "icon": "src/Skill_icons/20_AST/Astral_Draw.png", "personal": true, "togglesWithId": "ast_umbldraw", "isFirstToggle": true},
             { "id": "ast_umbldraw", "name": "靈極抽卡", "title":"抽取戰爭神之槍、世界樹之幹、河流神之瓶、王冠之貴婦奧秘卡\n出卡I變為戰爭神之槍、出卡II變為世界樹之幹、出卡III變為河流神之瓶、小奧秘卡變為王冠之貴婦\n追加效果：恢復自身最大MP的20%\n發動後，該技能變為星極抽卡，與星極抽卡共用冷卻時間", "effects": [], "duration": 1, "cooldown": 55, "icon": "src/Skill_icons/20_AST/Umbral_Draw.png", "personal": true, "togglesWithId": "ast_astldraw"},
-            { "id": "ast_celes", "name": "擢升", "title":"令自身或一名隊員受到的傷害減輕10%，持續時間：8秒\n持續時間結束後恢復目標的HP，恢復力：500", "effects": [], "duration": 8, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Exaltation.png", "personal": true},
-            { "id": "ast_celes", "name": "天星衝日", "title":"恢復自身及周圍隊員的HP，恢復力：200\n追加效果：目標HP持續恢復", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Celestial_Opposition.png", "personal": true},
-            { "id": "ast_earthstar", "name": "地星", 
-                "title":"在指定地點設置地星，並為自身附加地星主宰狀態，持續時間：10秒\n地星主宰持續時間內再次使用此技能，則會發動星體破裂，對範圍內的敵人進行無屬性魔法攻擊\n追加效果：恢復範圍內自身與隊員的HP，恢復力：540\n持續時間結束後，為自身附加巨星主宰狀態，持續時間：10秒\n巨星主宰的持續時間結束時，或時間內再次使用此技能，\n則會發動星體爆炸，對範圍內的敵人進行無屬性魔法攻擊，\n追加效果：恢復範圍內自身與隊員的HP，恢復力：720", 
+            { "id": "ast_celes", "name": "擢升", "tags": ["減傷"], "title":"令自身或一名隊員受到的傷害減輕10%，持續時間：8秒\n持續時間結束後恢復目標的HP，恢復力：500", "effects": [], "duration": 8, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Exaltation.png", "personal": true},
+            { "id": "ast_celop", "name": "天星衝日", "tags": ["HOT"], "title":"恢復自身及周圍隊員的HP，恢復力：200\n追加效果：目標HP持續恢復", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Celestial_Opposition.png", "personal": true},
+            { "id": "ast_earthstar", "name": "地星",
+                "title":"在指定地點設置地星，並為自身附加地星主宰狀態，持續時間：10秒\n地星主宰持續時間內再次使用此技能，則會發動星體破裂，對範圍內的敵人進行無屬性魔法攻擊\n追加效果：恢復範圍內自身與隊員的HP，恢復力：540\n持續時間結束後，為自身附加巨星主宰狀態，持續時間：10秒\n巨星主宰的持續時間結束時，或時間內再次使用此技能，\n則會發動星體爆炸，對範圍內的敵人進行無屬性魔法攻擊，\n追加效果：恢復範圍內自身與隊員的HP，恢復力：720",
                 "effects": [], "duration": 20, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Earthly_Star.png", "personal": true
             },
-            { "id": "ast_horos", "name": "天宮圖", 
-                "title":"對自身和周圍隊員附加天宮圖狀態，持續時間：10秒\n天宮圖持續時間內受到自身發動的陽星或陽星合相時，天宮圖狀態變為陽星天宮圖狀態，持續時間：30秒\n天宮圖及陽星天宮圖狀態的持續時間結束或持續時間內再次使用此技能，\n會恢復附加了天宮圖及陽星天宮圖狀態的自身及周圍隊員的HP，\n天宮圖狀態恢復力：200\n陽星天宮圖狀態恢復力：400", 
+            { "id": "ast_horos", "name": "天宮圖",
+                "title":"對自身和周圍隊員附加天宮圖狀態，持續時間：10秒\n天宮圖持續時間內受到自身發動的陽星或陽星合相時，天宮圖狀態變為陽星天宮圖狀態，持續時間：30秒\n天宮圖及陽星天宮圖狀態的持續時間結束或持續時間內再次使用此技能，\n會恢復附加了天宮圖及陽星天宮圖狀態的自身及周圍隊員的HP，\n天宮圖狀態恢復力：200\n陽星天宮圖狀態恢復力：400",
                 "effects": [], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Horoscope_1.png", "personal": true
             },
-            { "id": "ast_macromos", "name": "大宇宙", 
-                "title":"對自身周圍的敵人發動無屬性範圍魔法攻擊，威力：270\n攻擊複數敵人時，對第一個之外的敵人威力降低40%\n追加效果：為自身及周圍隊員附加大宇宙狀態，持續時間：15秒\n持續時間內累積目標所受的傷害\n持續時間結束或發動小宇宙後，恢復目標的HP，\n恢復量：恢復力200＋累積所受傷害的50%\n恢復量不會超過目標的最大HP\n該魔法有單獨計算的冷卻時間，不受裝備和狀態的影響", 
+            { "id": "ast_macromos", "name": "大宇宙",
+                "title":"對自身周圍的敵人發動無屬性範圍魔法攻擊，威力：270\n攻擊複數敵人時，對第一個之外的敵人威力降低40%\n追加效果：為自身及周圍隊員附加大宇宙狀態，持續時間：15秒\n持續時間內累積目標所受的傷害\n持續時間結束或發動小宇宙後，恢復目標的HP，\n恢復量：恢復力200＋累積所受傷害的50%\n恢復量不會超過目標的最大HP\n該魔法有單獨計算的冷卻時間，不受裝備和狀態的影響",
                 "effects": [], "duration": 15, "cooldown": 180, "icon": "src/Skill_icons/20_AST/Macrocosmos.png", "personal": true
             }
         ]
@@ -217,13 +217,13 @@
         "name": "賢者",
         "icon": "src/Job_icons/02_HEALER/Job/Sage.png",
         "skills": [
-            { "id": "sge_kera", "name": "堅角清汁", "title":"一定時間內，令自身與周圍隊員受到的傷害減輕10%，持續時間：15秒\n※無法與白牛清汁效果共存\n追加效果：持續恢復目標的HP，恢復力：100，持續時間：15秒\n追加效果：恢復自身最大MP的7%，發動條件：蛇膽。", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "icon": "src/Skill_icons/21_SGE/Kerachole.png" },
-            { "id": "sge_holos", "name": "整體論", "title":"恢復自身及周圍隊員的HP，恢復力：300\n追加效果：為目標附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於治療量100%的傷害，持續時間：30秒\n追加效果：自身及周圍隊員所受傷害減輕10%，持續時間：20秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_potency", "val": 300 }, { "type": "shield_potency", "val": 300 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Holos.png" },
-            { "id": "sge_ep2", "name": "均衡預後II", "title":"恢復自身及周圍隊員的HP，恢復力：100\n追加效果：為目標附加能夠抵禦一定傷害的防護罩，\n該防護罩能夠抵消相當於治療量360%的傷害，持續時間：30秒\n※無法與均衡診斷及學者的鼓舞效果共存", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 30, "cooldown": 1.5, "icon": "src/Skill_icons/21_SGE/Eukrasian_Prognosis_II.png" },
-            { "id": "sge_panha", "name": "泛輸血", "title":"為自身及周圍隊員附加能夠抵消一定傷害量的防護罩\n該防護罩能夠抵消相當於200恢復力的傷害量，同時附加5階泛血印狀態\n持續時間：15秒。\n防護罩因吸收到足夠的傷害而消失時，消耗1階泛血印重新為目標附加防護罩\n持續時間結束時，根據泛血印的剩餘等階恢復目標的HP\n恢復力：100×泛血印的剩餘等階。", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Panhaima.png" },
+            { "id": "sge_kera", "name": "堅角清汁", "tags": ["減傷", "HOT"], "title":"一定時間內，令自身與周圍隊員受到的傷害減輕10%，持續時間：15秒\n※無法與白牛清汁效果共存\n追加效果：持續恢復目標的HP，恢復力：100，持續時間：15秒\n追加效果：恢復自身最大MP的7%，發動條件：蛇膽。", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "icon": "src/Skill_icons/21_SGE/Kerachole.png" },
+            { "id": "sge_holos", "name": "整體論", "tags": ["減傷", "護盾"], "title":"恢復自身及周圍隊員的HP，恢復力：300\n追加效果：為目標附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於治療量100%的傷害，持續時間：30秒\n追加效果：自身及周圍隊員所受傷害減輕10%，持續時間：20秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_potency", "val": 300 }, { "type": "shield_potency", "val": 300 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Holos.png" },
+            { "id": "sge_ep2", "name": "均衡預後II", "tags": ["護盾"], "title":"恢復自身及周圍隊員的HP，恢復力：100\n追加效果：為目標附加能夠抵禦一定傷害的防護罩，\n該防護罩能夠抵消相當於治療量360%的傷害，持續時間：30秒\n※無法與均衡診斷及學者的鼓舞效果共存", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 30, "cooldown": 1.5, "icon": "src/Skill_icons/21_SGE/Eukrasian_Prognosis_II.png" },
+            { "id": "sge_panha", "name": "泛輸血", "tags": ["護盾"], "title":"為自身及周圍隊員附加能夠抵消一定傷害量的防護罩\n該防護罩能夠抵消相當於200恢復力的傷害量，同時附加5階泛血印狀態\n持續時間：15秒。\n防護罩因吸收到足夠的傷害而消失時，消耗1階泛血印重新為目標附加防護罩\n持續時間結束時，根據泛血印的剩餘等階恢復目標的HP\n恢復力：100×泛血印的剩餘等階。", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Panhaima.png" },
             { "id": "sge_rhizo", "name": "根素", "title":"為自身附加1階蛇膽", "effects": [], "duration": 1, "cooldown": 90, "icon": "src/Skill_icons/21_SGE/Rhizomata.png" ,"personal": true},
             { "id": "sge_Zoe", "name": "活化", "title":"30秒內，發動1次治療魔法的治療量提高1.5倍", "effects": [], "duration": 30, "cooldown": 90, "icon": "src/Skill_icons/21_SGE/Zoe.png" ,"personal": true},
-            { "id": "sge_phys2", "name": "自生II", "title":"15秒內，持續恢復自身及周圍隊員的HP，\n追加效果：令目標所受的HP恢復效果提高10%", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/21_SGE/Physis_II.png" ,"personal": true},
+            { "id": "sge_phys2", "name": "自生II", "tags": ["HOT"], "title":"15秒內，持續恢復自身及周圍隊員的HP，\n追加效果：令目標所受的HP恢復效果提高10%", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/21_SGE/Physis_II.png" ,"personal": true},
             { "id": "sge_pneuma", "name": "魂靈風息", "title":"向目標所在方向發出直線無屬性範圍魔法攻擊\n追加效果：令自身及周圍20米內的隊員恢復HP，恢復力：600\n追加效果：令帶有關心狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Pneuma.png" ,"personal": true},
             { "id": "sge_philo", "name": "智慧之愛", "title":"20秒內，自身發動治療魔法的治療量提高20%\n追加效果：為自身及周圍隊員附加幸福狀態\n持續時間內魔法命中後，令帶有幸福狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 180, "icon": "src/Skill_icons/21_SGE/Philosophia.png" ,"personal": true}
         ]

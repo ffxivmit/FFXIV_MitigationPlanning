@@ -20,18 +20,16 @@ const DAMAGE_TYPE_ICONS = {
 
 const TARGETED_LABELS = new Set(['普通攻擊', '點名', '死刑']);
 
-// 將 "M:SS" 格式（支援負數，如 "-0:16"）轉換為秒數整數
+const _timeCache = Object.create(null);
 const timeToSeconds = (t) => {
     if (!t) return 0;
+    if (t in _timeCache) return _timeCache[t];
     const str = String(t).trim();
     const isNegative = str.startsWith('-');
     const cleanStr = isNegative ? str.slice(1) : str;
     const parts = cleanStr.split(':').map(Number);
     const totalSeconds = (parts[0] || 0) * 60 + (parts[1] || 0);
-    if (isNegative) {
-        return -totalSeconds;
-    }
-    return totalSeconds;
+    return (_timeCache[t] = isNegative ? -totalSeconds : totalSeconds);
 };
 
 const secondsToTime = (totalSecs) => {
@@ -80,6 +78,7 @@ createApp({
         const hideTargeted = ref(false);
         const currentCat = ref('Tank');
         const settingsOpen = ref(false);
+        const compactMode = ref(true);
         const selectedVariants = ref({});
         const expandedPersonalMembers = ref([]);
         const shareToastVisible = ref(false);
@@ -88,6 +87,17 @@ createApp({
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
+
+        const skillTooltip = ref({ skill: null, x: 0, y: 0 });
+        const showSkillTooltip = (skill, event) => {
+            if (!skill.title && !skill.conditionSkillId && !skill.blockedBySkillId && skill.charges <= 1 && !skill.duration && !skill.cooldown) return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const tooltipWidth = 240;
+            let x = rect.left + rect.width / 2;
+            x = Math.max(tooltipWidth / 2 + 8, Math.min(x, window.innerWidth - tooltipWidth / 2 - 8));
+            skillTooltip.value = { skill, x, y: rect.bottom + 8 };
+        };
+        const hideSkillTooltip = () => { skillTooltip.value.skill = null; };
 
         // 自訂時間軸列，以副本 key 為索引分別儲存
         const customRowsByDuty = ref({});
@@ -103,6 +113,9 @@ createApp({
             if (params.has('hideTargeted')) {
                 hideTargeted.value = params.get('hideTargeted') === '1';
             }
+            if (params.has('compact')) {
+                compactMode.value = params.get('compact') !== '0';
+            }
         };
 
         const syncUrlParams = () => {
@@ -116,6 +129,11 @@ createApp({
                 params.set('hideTargeted', '1');
             } else {
                 params.delete('hideTargeted');
+            }
+            if (!compactMode.value) {
+                params.set('compact', '0');
+            } else {
+                params.delete('compact');
             }
             const qs = params.toString();
             const queryString = qs ? '?' + qs : '';
@@ -325,8 +343,7 @@ createApp({
 
         const hasOriginalDamage = (row, internalIdx) => {
             if (row._isCustom) return false;
-            const variant = getEffectiveVariant(row, internalIdx);
-            return variant.damage !== undefined && variant.damage.length > 0;
+            return (getEffectiveVariant(row, internalIdx).damage?.length ?? 0) > 0;
         };
 
         const isTargetedAttack = (row, internalIdx) => {
@@ -335,23 +352,10 @@ createApp({
             return damages.length > 0 && damages.every(d => TARGETED_LABELS.has(d.label));
         };
 
-        const getDamageTypeIcon = (row, internalIdx) => {
-            if (row._isCustom) return null;
-            const type = getEffectiveVariant(row, internalIdx).type;
-            const icon = DAMAGE_TYPE_ICONS[type];
-            if (icon !== undefined) {
-                return icon;
-            }
-            return null;
-        };
+        const getDamageTypeIconByType = (type) => DAMAGE_TYPE_ICONS[type] ?? null;
 
-        const getDamageTypeIconByType = (type) => {
-            const icon = DAMAGE_TYPE_ICONS[type];
-            if (icon !== undefined) {
-                return icon;
-            }
-            return null;
-        };
+        const getDamageTypeIcon = (row, internalIdx) =>
+            row._isCustom ? null : getDamageTypeIconByType(getEffectiveVariant(row, internalIdx).type);
 
         // ── Skill cast state helpers ──────────────────────────
         // 產生 mitMap 的 key，格式為 "dutyKey-skillInstanceId"
@@ -681,30 +685,13 @@ createApp({
             return result;
         });
 
-        const getAetherStacksAt = (pIdx, internalIdx) => {
-            const memberStacks = aetherStacksByMember.value[pIdx];
-            if (memberStacks === undefined || memberStacks === null) {
-                return 0;
-            }
-            const stackAtRow = memberStacks[internalIdx];
-            if (stackAtRow === undefined || stackAtRow === null) {
-                return 0;
-            }
-            return stackAtRow;
-        };
+        const getAetherStacksAt = (pIdx, internalIdx) =>
+            aetherStacksByMember.value[pIdx]?.[internalIdx] ?? 0;
 
         const isSkillAetherDepleted = (skill, internalIdx) => {
             if (!skill.aetherCost) return false;
             const pIdx = skill.memberIndex - 1;
-            const memberStacks = aetherStacksByMember.value[pIdx];
-            let previousStacks = 0;
-            if (memberStacks !== undefined && memberStacks !== null) {
-                const stackAtPriorRow = memberStacks[internalIdx - 1];
-                if (stackAtPriorRow !== undefined && stackAtPriorRow !== null) {
-                    previousStacks = stackAtPriorRow;
-                }
-            }
-            return previousStacks === 0;
+            return (aetherStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 0) === 0;
         };
 
         // ── Data loading ──────────────────────────────────────
@@ -766,6 +753,7 @@ createApp({
                     }
                 }
                 initDefaultAetherflowForParty();
+                syncStickyRow();
             } catch (err) {
                 console.error("資料載入失敗，請確認檔案路徑是否正確 (src/)", err);
                 alert("無法讀取 JSON 資料，請檢查控制台錯誤訊息。");
@@ -906,14 +894,8 @@ createApp({
             selectedVariants.value[`${selectedDutyKey.value}-${internalIdx}`] = variantIdx;
         };
 
-        const getSelectedVariantIdx = (internalIdx) => {
-            const key = `${selectedDutyKey.value}-${internalIdx}`;
-            const stored = selectedVariants.value[key];
-            if (stored !== undefined && stored !== null) {
-                return stored;
-            }
-            return 0;
-        };
+        const getSelectedVariantIdx = (internalIdx) =>
+            selectedVariants.value[`${selectedDutyKey.value}-${internalIdx}`] ?? 0;
 
         // ── Aetherflow auto-init ──────────────────────────────
         // 根據時間軸自動計算乙太流的預設施放列
@@ -954,14 +936,8 @@ createApp({
 
         // ── Clear helpers ─────────────────────────────────────
         // 判斷指定技能實例是否有任何施放記錄（用於顯示清除按鈕）
-        const skillHasAnyCast = (instanceId) => {
-            const key = mitKeyForSkill(instanceId);
-            const castList = mitMap.value[key];
-            if (castList === undefined || castList === null) {
-                return false;
-            }
-            return castList.length > 0;
-        };
+        const skillHasAnyCast = (instanceId) =>
+            (mitMap.value[mitKeyForSkill(instanceId)]?.length ?? 0) > 0;
 
         const memberHasAnyCast = (pIdx) => {
             const prefix = `${selectedDutyKey.value}-p${pIdx}-`;
@@ -1111,9 +1087,22 @@ createApp({
             }));
         }, { deep: true });
 
-        watch([hideNonDmg, hideTargeted], syncUrlParams);
+        watch([hideNonDmg, hideTargeted, compactMode], syncUrlParams);
         watch(selectedDutyKey, initDefaultAetherflowForParty);
         watch(party, initDefaultAetherflowForParty, { deep: true });
+
+        // 動態對齊 row-skills 的 sticky top，避免因 inline 圖片 baseline 差距造成捲動抖動
+        const syncStickyRow = () => {
+            nextTick(() => {
+                const rowGroup = document.querySelector('thead tr.row-group');
+                if (!rowGroup) return;
+                const h = Math.ceil(rowGroup.getBoundingClientRect().height);
+                document.querySelectorAll('thead tr.row-skills th').forEach(th => {
+                    th.style.top = h + 'px';
+                });
+            });
+        };
+        watch([party, activeSkillsByMember], syncStickyRow, { deep: false });
 
         const exportData = () => {
             const data = JSON.stringify({
@@ -1151,16 +1140,11 @@ createApp({
             reader.readAsText(file);
         };
 
-        const selectedDutyName = computed(() => {
-            if (!selectedDutyKey.value) {
-                return '選擇副本…';
-            }
-            const duty = dutyIndex.value.duties.find(d => d.key === selectedDutyKey.value);
-            if (duty) {
-                return duty.name;
-            }
-            return '選擇副本…';
-        });
+        const selectedDutyName = computed(() =>
+            selectedDutyKey.value
+                ? (dutyIndex.value.duties.find(d => d.key === selectedDutyKey.value)?.name ?? '選擇副本…')
+                : '選擇副本…'
+        );
 
         const openDutyDropdown = () => {
             if (!dutyDropdownOpen.value && selectedDutyKey.value) {
@@ -1182,7 +1166,7 @@ createApp({
         return {
             categoryDb, jobDb, dutyDb, dutyIndex,
             selectedDutyKey, party, mitMap,
-            hideNonDmg, hideTargeted, settingsOpen, currentCat,
+            hideNonDmg, hideTargeted, settingsOpen, compactMode, currentCat,
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage,
             exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
@@ -1205,6 +1189,7 @@ createApp({
             isRowVisible,
             // Floating insert button
             hoverInsert, onRowMouseMove, onRowMouseLeave, onInsertBtnEnter, onInsertBtnLeave,
+            skillTooltip, showSkillTooltip, hideSkillTooltip,
         };
     }
 }).mount('#app');

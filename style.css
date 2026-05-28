@@ -149,6 +149,39 @@ tr:hover .skill-cell { filter: brightness(0.96); }
 }
 
 /* ──────────────────────────────────────────
+    精簡模式
+────────────────────────────────────────── */
+
+/* 精簡模式下重新定位 sticky 欄位（phase 欄被隱藏） */
+.mit-table.compact-mode th.col-hit,
+.mit-table.compact-mode td.col-hit  { left: 0; }
+
+.mit-table.compact-mode th.col-name,
+.mit-table.compact-mode td.col-name {
+    left: 80px;
+    box-shadow: 2px 0 0 0 #cbd5e1, 4px 0 6px -2px rgba(0,0,0,0.08);
+}
+
+/* 精簡模式：col-orig 的陰影不顯示（欄位已隱藏） */
+.mit-table.compact-mode td.col-orig,
+.mit-table.compact-mode th.col-orig { box-shadow: none; }
+
+/* 精簡模式：技能欄 padding 更小、最小寬度縮減 */
+.mit-table.compact-mode td.skill-cell { padding: 1px; }
+.mit-table.compact-mode th.compact-skill-th {
+    padding: 2px 1px !important;
+    min-width: 52px;
+}
+
+/* 技能欄 hover 時拉高 z-index，避免 tooltip shadow 被相鄰欄背景蓋住 */
+thead tr.row-skills th.compact-skill-th {
+    overflow: visible;
+}
+thead tr.row-skills th.compact-skill-th:hover {
+    z-index: 35;
+}
+
+/* ──────────────────────────────────────────
     設定面板動畫
 ────────────────────────────────────────── */
 .settings-panel {

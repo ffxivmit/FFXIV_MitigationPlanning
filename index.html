@@ -104,13 +104,11 @@
                     class="text-xs px-2 py-1 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 border border-red-200 rounded-lg transition font-medium">
                 清除全部
             </button>
-            <div class="w-px h-4 bg-slate-200 shrink-0"></div>
-
             <!-- ⚙️ 顯示設定 -->
             <div class="relative shrink-0">
                 <button @click="settingsOpen = !settingsOpen"
                         :class="['flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition font-semibold',
-                                 settingsOpen || hideNonDmg || hideTargeted
+                                 settingsOpen || hideNonDmg || hideTargeted || compactMode
                                    ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
                                    : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100']">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -118,10 +116,10 @@
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
                     顯示設定
-                    <span v-if="hideNonDmg || hideTargeted" class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                    <span v-if="hideNonDmg || hideTargeted || compactMode" class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                 </button>
-                <div v-if="settingsOpen" class="fixed inset-0 z-60" @click="settingsOpen = false"></div>
-                <div v-if="settingsOpen" class="settings-panel absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-70 w-64 overflow-hidden">
+                <div v-if="settingsOpen" class="fixed inset-0 z-[60]" @click="settingsOpen = false"></div>
+                <div v-if="settingsOpen" class="settings-panel absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-[70] w-64 overflow-hidden">
                     <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                         <span class="text-xs font-black text-slate-600 uppercase tracking-widest">顯示設定</span>
                         <button @click="settingsOpen = false" class="text-slate-400 hover:text-slate-600 transition text-lg leading-none font-light">×</button>
@@ -148,6 +146,18 @@
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-semibold text-slate-700 leading-tight">隱藏單體／點名攻擊</div>
                                 <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">隱藏 AA、死刑、點名等非全體傷害</div>
+                            </div>
+                        </label>
+                        <div class="border-t border-slate-100"></div>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <div class="relative mt-0.5 shrink-0">
+                                <input type="checkbox" v-model="compactMode" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-slate-700 leading-tight">精簡模式</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">隱藏階段欄與原始傷害欄，縮小技能格間距</div>
                             </div>
                         </label>
                     </div>
@@ -187,13 +197,13 @@
     <!-- ── 主表格 ── -->
     <div v-if="selectedDutyKey" class="bg-white rounded-xl shadow-lg" style="overflow: clip;">
         <div class="table-container">
-            <table class="w-full mit-table">
+            <table class="w-full mit-table" :class="{'compact-mode': compactMode}">
                 <thead>
                     <tr class="row-group border-b border-slate-200">
-                        <th class="sticky-col col-phase" style="background:#f8fafc;"></th>
+                        <th v-show="!compactMode" class="sticky-col col-phase" style="background:#f8fafc;"></th>
                         <th class="sticky-col col-hit"   style="background:#f8fafc;"></th>
                         <th class="sticky-col col-name"  style="background:#f8fafc;"></th>
-                        <th class="sticky-col col-orig"  style="background:#f8fafc;"></th>
+                        <th v-show="!compactMode" class="sticky-col col-orig"  style="background:#f8fafc;"></th>
                         <th v-for="member in activeSkillsByMember" :key="member.pIdx"
                             :colspan="member.skills.length"
                             :style="`background:${member.color.headerBg}; border-left:2px solid ${member.color.border}; border-bottom:2px solid ${member.color.border};`"
@@ -215,28 +225,29 @@
                         <th class="sticky-right" style="background:#eff6ff; border-bottom:1px solid #e2e8f0;"></th>
                     </tr>
                     <tr class="row-skills border-b-2 border-slate-300">
-                        <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-phase">時間軸階段</th>
+                        <th v-show="!compactMode" class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-phase">時間軸階段</th>
                         <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-hit">判定時間</th>
                         <th class="p-3 text-left text-xs font-bold text-slate-500 sticky-col col-name">招式名稱</th>
-                        <th class="p-3 text-right text-xs font-bold text-slate-500 sticky-col col-orig">原始傷害</th>
+                        <th v-show="!compactMode" class="p-3 text-right text-xs font-bold text-slate-500 sticky-col col-orig">原始傷害</th>
                         <th v-for="skill in activeSkills" :key="skill.instanceId"
                             :style="`background:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.06);'}`"
-                            class="p-1 text-center min-w-[85px] relative group/skill">
-                            <button v-if="!skill._isAetherIndicator && skillHasAnyCast(skill.instanceId)"
-                                    @click.stop="clearSkill(skill.instanceId, skill.name)"
-                                    class="absolute top-1 right-1 opacity-0 group-hover/skill:opacity-100 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all text-xs" title="清除此技能所有施放">🗑</button>
+                            class="p-1 text-center min-w-[85px] compact-skill-th relative group/skill">
                             <div v-if="skill._isAetherIndicator" class="flex flex-col items-center gap-1 py-1">
                                 <img src="src/Skill_icons/19_SCH/Aether.png" class="w-14 h-10 object-contain">
                                 <span class="text-xs font-bold text-sky-600 leading-tight">乙太超流</span>
                             </div>
-                            <div v-else class="flex flex-col items-center gap-1">
-                                <img :src="skill.icon" class="w-10 h-10 rounded shadow-sm border border-slate-200" :title="skill.title">
-                                <span class="text-xs font-bold text-slate-700 leading-tight break-keep">{{ skill.name }}</span>
-                                <div class="flex items-center gap-1">
-                                    <span v-if="skill.conditionSkillId" class="text-[9px] font-bold text-amber-500 bg-amber-50 border border-amber-200 px-1 rounded leading-none py-0.5" title="條件技能">條件</span>
-                                    <span v-if="skill.blockedBySkillId" class="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-1 rounded leading-none py-0.5" title="互斥技能">互斥</span>
-                                    <span v-if="skill.charges > 1" class="text-[9px] font-bold text-sky-500 bg-sky-50 border border-sky-200 px-1 rounded leading-none py-0.5" :title="`累計次數 ×${skill.charges}，冷卻 ${skill.cooldown}s`">×{{ skill.charges }}</span>
+                            <div v-else class="flex flex-col items-center gap-1 pb-1">
+                                <div class="relative inline-block">
+                                    <img :src="skill.icon"
+                                         :class="['w-10 h-10 rounded shadow-sm border border-slate-200', (skill.title || skill.conditionSkillId || skill.blockedBySkillId || skill.charges > 1) ? 'cursor-help' : '']"
+                                         @mouseenter="showSkillTooltip(skill, $event)"
+                                         @mouseleave="hideSkillTooltip()">
+                                    <button v-if="skillHasAnyCast(skill.instanceId)"
+                                            @click.stop="clearSkill(skill.instanceId, skill.name)"
+                                            class="absolute -top-1 -right-1 opacity-0 group-hover/skill:opacity-100 w-4 h-4 flex items-center justify-center rounded-full bg-slate-400 hover:bg-red-500 text-white transition-all text-[10px] font-black shadow-sm z-10"
+                                            title="清除此技能所有施放">✕</button>
                                 </div>
+                                <span class="text-xs font-bold text-slate-700 leading-tight break-keep">{{ skill.name }}</span>
                             </div>
                         </th>
                         <th class="p-3 text-right text-xs font-bold text-blue-600 sticky-right">預計傷害</th>
@@ -252,7 +263,7 @@
                             @mouseleave="onRowMouseLeave()">
 
                             <!-- 階段 -->
-                            <td class="p-2 font-mono text-sm sticky-col col-phase" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+                            <td v-show="!compactMode" class="p-2 font-mono text-sm sticky-col col-phase" :style="row._isCustom ? 'background:#fffdf0;' : ''">
                                 <span v-if="!row._isCustom" class="text-slate-500">{{ row.phase }}</span>
                                 <span v-else class="text-[10px] font-bold text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded">自訂</span>
                             </td>
@@ -320,9 +331,7 @@
                                                              getSelectedVariantIdx(row._internalIdx) === vIdx
                                                                ? 'bg-slate-700 text-white border-slate-700 shadow-sm'
                                                                : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100']">
-                                                <img v-if="v.type === '物理'" src="src/Damage_type/physical.png" class="w-4 h-4 shrink-0 object-contain">
-                                                <img v-else-if="v.type === '魔法'" src="src/Damage_type/magical.png" class="w-4 h-4 shrink-0 object-contain">
-                                                <img v-else-if="v.type === '特殊' || v.type === '即死'" src="src/Damage_type/unique.png" class="w-4 h-4 shrink-0 object-contain">
+                                                <img v-if="getDamageTypeIconByType(v.type)" :src="getDamageTypeIconByType(v.type)" class="w-4 h-4 shrink-0 object-contain">
                                                 <span>{{ v.skill }}</span>
                                             </button>
                                         </div>
@@ -331,7 +340,7 @@
                             </td>
 
                             <!-- 原始傷害 -->
-                            <td class="p-2 text-sm sticky-col col-orig" :style="row._isCustom ? 'background:#fffdf0;' : ''">
+<td v-show="!compactMode" class="p-2 text-sm sticky-col col-orig" :style="row._isCustom ? 'background:#fffdf0;' : ''">
                                 <div v-if="!row._isCustom && !row.isRandom && row.damage && row.damage.length > 0">
                                     <div v-for="(hit, hIdx) in row.damage" :key="hIdx" class="flex items-center justify-end gap-1 text-slate-500">
                                         <img v-if="getDamageTypeIconByType(hit.type)" :src="getDamageTypeIconByType(hit.type)" :title="hit.type" class="w-3.5 h-3.5 object-contain shrink-0 opacity-70">
@@ -392,6 +401,34 @@
         </div>
     </div>
 
+
+    <!-- ── 技能說明 Tooltip ── -->
+    <Teleport to="body">
+        <div v-if="skillTooltip.skill"
+             class="fixed w-64 p-3 bg-white/95 backdrop-blur-sm text-slate-700 text-sm font-normal rounded-lg shadow-xl border border-slate-200 z-[500] pointer-events-none normal-case tracking-normal leading-relaxed"
+             :style="`left:${skillTooltip.x}px; top:${skillTooltip.y}px; transform:translateX(-50%);`">
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-white"></div>
+            <div class="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-1 mb-1.5">
+                <span class="font-bold text-slate-800">{{ skillTooltip.skill.name }}</span>
+                <span v-if="skillTooltip.skill.duration || skillTooltip.skill.cooldown"
+                      class="flex gap-2 text-xs text-slate-400 font-normal shrink-0">
+                    <span v-if="skillTooltip.skill.duration">持續 {{ skillTooltip.skill.duration }}s</span>
+                    <span v-if="skillTooltip.skill.cooldown">CD {{ skillTooltip.skill.cooldown }}s</span>
+                </span>
+            </div>
+            <div v-if="skillTooltip.skill.title" class="text-slate-600 whitespace-pre-wrap">{{ skillTooltip.skill.title }}</div>
+            <div v-if="skillTooltip.skill.conditionSkillId || skillTooltip.skill.blockedBySkillId || skillTooltip.skill.charges > 1 || (skillTooltip.skill.tags && skillTooltip.skill.tags.length)"
+                 class="flex flex-wrap gap-1 mt-1.5 pt-1.5 border-t border-slate-100">
+                <span v-if="skillTooltip.skill.conditionSkillId" class="text-[11px] font-bold text-amber-500 bg-amber-50 border border-amber-200 px-1.5 rounded leading-none py-0.5">條件</span>
+                <span v-if="skillTooltip.skill.blockedBySkillId" class="text-[11px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 rounded leading-none py-0.5">互斥</span>
+                <span v-if="skillTooltip.skill.charges > 1" class="text-[11px] font-bold text-sky-500 bg-sky-50 border border-sky-200 px-1.5 rounded leading-none py-0.5">×{{ skillTooltip.skill.charges }} 充能</span>
+                <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('減傷')" class="text-[11px] font-bold text-green-600 bg-green-50 border border-green-200 px-1.5 rounded leading-none py-0.5">減傷</span>
+                <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('無敵')" class="text-[11px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 rounded leading-none py-0.5">無敵</span>
+                <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('HOT')" class="text-[11px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 rounded leading-none py-0.5">HOT</span>
+                <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('護盾')" class="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 rounded leading-none py-0.5">護盾</span>
+            </div>
+        </div>
+    </Teleport>
 
     <!-- ── 分享 Toast ── -->
     <div v-if="shareToastVisible"

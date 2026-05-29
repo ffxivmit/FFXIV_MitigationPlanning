@@ -29,6 +29,7 @@
     { "key": "u_eden_P3", "file": "u_eden/eden_P3.json", "name": "絕伊甸(P3)", "category": "ultimate_eden" },
     { "key": "u_eden_P4", "file": "u_eden/eden_P4.json", "name": "絕伊甸(P4)", "category": "ultimate_eden" },
     { "key": "u_eden_P5", "file": "u_eden/eden_P5.json", "name": "絕伊甸(P5)", "category": "ultimate_eden" },
+    { "key": "u_eden_all", "file": "u_eden/eden_all.json", "name": "絕伊甸(All)", "category": "ultimate_eden" },
     { "key": "u_omega_P1", "file": "u_omega/omega_P1.json", "name": "絕歐米茄(P1)", "category": "ultimate_omega" },
     { "key": "u_omega_P2", "file": "u_omega/omega_P2.json", "name": "絕歐米茄(P2)", "category": "ultimate_omega" },
     { "key": "u_omega_P3", "file": "u_omega/omega_P3.json", "name": "絕歐米茄(P3)", "category": "ultimate_omega" },

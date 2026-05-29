@@ -67,7 +67,7 @@ thead tr.row-skills th {
     background-color: #f8fafc;
 }
 
-thead tr.row-group  th.sticky-col { z-index: 50; }
+thead tr.row-group  th.sticky-col { z-index: 50; border-bottom: 1px solid #e2e8f0; }
 thead tr.row-skills th.sticky-col { z-index: 45; }
 
 thead tr.row-group  th.sticky-right { z-index: 50; }
@@ -317,7 +317,8 @@ body.dark .mit-table.compact-mode td.col-name {
 /* ── 表頭背景 ── */
 body.dark thead tr.row-group th  { background-color: #232a32 !important; }
 body.dark thead tr.row-skills th { background-color: #232a32 !important; }
-body.dark thead tr.row-group  th.sticky-right { background-color: #1f262d !important; }
+body.dark thead tr.row-group  th.sticky-col   { border-bottom-color: #303842 !important; }
+body.dark thead tr.row-group  th.sticky-right { background-color: #1f262d !important; border-bottom-color: #303842 !important; }
 body.dark thead tr.row-skills th.sticky-right { background-color: #1f262d !important; }
 
 /* ── tbody 列邊線與 hover ── */

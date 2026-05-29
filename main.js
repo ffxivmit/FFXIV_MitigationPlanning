@@ -11,6 +11,37 @@ const MEMBER_COLORS = [
     { bg: '#f0fdfa', border: '#14b8a6', headerBg: '#ccfbf1' },
 ];
 
+const DARK_MEMBER_COLORS = [
+    { bg: 'rgba(104,168,255,0.15)', border: '#68a8ff', headerBg: 'rgba(104,168,255,0.22)' },
+    { bg: 'rgba(61,189,114,0.12)',  border: '#3dbd72', headerBg: 'rgba(61,189,114,0.18)'  },
+    { bg: 'rgba(192,132,252,0.13)', border: '#c084fc', headerBg: 'rgba(192,132,252,0.20)' },
+    { bg: 'rgba(214,163,84,0.13)',  border: '#d6a354', headerBg: 'rgba(214,163,84,0.20)'  },
+    { bg: 'rgba(255,118,111,0.13)', border: '#ff766f', headerBg: 'rgba(255,118,111,0.20)' },
+    { bg: 'rgba(122,199,255,0.13)', border: '#7ac7ff', headerBg: 'rgba(122,199,255,0.20)' },
+    { bg: 'rgba(196,148,58,0.13)',  border: '#c49438', headerBg: 'rgba(196,148,58,0.20)'  },
+    { bg: 'rgba(130,216,166,0.13)', border: '#82d8a6', headerBg: 'rgba(130,216,166,0.20)' },
+];
+
+// 注入 CSS custom properties，讓主題切換完全交給 CSS，避免 Vue 重渲染 table
+(function injectMemberColorVars() {
+    let css = ':root {\n';
+    for (let i = 0; i < 8; i++) {
+        const l = MEMBER_COLORS[i];
+        css += `  --m${i}-bg:${l.bg};--m${i}-border:${l.border};--m${i}-hdr:${l.headerBg};`;
+        css += `  --m${i}-cast:${l.border};--m${i}-cov-bg:${l.border}28;--m${i}-cov-bdr:${l.border}70;--m${i}-badge:${l.border}cc;\n`;
+    }
+    css += '}\nbody.dark {\n';
+    for (let i = 0; i < 8; i++) {
+        const d = DARK_MEMBER_COLORS[i];
+        css += `  --m${i}-bg:${d.bg};--m${i}-border:${d.border};--m${i}-hdr:${d.headerBg};`;
+        css += `  --m${i}-cast:${d.border}90;--m${i}-cov-bg:${d.border}28;--m${i}-cov-bdr:${d.border}70;--m${i}-badge:${d.border}cc;\n`;
+    }
+    css += '}';
+    const el = document.createElement('style');
+    el.textContent = css;
+    document.head.appendChild(el);
+})();
+
 const DAMAGE_TYPE_ICONS = {
     '物理': 'src/Damage_type/physical.png',
     '魔法': 'src/Damage_type/magical.png',
@@ -87,6 +118,18 @@ createApp({
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
+
+        const darkMode = ref(false);
+        const toggleDarkMode = () => {
+            darkMode.value = !darkMode.value;
+            document.body.classList.toggle('dark', darkMode.value);
+            localStorage.setItem('ffxiv_dark_mode', darkMode.value ? '1' : '0');
+        };
+
+        const customRowStyle = computed(() =>
+            darkMode.value ? 'background:rgba(214,163,84,0.10);' : 'background:#fffdf0;'
+        );
+
 
         const skillTooltip = ref({ skill: null, x: 0, y: 0 });
         let _tooltipHideTimer = null;
@@ -595,6 +638,7 @@ createApp({
                 if (!isSkillConditionMet(skill, internalIdx)) return;
                 if (isSkillBlocked(skill, internalIdx)) return;
                 if (isSkillAetherDepleted(skill, internalIdx)) return;
+                if (isSkillAddersgallDepleted(skill, internalIdx)) return;
 
                 if (skill.charges > 1) {
                     const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
@@ -699,6 +743,50 @@ createApp({
             return (aetherStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 0) === 0;
         };
 
+        // 逐列追蹤賢者（SGE）蛇膽（Addersgall）的存量變化
+        // 初始存量 3，每 20 秒自動回復 1（上限 3）
+        // 使用「根素」+1，使用消耗蛇膽的技能 -1
+        const addersgallStacksByMember = computed(() => {
+            const result = {};
+            party.value.forEach((jobKey, pIdx) => {
+                if (jobKey !== 'SGE') return;
+                const jobEntry = jobDb.value[jobKey];
+                if (!jobEntry || !jobEntry.skills) return;
+                const flat = allRowsFlat.value;
+                let stacks = 3;
+                let lastTickCount = 0;
+                const byRow = [];
+                for (let ri = 0; ri < flat.length; ri++) {
+                    const rowTime = timeToSeconds(flat[ri].hitTime);
+                    const tickCount = Math.max(0, Math.floor(rowTime / 20));
+                    const newTicks = tickCount - lastTickCount;
+                    if (newTicks > 0) {
+                        stacks = Math.min(3, stacks + newTicks);
+                        lastTickCount = tickCount;
+                    }
+                    for (const skill of jobEntry.skills) {
+                        if (!skill.addersgallProvide && !skill.addersgallCost) continue;
+                        if (isSkillCastOrigin(`p${pIdx}-${skill.id}`, ri)) {
+                            if (skill.addersgallProvide) stacks = Math.min(3, stacks + skill.addersgallProvide);
+                            if (skill.addersgallCost) stacks = Math.max(0, stacks - skill.addersgallCost);
+                        }
+                    }
+                    byRow.push(stacks);
+                }
+                result[pIdx] = byRow;
+            });
+            return result;
+        });
+
+        const getAddersgallStacksAt = (pIdx, internalIdx) =>
+            addersgallStacksByMember.value[pIdx]?.[internalIdx] ?? 3;
+
+        const isSkillAddersgallDepleted = (skill, internalIdx) => {
+            if (!skill.addersgallCost) return false;
+            const pIdx = skill.memberIndex - 1;
+            return (addersgallStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 3) === 0;
+        };
+
         // ── Data loading ──────────────────────────────────────
         // 舊版資料格式 mitMap 的 key 為 "dutyKey-rowIdx-skillInstId"，值為 true
         // 新版格式 key 為 "dutyKey-skillInstId"，值為施放列索引陣列
@@ -745,6 +833,12 @@ createApp({
                 jobDb.value = await skillsRes.json();
                 dutyIndex.value = await indexRes.json();
 
+                const savedDark = localStorage.getItem('ffxiv_dark_mode');
+                if (savedDark === '1') {
+                    darkMode.value = true;
+                    document.body.classList.add('dark');
+                }
+
                 if (!await loadFromShareParam()) {
                     readUrlParams();
                     const saved = localStorage.getItem('ffxiv_planner_data');
@@ -757,7 +851,6 @@ createApp({
                         mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
                     }
                 }
-                initDefaultAetherflowForParty();
                 syncStickyRow();
             } catch (err) {
                 console.error("資料載入失敗，請確認檔案路徑是否正確 (src/)", err);
@@ -790,7 +883,17 @@ createApp({
             const result = party.value.map((jobKey, pIdx) => {
                 const jobEntry = jobDb.value[jobKey];
                 if (!jobEntry || !jobEntry.skills) return null;
-                const color = MEMBER_COLORS[pIdx % MEMBER_COLORS.length];
+                const pSlot = pIdx % 8;
+                const memberBg     = `var(--m${pSlot}-bg)`;
+                const memberBorder = `var(--m${pSlot}-border)`;
+                const memberCast   = `var(--m${pSlot}-cast)`;
+                const memberCovBg  = `var(--m${pSlot}-cov-bg)`;
+                const memberCovBdr = `var(--m${pSlot}-cov-bdr)`;
+                const color = {
+                    border:   memberBorder,
+                    headerBg: `var(--m${pSlot}-hdr)`,
+                    badge:    `var(--m${pSlot}-badge)`,
+                };
                 const hasPersonalSkills = jobEntry.skills.some(s => s.personal);
                 const showPersonal = expandedPersonalMembers.value.includes(pIdx);
                 const filteredSkills = jobEntry.skills.filter(s => !s.personal || showPersonal);
@@ -799,8 +902,11 @@ createApp({
                     instanceId: `p${pIdx}-${s.id}`,
                     memberIndex: pIdx + 1,
                     jobIcon: jobEntry.icon,
-                    memberBg: color.bg,
-                    memberBorder: color.border,
+                    memberBg,
+                    memberBorder,
+                    memberCast,
+                    memberCovBg,
+                    memberCovBdr,
                     isFirstInGroup: sIdx === 0,
                 }));
                 if (jobKey === 'SCH' && showPersonal) {
@@ -810,8 +916,21 @@ createApp({
                         name: '乙太存量',
                         _isAetherIndicator: true,
                         _pIdx: pIdx,
-                        memberBg: color.bg,
-                        memberBorder: color.border,
+                        memberBg,
+                        memberBorder,
+                        isFirstInGroup: false,
+                        effects: [],
+                    });
+                }
+                if (jobKey === 'SGE' && showPersonal) {
+                    mappedSkills.push({
+                        id: '_addersgall',
+                        instanceId: `p${pIdx}-_addersgall`,
+                        name: '蛇膽存量',
+                        _isAddersgallIndicator: true,
+                        _pIdx: pIdx,
+                        memberBg,
+                        memberBorder,
                         isFirstInGroup: false,
                         effects: [],
                     });
@@ -910,42 +1029,6 @@ createApp({
         const getSelectedVariantIdx = (internalIdx) =>
             selectedVariants.value[`${selectedDutyKey.value}-${internalIdx}`] ?? 0;
 
-        // ── Aetherflow auto-init ──────────────────────────────
-        // 根據時間軸自動計算乙太流的預設施放列
-        // 規則：從第 0 秒開始，每 60 秒施放一次（選最早滿足時間的列）
-        const computeDefaultAetherflowRows = () => {
-            const sorted = allRowsFlat.value
-                .map((row, idx) => ({ hitTime: row.hitTime, idx }))
-                .sort((a, b) => timeToSeconds(a.hitTime) - timeToSeconds(b.hitTime));
-            if (!sorted.length) return [];
-            const rows = [];
-            let nextCastTime = 0;
-            for (const { hitTime, idx } of sorted) {
-                const t = timeToSeconds(hitTime);
-                if (t >= nextCastTime) {
-                    rows.push(idx);
-                    nextCastTime = t + 60;
-                }
-            }
-            return rows;
-        };
-
-        const initDefaultAetherflowForParty = () => {
-            if (!selectedDutyKey.value || !allRowsFlat.value.length) return;
-            const newMap = { ...mitMap.value };
-            let changed = false;
-            party.value.forEach((jobKey, pIdx) => {
-                if (jobKey !== 'SCH') return;
-                const afKey = `${selectedDutyKey.value}-p${pIdx}-sch_af`;
-                if (afKey in newMap) return;
-                const rows = computeDefaultAetherflowRows();
-                if (rows.length) {
-                    newMap[afKey] = rows;
-                    changed = true;
-                }
-            });
-            if (changed) mitMap.value = newMap;
-        };
 
         // ── Clear helpers ─────────────────────────────────────
         // 判斷指定技能實例是否有任何施放記錄（用於顯示清除按鈕）
@@ -954,9 +1037,8 @@ createApp({
 
         const memberHasAnyCast = (pIdx) => {
             const prefix = `${selectedDutyKey.value}-p${pIdx}-`;
-            const afKey = `${selectedDutyKey.value}-p${pIdx}-sch_af`;
             return Object.keys(mitMap.value).some(key =>
-                key.startsWith(prefix) && key !== afKey && mitMap.value[key].length > 0
+                key.startsWith(prefix) && mitMap.value[key].length > 0
             );
         };
 
@@ -998,13 +1080,11 @@ createApp({
                 if (key.startsWith(prefix)) delete newMap[key];
             }
             mitMap.value = newMap;
-            initDefaultAetherflowForParty();
         };
 
         const clearAll = () => {
             if (!confirm('確定要清除所有施放紀錄？此操作無法復原。')) return;
             mitMap.value = {};
-            initDefaultAetherflowForParty();
         };
 
         // ── Share via Cloudflare Worker + KV ─────────────────
@@ -1101,8 +1181,6 @@ createApp({
         }, { deep: true });
 
         watch([hideNonDmg, hideTargeted, compactMode], syncUrlParams);
-        watch(selectedDutyKey, initDefaultAetherflowForParty);
-        watch(party, initDefaultAetherflowForParty, { deep: true });
 
         // 動態對齊 row-skills 的 sticky top，避免因 inline 圖片 baseline 差距造成捲動抖動
         const syncStickyRow = () => {
@@ -1194,6 +1272,7 @@ createApp({
             openDutyDropdown, toggleDutyCategory, selectDuty,
             isSkillConditionMet, isSkillBlocked,
             getAetherStacksAt, isSkillAetherDepleted,
+            getAddersgallStacksAt, isSkillAddersgallDepleted,
             skillHasAnyCast, clearSkill, memberHasAnyCast, clearMember, clearAll,
             // Custom rows
             customRowsByDuty, customRowDraftTimes,
@@ -1203,6 +1282,7 @@ createApp({
             // Floating insert button
             hoverInsert, onRowMouseMove, onRowMouseLeave, onInsertBtnEnter, onInsertBtnLeave,
             skillTooltip, showSkillTooltip, hideSkillTooltip, keepSkillTooltip, skillNameById,
+            darkMode, toggleDarkMode, customRowStyle,
         };
     }
 }).mount('#app');

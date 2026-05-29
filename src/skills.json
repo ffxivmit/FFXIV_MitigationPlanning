@@ -217,15 +217,18 @@
         "name": "賢者",
         "icon": "src/Job_icons/02_HEALER/Job/Sage.png",
         "skills": [
-            { "id": "sge_kera", "name": "堅角清汁", "tags": ["減傷", "HOT"], "title":"一定時間內，令自身與周圍隊員受到的傷害減輕10%，持續時間：15秒\n※無法與白牛清汁效果共存\n追加效果：持續恢復目標的HP，恢復力：100，持續時間：15秒\n追加效果：恢復自身最大MP的7%，發動條件：蛇膽。", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "icon": "src/Skill_icons/21_SGE/Kerachole.png" },
+            { "id": "sge_kera", "name": "堅角清汁", "tags": ["減傷", "HOT"], "title":"一定時間內，令自身與周圍隊員受到的傷害減輕10%，持續時間：15秒\n※無法與白牛清汁效果共存\n追加效果：持續恢復目標的HP，恢復力：100，持續時間：15秒\n追加效果：恢復自身最大MP的7%，發動條件：蛇膽。", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100 }], "duration": 15, "cooldown": 30, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Kerachole.png" },
             { "id": "sge_holos", "name": "整體論", "tags": ["減傷", "護盾"], "title":"恢復自身及周圍隊員的HP，恢復力：300\n追加效果：為目標附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於治療量100%的傷害，持續時間：30秒\n追加效果：自身及周圍隊員所受傷害減輕10%，持續時間：20秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_potency", "val": 300 }, { "type": "shield_potency", "val": 300 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Holos.png" },
             { "id": "sge_ep2", "name": "均衡預後II", "tags": ["護盾"], "title":"恢復自身及周圍隊員的HP，恢復力：100\n追加效果：為目標附加能夠抵禦一定傷害的防護罩，\n該防護罩能夠抵消相當於治療量360%的傷害，持續時間：30秒\n※無法與均衡診斷及學者的鼓舞效果共存", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 30, "cooldown": 1.5, "icon": "src/Skill_icons/21_SGE/Eukrasian_Prognosis_II.png" },
             { "id": "sge_panha", "name": "泛輸血", "tags": ["護盾"], "title":"為自身及周圍隊員附加能夠抵消一定傷害量的防護罩\n該防護罩能夠抵消相當於200恢復力的傷害量，同時附加5階泛血印狀態\n持續時間：15秒。\n防護罩因吸收到足夠的傷害而消失時，消耗1階泛血印重新為目標附加防護罩\n持續時間結束時，根據泛血印的剩餘等階恢復目標的HP\n恢復力：100×泛血印的剩餘等階。", "effects": [{ "type": "shield_potency", "val": 200, "stacks": 5 }], "duration": 15, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Panhaima.png" },
-            { "id": "sge_rhizo", "name": "根素", "title":"為自身附加1階蛇膽", "effects": [], "duration": 1, "cooldown": 90, "icon": "src/Skill_icons/21_SGE/Rhizomata.png" ,"personal": true},
             { "id": "sge_Zoe", "name": "活化", "title":"30秒內，發動1次治療魔法的治療量提高1.5倍", "effects": [], "duration": 30, "cooldown": 90, "icon": "src/Skill_icons/21_SGE/Zoe.png" ,"personal": true},
             { "id": "sge_phys2", "name": "自生II", "tags": ["HOT"], "title":"15秒內，持續恢復自身及周圍隊員的HP，\n追加效果：令目標所受的HP恢復效果提高10%", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/21_SGE/Physis_II.png" ,"personal": true},
             { "id": "sge_pneuma", "name": "魂靈風息", "title":"向目標所在方向發出直線無屬性範圍魔法攻擊\n追加效果：令自身及周圍20米內的隊員恢復HP，恢復力：600\n追加效果：令帶有關心狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Pneuma.png" ,"personal": true},
-            { "id": "sge_philo", "name": "智慧之愛", "title":"20秒內，自身發動治療魔法的治療量提高20%\n追加效果：為自身及周圍隊員附加幸福狀態\n持續時間內魔法命中後，令帶有幸福狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 180, "icon": "src/Skill_icons/21_SGE/Philosophia.png" ,"personal": true}
+            { "id": "sge_philo", "name": "智慧之愛", "title":"20秒內，自身發動治療魔法的治療量提高20%\n追加效果：為自身及周圍隊員附加幸福狀態\n持續時間內魔法命中後，令帶有幸福狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 180, "icon": "src/Skill_icons/21_SGE/Philosophia.png" ,"personal": true},
+            { "id": "sge_tauro", "name": "白牛清汁", "tags": ["減傷"], "title":"恢復自身或一名隊員的HP，恢復力：700\n追加效果：目標所受傷害減輕10%，持續時間：15秒\n追加效果：恢復自身最大MP的7%\n無法與堅角清汁效果共存\n發動條件：蛇膽", "effects": [], "duration": 15, "cooldown": 45, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Taurochole.png", "personal": true },
+            { "id": "sge_druo", "name": "寄生清汁", "title":"恢復自身及周圍隊員的HP，恢復力：400\n追加效果：恢復自身最大MP的7%\n發動條件：蛇膽", "effects": [], "duration": 1, "cooldown": 30, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Ixochole.png", "personal": true },
+            { "id": "sge_druo", "name": "靈橡清汁", "title":"恢復目標的HP，恢復力：600\n追加效果：恢復自身最大MP的7%\n發動條件：蛇膽", "effects": [], "duration": 1, "cooldown": 1, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Druochole.png", "personal": true },
+            { "id": "sge_rhizo", "name": "根素", "title":"為自身附加1階蛇膽", "effects": [], "duration": 1, "cooldown": 90, "addersgallProvide": 1, "icon": "src/Skill_icons/21_SGE/Rhizomata.png", "personal": true }
         ]
     }
 }

@@ -116,16 +116,32 @@ tr:hover .skill-cell { filter: brightness(0.96); }
 .skill-cooldown {
     width: 20px; height: 20px;
     border-radius: 4px;
-    background: #e2e8f0;
-    opacity: 0.45;
+    border: 1.5px solid rgba(148,163,184,0.55);
+    background-color: rgba(241,245,249,0.45);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'/%3E%3Cpolyline points='1 20 1 14 7 14'/%3E%3Cpath d='M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 13px 13px;
+    cursor: not-allowed;
+    opacity: 0.8;
 }
 
 .skill-blocked {
     width: 20px; height: 20px;
     border-radius: 4px;
-    background: #e2e8f0;
-    border: 2px solid #cbd5e1;
-    opacity: 0.4;
+    border: 1.5px solid rgba(148,163,184,0.55);
+    background-color: rgba(241,245,249,0.45);
+    background-image:
+        linear-gradient(to bottom right,
+            transparent calc(50% - 1px),
+            rgba(100,116,139,0.5) calc(50% - 1px),
+            rgba(100,116,139,0.5) calc(50% + 1px),
+            transparent calc(50% + 1px)),
+        linear-gradient(to top right,
+            transparent calc(50% - 1px),
+            rgba(100,116,139,0.5) calc(50% - 1px),
+            rgba(100,116,139,0.5) calc(50% + 1px),
+            transparent calc(50% + 1px));
     cursor: not-allowed;
 }
 
@@ -133,9 +149,9 @@ tr:hover .skill-cell { filter: brightness(0.96); }
     width: 20px; height: 20px;
     border-radius: 4px;
     background: repeating-linear-gradient(
-        45deg,
-        #f1f5f9 0px, #f1f5f9 2px,
-        #e2e8f0 2px, #e2e8f0 4px
+        45deg, 
+        rgb(241, 245, 249) 0px, rgb(186 191 197) 2px, 
+        rgb(136 140 145) 2px, rgb(226, 232, 240) 4px
     );
     opacity: 0.6;
 }
@@ -182,8 +198,310 @@ thead tr.row-skills th.compact-skill-th:hover {
 }
 
 /* ──────────────────────────────────────────
+    暗色主題
+────────────────────────────────────────── */
+
+/* 整體背景（對齊 ranking.init.engineer 暗色系統） */
+body.dark { background-color: #101214; }
+
+/* ── 通用卡片 / 白色區塊 ── */
+body.dark .bg-white     { background-color: #171b1f !important; }
+body.dark .bg-white\/95 { background-color: #20262c !important; }
+
+/* ── Slate 背景層 ── */
+body.dark .bg-slate-50  { background-color: #171b1f !important; }
+body.dark .bg-slate-100 { background-color: #20262c !important; }
+body.dark .bg-slate-200 { background-color: #272e36 !important; }
+
+/* ── 文字顏色（暖白調） ── */
+body.dark .text-slate-900 { color: #f9f8f5 !important; }
+body.dark .text-slate-800 { color: #f4f1ea !important; }
+body.dark .text-slate-700 { color: #e8e4dc !important; }
+body.dark .text-slate-600 { color: #b7b1a8 !important; }
+body.dark .text-slate-500 { color: #a0a0a0 !important; }
+body.dark .text-slate-400 { color: #7a7672 !important; }
+body.dark .text-slate-300 { color: #585450 !important; }
+
+/* ── 邊框顏色 ── */
+body.dark .border-slate-200 { border-color: #303842 !important; }
+body.dark .border-slate-100 { border-color: #272e36 !important; }
+body.dark .border-slate-300 { border-color: #3d4854 !important; }
+
+/* ── 分隔線 (w-px bg-slate-200) ── */
+body.dark .bg-slate-200.w-px { background-color: #303842 !important; }
+
+/* ── hover 狀態 ── */
+body.dark .hover\:bg-slate-100:hover { background-color: #20262c !important; }
+body.dark .hover\:bg-slate-200:hover { background-color: #272e36 !important; }
+body.dark .hover\:bg-slate-50:hover  { background-color: #1f262d !important; }
+
+/* ── 藍色功能按鈕（分享連結） ── */
+body.dark .bg-blue-50      { background-color: rgba(104,168,255,0.12) !important; }
+body.dark .border-blue-200 { border-color: rgba(104,168,255,0.35) !important; }
+body.dark .text-blue-500   { color: #68a8ff !important; }
+body.dark .text-blue-600   { color: #68a8ff !important; }
+body.dark .text-blue-700   { color: #7ac7ff !important; }
+body.dark .hover\:bg-blue-100:hover { background-color: rgba(104,168,255,0.2) !important; }
+
+/* ── 紅色危險按鈕 ── */
+body.dark .bg-red-50       { background-color: rgba(255,118,111,0.1) !important; }
+body.dark .border-red-200  { border-color: rgba(255,118,111,0.3) !important; }
+body.dark .text-red-400    { color: #ff8176 !important; }
+body.dark .text-red-500    { color: #ff8176 !important; }
+body.dark .hover\:text-red-600:hover { color: #ff9a95 !important; }
+body.dark .hover\:bg-red-100:hover   { background-color: rgba(255,118,111,0.18) !important; }
+body.dark .hover\:text-red-500:hover { color: #ff8176 !important; }
+
+/* ── Tooltip 技能標籤 ── */
+/* 充能（sky） */
+body.dark .text-sky-500   { color: #7ac7ff !important; }
+body.dark .text-sky-600   { color: #7ac7ff !important; }
+body.dark .bg-sky-50      { background-color: rgba(122,199,255,0.15) !important; }
+body.dark .border-sky-200 { border-color: rgba(122,199,255,0.38) !important; }
+
+/* 減傷（green） */
+body.dark .text-green-600   { color: #55d98c !important; }
+body.dark .bg-green-50      { background-color: rgba(85,217,140,0.14) !important; }
+body.dark .border-green-200 { border-color: rgba(85,217,140,0.38) !important; }
+
+/* 無敵（violet） */
+body.dark .text-violet-600   { color: #c084fc !important; }
+body.dark .bg-violet-50      { background-color: rgba(192,132,252,0.14) !important; }
+body.dark .border-violet-200 { border-color: rgba(192,132,252,0.38) !important; }
+
+/* HOT（teal） */
+body.dark .text-teal-600   { color: #2dd4bf !important; }
+body.dark .bg-teal-50      { background-color: rgba(45,212,191,0.14) !important; }
+body.dark .border-teal-200 { border-color: rgba(45,212,191,0.38) !important; }
+
+/* ── 琥珀色（條件標籤 / 提示 Banner） ── */
+body.dark .bg-amber-50      { background-color: rgba(214,163,84,0.13) !important; }
+body.dark .border-amber-200 { border-color: rgba(214,163,84,0.38) !important; }
+body.dark .text-amber-500   { color: #d6a354 !important; }
+body.dark .text-amber-700   { color: #d6a354 !important; }
+body.dark .text-amber-400   { color: #d6a354 !important; }
+body.dark .bg-amber-500     { background-color: #b9853d !important; }
+body.dark .hover\:bg-amber-600:hover { background-color: #9a6a2a !important; }
+body.dark .bg-amber-100     { background-color: rgba(214,163,84,0.18) !important; }
+
+/* 自訂列 tr 背景 */
+body.dark .bg-amber-50\/40      { background-color: rgba(214,163,84,0.10) !important; }
+body.dark .hover\:bg-amber-50\/70:hover { background-color: rgba(214,163,84,0.16) !important; }
+
+/* ── 分享 Banner ── */
+body.dark .bg-amber-50.border.border-amber-200 { background-color: rgba(214,163,84,0.08) !important; }
+
+/* ── 輸入框文字顏色 ── */
+body.dark input { color: #e8e4dc; }
+body.dark input::placeholder { color: #585450; }
+
+/* ── 表格：Table container ── */
+body.dark .table-container { background: #20262c; }
+
+/* ── 固定欄位背景 ── */
+body.dark .sticky-col  { background-color: #20262c !important; }
+body.dark .sticky-right {
+    background-color: #252d36 !important;
+    box-shadow: -2px 0 0 0 #303842, -4px 0 6px -2px rgba(0,0,0,0.4);
+}
+
+/* ── col-orig 陰影 ── */
+body.dark .col-orig {
+    box-shadow: 2px 0 0 0 #303842, 4px 0 6px -2px rgba(0,0,0,0.3) !important;
+}
+body.dark .mit-table.compact-mode th.col-name,
+body.dark .mit-table.compact-mode td.col-name {
+    box-shadow: 2px 0 0 0 #303842, 4px 0 6px -2px rgba(0,0,0,0.3) !important;
+}
+
+/* ── 表頭背景 ── */
+body.dark thead tr.row-group th  { background-color: #232a32 !important; }
+body.dark thead tr.row-skills th { background-color: #232a32 !important; }
+body.dark thead tr.row-group  th.sticky-right { background-color: #1f262d !important; }
+body.dark thead tr.row-skills th.sticky-right { background-color: #1f262d !important; }
+
+/* ── tbody 列邊線與 hover ── */
+body.dark tbody tr { border-bottom-color: #272e36; }
+body.dark tr:hover td.sticky-col   { background-color: #2a3340 !important; }
+body.dark tr:hover td.sticky-right { background-color: #2d3848 !important; }
+body.dark tr:hover .skill-cell     { filter: brightness(1.14); }
+
+/* ── 技能格狀態 ── */
+body.dark .skill-btn {
+    border-color: #3d4854;
+    background: #20262c;
+}
+body.dark .skill-btn:hover {
+    border-color: #5d6b7aff;
+    background: #2a3340;
+}
+body.dark .skill-cooldown {
+    border-color: rgba(255,118,111,0.42);
+    background-color: rgba(255,118,111,0.07);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff766f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'/%3E%3Cpolyline points='1 20 1 14 7 14'/%3E%3Cpath d='M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 13px 13px;
+    opacity: 1;
+}
+body.dark .skill-blocked {
+    border-color: rgba(255,118,111,0.42);
+    background-color: rgba(255,118,111,0.07);
+    background-image:
+        linear-gradient(to bottom right,
+            transparent calc(50% - 1px),
+            rgba(255,118,111,0.68) calc(50% - 1px),
+            rgba(255,118,111,0.68) calc(50% + 1px),
+            transparent calc(50% + 1px)),
+        linear-gradient(to top right,
+            transparent calc(50% - 1px),
+            rgba(255,118,111,0.68) calc(50% - 1px),
+            rgba(255,118,111,0.68) calc(50% + 1px),
+            transparent calc(50% + 1px));
+    opacity: 1;
+}
+body.dark .skill-cond {
+    background: repeating-linear-gradient(
+        45deg, 
+        #1f262d 0px, #3c4e61 2px, 
+        #697583 2px, #272e36 4px
+    );
+    opacity: 0.75;
+}
+
+/* ── 設定面板內部 ── */
+body.dark .settings-panel { border-color: #303842 !important; }
+
+/* ── Toggle 軌道：啟用時改為藍色以便辨識 ── */
+body.dark .peer:checked ~ .peer-checked\:bg-slate-700 {
+    background-color: #2563eb !important;
+}
+
+/* ── Toggle 圓鈕保持亮色 ── */
+body.dark .w-4.h-4.rounded-full.bg-white {
+    background-color: #f4f1ea !important;
+}
+
+/* ── 技能說明標籤 (tooltip 內) ── */
+body.dark .border-slate-100 { border-color: #272e36 !important; }
+body.dark .bg-amber-50\/60 { background-color: rgba(214,163,84,0.14) !important; }
+
+/* ── 乙太存量格 ── */
+body.dark .bg-green-400 { background-color: #3dbd72 !important; }
+body.dark .border-green-500 { border-color: #1d6338 !important; }
+body.dark .bg-slate-100.border-slate-300 {
+    background-color: #20262c !important;
+    border-color: #3d4854 !important;
+}
+
+/* ── 浮動插入按鈕 ── */
+body.dark .bg-white.border.border-slate-300 {
+    background-color: #171b1f !important;
+    border-color: #3d4854 !important;
+    color: #b7b1a8 !important;
+}
+
+/* ── 分享 Toast ── */
+body.dark .bg-slate-800.text-white { background-color: #101214 !important; }
+
+/* ── 下拉副本選單 ── */
+body.dark select,
+body.dark .border.border-slate-200.rounded-lg.bg-slate-50 {
+    background-color: #20262c !important;
+    border-color: #303842 !important;
+    color: #b7b1a8 !important;
+}
+
+/* ── 副本選擇 dropdown 面板 ── */
+body.dark .duty-dropdown {
+    background-color: #20262c;
+    border-color: #303842 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.55) !important;
+}
+/* 分類標題列 */
+body.dark .duty-cat-btn {
+    background-color: #131820 !important;
+    color: #c0b9b0 !important;
+    border-bottom-color: #3d4854 !important;
+    letter-spacing: 0.04em;
+}
+body.dark .duty-cat-btn:hover {
+    background-color: #1a2230 !important;
+    color: #e8e4dc !important;
+}
+/* 副本選項列 */
+body.dark .duty-item {
+    background-color: transparent !important;
+    color: #a8a29c !important;
+    border-bottom-color: #272e36 !important;
+}
+body.dark .duty-item:hover {
+    background-color: #2a3340 !important;
+    color: #e8e4dc !important;
+}
+/* 已選中的副本 */
+.duty-item-active {
+    background-color: #e2e8f0;
+    color: #0f172a;
+    border-left: 3px solid #94a3b8;
+    padding-left: calc(1rem - 3px);
+}
+body.dark .duty-item-active {
+    background-color: rgba(104,168,255,0.15) !important;
+    color: #7ac7ff !important;
+    border-left: 3px solid #68a8ff;
+    padding-left: calc(1rem - 3px);
+}
+
+/* ── 機制說明 tooltip ── */
+body.dark .border-r-white { border-right-color: rgba(23,27,31,0.97) !important; }
+body.dark .border-b-white { border-bottom-color: rgba(23,27,31,0.97) !important; }
+
+/* ──────────────────────────────────────────
     設定面板動畫
 ────────────────────────────────────────── */
+/* ── 顯示設定按鈕 ── */
+.settings-inactive {
+    background-color: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+.settings-inactive:hover {
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+.settings-active {
+    background-color: #e2e8f0;
+    border-color: #94a3b8;
+    color: #334155;
+}
+.settings-active:hover {
+    background-color: #cbd5e1;
+    border-color: #64748b;
+}
+
+body.dark .settings-inactive {
+    background-color: #232a32;
+    border-color: #3d4854;
+    color: #a8a29c;
+}
+body.dark .settings-inactive:hover {
+    background-color: #2a3340;
+    border-color: #5d6b7a;
+    color: #e8e4dc;
+}
+body.dark .settings-active {
+    background-color: #3d4854;
+    border-color: #5d6b7a;
+    color: #f4f1ea;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+body.dark .settings-active:hover {
+    background-color: #4a5a6c;
+    border-color: #6b7f94;
+}
+
 .settings-panel {
     animation: panelIn 0.15s ease-out;
     transform-origin: top right;
@@ -192,4 +510,33 @@ thead tr.row-skills th.compact-skill-th:hover {
 @keyframes panelIn {
     from { opacity: 0; transform: scale(0.95) translateY(-4px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ──────────────────────────────────────────
+    職能分類按鈕（坦克 / 治療 / ...）
+────────────────────────────────────────── */
+.cat-btn-active {
+    background-color: #475569;
+    color: white;
+}
+.cat-btn-inactive {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+.cat-btn-inactive:hover {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+
+body.dark .cat-btn-active {
+    background-color: #5e7391;
+    color: white;
+}
+body.dark .cat-btn-inactive {
+    background-color: #232a32;
+    color: #a0a0a0;
+}
+body.dark .cat-btn-inactive:hover {
+    background-color: #2a3340;
+    color: #e8e4dc;
 }

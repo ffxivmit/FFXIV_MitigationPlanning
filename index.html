@@ -389,7 +389,9 @@
                                          :class="['w-3 h-3 rounded-full border-2', i <= getAddersgallStacksAt(skill._pIdx, row._internalIdx) ? 'bg-yellow-400 border-yellow-500' : 'bg-slate-100 border-slate-300']"></div>
                                 </div>
                                 <div v-else class="flex items-center justify-center">
-                                    <button v-if="isSkillCastOrigin(skill.instanceId, row._internalIdx)"
+                                    <div v-if="skill.passive"
+                                         class="skill-covered" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="被動常駐減傷">∞</div>
+                                    <button v-else-if="isSkillCastOrigin(skill.instanceId, row._internalIdx)"
                                             class="skill-cast" :style="`background:${skill.memberCast}; border:2px solid ${skill.memberBorder}`"
                                             @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消">✓</button>
                                     <div v-else-if="isSkillOnCooldown(skill.instanceId, row._internalIdx, skill)" class="skill-cooldown" title="冷卻中"></div>

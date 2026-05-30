@@ -207,6 +207,22 @@ createApp({
             return [...duty, ...custom];
         });
 
+        const rowTimes = computed(() =>
+            allRowsFlat.value.map(row => timeToSeconds(row?.hitTime))
+        );
+
+        const castTimesCache = computed(() => {
+            const map = new Map();
+            const flat = allRowsFlat.value;
+            const prefix = selectedDutyKey.value + '-';
+            for (const [key, castRows] of Object.entries(mitMap.value)) {
+                if (!key.startsWith(prefix)) continue;
+                const instanceId = key.slice(prefix.length);
+                map.set(instanceId, castRows.map(ci => timeToSeconds(flat[ci]?.hitTime)));
+            }
+            return map;
+        });
+
         const currentTimeline = computed(() => {
             return allRowsFlat.value
                 .map((row, idx) => ({ ...row, _internalIdx: idx }))
@@ -441,14 +457,9 @@ createApp({
 
         // 計算在某個時間軸列時，技能實際剩餘充能數（根據 mitMap 中該技能的所有施放記錄推算）
         const chargesAvailableAt = (skillInstanceId, rowTime, skill) => {
-            const castRows = getCastRows(skillInstanceId);
-            const flat = allRowsFlat.value;
-            const castTimes = castRows
-                .map(ci => timeToSeconds(flat[ci]?.hitTime))
-                .filter(ct => ct < rowTime);
-            if (!castTimes.length) {
-                return skill.charges;
-            }
+            const allTimes = castTimesCache.value.get(skillInstanceId) || [];
+            const castTimes = allTimes.filter(ct => ct < rowTime);
+            if (!castTimes.length) return skill.charges;
             const restoreTimes = computeChargeRestoreTimes(castTimes, skill.cooldown);
             const inRecharge = castTimes.filter((_ct, i) => rowTime < restoreTimes[i]).length;
             return Math.max(0, skill.charges - inRecharge);
@@ -459,60 +470,40 @@ createApp({
         //   2. conditionDuration：需要在某個條件技能的效果時間窗內才可施放
         //   3. conditionSkillId（無 duration）：需要條件技能目前處於效果中
         const isSkillConditionMet = (skill, internalIdx) => {
-            const flat = allRowsFlat.value;
-            const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
+            const rowTime = rowTimes.value[internalIdx];
             if (skill.togglesWithId) {
-                const pairedSkill = activeSkills.value.find(s =>
-                    s.id === skill.togglesWithId && s.memberIndex === skill.memberIndex
-                );
-                const myCount = getCastRows(skill.instanceId)
-                    .filter(ci => timeToSeconds(flat[ci]?.hitTime) < rowTime).length;
-                let pairedCount = 0;
-                if (pairedSkill) {
-                    pairedCount = getCastRows(pairedSkill.instanceId)
-                        .filter(ci => timeToSeconds(flat[ci]?.hitTime) < rowTime).length;
-                }
-                if (skill.isFirstToggle) {
-                    return myCount === pairedCount;
-                }
-                return myCount < pairedCount;
+                const pairedSkill = activeSkillByKey.value.get(`${skill.togglesWithId}|${skill.memberIndex}`);
+                const myCastTimes = castTimesCache.value.get(skill.instanceId) || [];
+                const myCount = myCastTimes.filter(ct => ct < rowTime).length;
+                const pairedCount = pairedSkill
+                    ? (castTimesCache.value.get(pairedSkill.instanceId) || []).filter(ct => ct < rowTime).length
+                    : 0;
+                return skill.isFirstToggle ? myCount === pairedCount : myCount < pairedCount;
             }
             if (!skill.conditionSkillId) return true;
+            const condSkill = activeSkillByKey.value.get(`${skill.conditionSkillId}|${skill.memberIndex}`);
+            if (!condSkill) return false;
+            const condCastTimes = castTimesCache.value.get(condSkill.instanceId) || [];
             if (skill.conditionDuration != null) {
-                return activeSkills.value.some(condSkill => {
-                    if (condSkill.id !== skill.conditionSkillId) return false;
-                    if (condSkill.memberIndex !== skill.memberIndex) return false;
-                    return getCastRows(condSkill.instanceId).some(ci => {
-                        const castTime = timeToSeconds(flat[ci]?.hitTime);
-                        return rowTime >= castTime && rowTime <= castTime + skill.conditionDuration;
-                    });
-                });
+                return condCastTimes.some(ct => rowTime >= ct && rowTime <= ct + skill.conditionDuration);
             }
-            return activeSkills.value.some(s =>
-                s.id === skill.conditionSkillId &&
-                s.memberIndex === skill.memberIndex &&
-                isSkillActive(s.instanceId, internalIdx, s)
-            );
+            return isSkillActive(condSkill.instanceId, internalIdx, condSkill);
         };
 
         const isSkillBlocked = (skill, internalIdx) => {
             if (!skill.blockedBySkillId) return false;
-            return activeSkills.value.some(s =>
-                s.id === skill.blockedBySkillId &&
-                s.memberIndex === skill.memberIndex &&
-                isSkillActive(s.instanceId, internalIdx, s)
-            );
+            return skill.blockedBySkillId.some(blockId => {
+                const s = activeSkillByKey.value.get(`${blockId}|${skill.memberIndex}`);
+                return s && isSkillActive(s.instanceId, internalIdx, s);
+            });
         };
 
         const isSkillActive = (skillInstanceId, internalIdx, skill) => {
-            const castRows = getCastRows(skillInstanceId);
-            if (!castRows.length) return false;
-            const flat = allRowsFlat.value;
-            const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
-            return castRows.some(ci => {
-                const castTime = timeToSeconds(flat[ci]?.hitTime);
-                return rowTime >= castTime && rowTime <= castTime + skill.duration;
-            });
+            if (skill.passive) return true;
+            const castTimes = castTimesCache.value.get(skillInstanceId);
+            if (!castTimes || !castTimes.length) return false;
+            const rowTime = rowTimes.value[internalIdx];
+            return castTimes.some(ct => rowTime >= ct && rowTime <= ct + skill.duration);
         };
 
         // 判斷技能在指定列是否處於冷卻中，需處理多種複雜情境：
@@ -521,28 +512,20 @@ createApp({
         //   - conditionOnce：在條件技能的時間窗內只允許施放一次
         //   - charges > 1：多充能技能，充能歸零才算冷卻
         const isSkillOnCooldown = (skillInstanceId, internalIdx, skill) => {
-            const castRows = getCastRows(skillInstanceId);
-            const flat = allRowsFlat.value;
-            const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
+            const myCastTimes = castTimesCache.value.get(skillInstanceId) || [];
+            const rowTime = rowTimes.value[internalIdx];
 
             if (skill.togglesWithId) {
-                const pairedSkill = activeSkills.value.find(s =>
-                    s.id === skill.togglesWithId && s.memberIndex === skill.memberIndex
-                );
-                const ownOnCooldown = castRows.some(ci => {
-                    const castTime = timeToSeconds(flat[ci]?.hitTime);
-                    const diff = rowTime - castTime;
+                const pairedSkill = activeSkillByKey.value.get(`${skill.togglesWithId}|${skill.memberIndex}`);
+                const ownOnCooldown = myCastTimes.some(ct => {
+                    const diff = rowTime - ct;
                     return diff > skill.duration && diff < skill.cooldown;
                 });
                 if (ownOnCooldown) return true;
-                const myCount = castRows
-                    .filter(ci => timeToSeconds(flat[ci]?.hitTime) < rowTime).length;
-                let pairedCastTimes = [];
-                if (pairedSkill) {
-                    pairedCastTimes = getCastRows(pairedSkill.instanceId)
-                        .map(ci => timeToSeconds(flat[ci]?.hitTime))
-                        .filter(t => t < rowTime);
-                }
+                const myCount = myCastTimes.filter(ct => ct < rowTime).length;
+                const pairedCastTimes = pairedSkill
+                    ? (castTimesCache.value.get(pairedSkill.instanceId) || []).filter(t => t < rowTime)
+                    : [];
                 let parityCorrect;
                 if (skill.isFirstToggle) {
                     parityCorrect = myCount === pairedCastTimes.length;
@@ -552,55 +535,35 @@ createApp({
                 if (!parityCorrect) return false;
                 if (pairedCastTimes.length > 0) {
                     const lastPaired = Math.max(...pairedCastTimes);
-                    let pairedCooldown = skill.cooldown;
-                    if (pairedSkill && pairedSkill.cooldown !== undefined) {
-                        pairedCooldown = pairedSkill.cooldown;
-                    }
+                    const pairedCooldown = pairedSkill?.cooldown ?? skill.cooldown;
                     return rowTime < lastPaired + pairedCooldown;
                 }
                 return false;
             }
 
             if (skill.sharedCooldownId) {
-                const pairedSkill = activeSkills.value.find(s =>
-                    s.id === skill.sharedCooldownId && s.memberIndex === skill.memberIndex
-                );
+                const pairedSkill = activeSkillByKey.value.get(`${skill.sharedCooldownId}|${skill.memberIndex}`);
                 if (pairedSkill) {
-                    const sharedOnCooldown = getCastRows(pairedSkill.instanceId).some(ci => {
-                        const diff = rowTime - timeToSeconds(flat[ci]?.hitTime);
+                    const pairedCastTimes = castTimesCache.value.get(pairedSkill.instanceId) || [];
+                    const sharedOnCooldown = pairedCastTimes.some(ct => {
+                        const diff = rowTime - ct;
                         return diff >= 0 && diff < pairedSkill.cooldown;
                     });
                     if (sharedOnCooldown) return true;
                 }
             }
 
-            if (!castRows.length) return false;
+            if (!myCastTimes.length) return false;
 
             if (skill.conditionOnce && skill.conditionSkillId) {
-                const condDuration = skill.conditionDuration;
-                const condSkillInst = activeSkills.value.find(s =>
-                    s.id === skill.conditionSkillId && s.memberIndex === skill.memberIndex
-                );
+                const condSkillInst = activeSkillByKey.value.get(`${skill.conditionSkillId}|${skill.memberIndex}`);
                 if (condSkillInst) {
-                    for (const condCastIdx of getCastRows(condSkillInst.instanceId)) {
-                        const condCastTime = timeToSeconds(flat[condCastIdx]?.hitTime);
-                        let effectiveDuration;
-                        if (condDuration !== null && condDuration !== undefined) {
-                            effectiveDuration = condDuration;
-                        } else {
-                            effectiveDuration = condSkillInst.duration;
-                        }
-                        const windowEnd = condCastTime + effectiveDuration;
+                    const condDuration = skill.conditionDuration ?? condSkillInst.duration;
+                    for (const condCastTime of (castTimesCache.value.get(condSkillInst.instanceId) || [])) {
+                        const windowEnd = condCastTime + condDuration;
                         if (rowTime > condCastTime && rowTime <= windowEnd) {
-                            const existingCastIdx = castRows.find(ci => {
-                                if (ci === internalIdx) return false;
-                                const ct = timeToSeconds(flat[ci]?.hitTime);
-                                return ct >= condCastTime && ct <= windowEnd;
-                            });
-                            if (existingCastIdx != null) {
-                                const existingCastTime = timeToSeconds(flat[existingCastIdx]?.hitTime);
-                                if (rowTime > existingCastTime + skill.duration) return true;
-                            }
+                            const existingTime = myCastTimes.find(ct => ct !== rowTime && ct >= condCastTime && ct <= windowEnd);
+                            if (existingTime !== undefined && rowTime > existingTime + skill.duration) return true;
                         }
                     }
                 }
@@ -611,9 +574,8 @@ createApp({
                 return chargesAvailableAt(skillInstanceId, rowTime, skill) === 0;
             }
 
-            return castRows.some(ci => {
-                const castTime = timeToSeconds(flat[ci]?.hitTime);
-                const diff = rowTime - castTime;
+            return myCastTimes.some(ct => {
+                const diff = rowTime - ct;
                 return diff > skill.duration && diff < skill.cooldown;
             });
         };
@@ -954,6 +916,14 @@ createApp({
             return activeSkillsByMember.value.flatMap(m => m.skills);
         });
 
+        const activeSkillByKey = computed(() => {
+            const map = new Map();
+            for (const s of activeSkills.value) {
+                map.set(`${s.id}|${s.memberIndex}`, s);
+            }
+            return map;
+        });
+
         const skillNameById = computed(() => {
             const map = {};
             for (const job of Object.values(jobDb.value)) {
@@ -963,63 +933,76 @@ createApp({
         });
 
         // ── Damage calculation ────────────────────────────────
-        // 計算套用所有作用中減傷技能後的剩餘傷害總量
+        // 預先計算每列的剩餘傷害，並快取為陣列；僅在 mitMap／activeSkills／timeline 變動時重算
         // 同名技能只計算一次（appliedNames 去重）；效果有 duration 限制時需檢查是否仍在效果窗內
         // 支援 bonusVal（如配對技能同時生效時的額外減傷加成）
-        const calculateDamage = (row, internalIdx) => {
-            if (!selectedDutyKey.value || row._isCustom) return 0;
-            const damages = getEffectiveVariant(row, internalIdx).damage || [];
-            if (!damages.length) return 0;
+        const damageByRow = computed(() => {
+            if (!selectedDutyKey.value) return [];
             const flat = allRowsFlat.value;
-            let totalRemaining = 0;
-            damages.forEach(hit => {
-                let dmg = hit.amount;
-                const appliedNames = new Set();
-                activeSkills.value.forEach(skill => {
-                    if (!isSkillActive(skill.instanceId, internalIdx, skill)) return;
-                    if (appliedNames.has(skill.name)) return;
-                    const castRows = getCastRows(skill.instanceId);
-                    const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
-                    const activeCastTime = castRows.reduce((found, ci) => {
-                        if (found !== null) return found;
-                        const ct = timeToSeconds(flat[ci]?.hitTime);
-                        if (rowTime >= ct && rowTime <= ct + skill.duration) {
-                            return ct;
-                        }
-                        return null;
-                    }, null);
-                    let applied = false;
-                    skill.effects.forEach(effect => {
-                        if (effect.duration != null && activeCastTime != null &&
-                            rowTime > activeCastTime + effect.duration) return;
-                        const t = effect.type;
-                        const mitigates = t === 'mit_all' ||
-                            (t === 'mit_physical' && hit.type === '物理') ||
-                            (t === 'mit_magic'    && hit.type === '魔法');
-                        if (mitigates && effect.val != null) {
-                            let effectVal = effect.val;
-                            const hasBonusRequirements = effect.bonusVal != null &&
-                                Array.isArray(effect.bonusRequiresIds) &&
-                                effect.bonusRequiresIds.length > 0;
-                            if (hasBonusRequirements) {
-                                const conditionMet = effect.bonusRequiresIds.some(reqId =>
-                                    activeSkills.value.some(s =>
-                                        s.id === reqId && s.memberIndex === skill.memberIndex &&
-                                        isSkillActive(s.instanceId, internalIdx, s)
-                                    )
-                                );
-                                if (conditionMet) effectVal += effect.bonusVal;
+            const result = new Array(flat.length).fill(0);
+            const skills = activeSkills.value;
+            for (let internalIdx = 0; internalIdx < flat.length; internalIdx++) {
+                const row = flat[internalIdx];
+                if (row._isCustom) continue;
+                const damages = getEffectiveVariant(row, internalIdx).damage;
+                if (!damages || !damages.length) continue;
+                const rowTime = rowTimes.value[internalIdx];
+                let totalRemaining = 0;
+                for (const hit of damages) {
+                    let dmg = hit.amount;
+                    const appliedNames = new Set();
+                    for (const skill of skills) {
+                        if (skill.passive) {
+                            if (appliedNames.has(skill.name)) continue;
+                            let applied = false;
+                            for (const effect of skill.effects) {
+                                const t = effect.type;
+                                const mitigates = t === 'mit_all' ||
+                                    (t === 'mit_physical' && hit.type === '物理') ||
+                                    (t === 'mit_magic'    && hit.type === '魔法');
+                                if (mitigates && effect.val != null) {
+                                    dmg *= (1 - effect.val);
+                                    applied = true;
+                                }
                             }
-                            dmg *= (1 - effectVal);
-                            applied = true;
+                            if (applied) appliedNames.add(skill.name);
+                            continue;
                         }
-                    });
-                    if (applied) appliedNames.add(skill.name);
-                });
-                totalRemaining += dmg;
-            });
-            return Math.floor(totalRemaining);
-        };
+                        const castTimes = castTimesCache.value.get(skill.instanceId);
+                        if (!castTimes || !castTimes.length) continue;
+                        const activeCastTime = castTimes.find(ct => rowTime >= ct && rowTime <= ct + skill.duration) ?? null;
+                        if (activeCastTime === null) continue;
+                        if (appliedNames.has(skill.name)) continue;
+                        let applied = false;
+                        for (const effect of skill.effects) {
+                            if (effect.duration != null && rowTime > activeCastTime + effect.duration) continue;
+                            const t = effect.type;
+                            const mitigates = t === 'mit_all' ||
+                                (t === 'mit_physical' && hit.type === '物理') ||
+                                (t === 'mit_magic'    && hit.type === '魔法');
+                            if (mitigates && effect.val != null) {
+                                let effectVal = effect.val;
+                                if (effect.bonusVal != null && Array.isArray(effect.bonusRequiresIds) && effect.bonusRequiresIds.length > 0) {
+                                    const conditionMet = effect.bonusRequiresIds.some(reqId => {
+                                        const s = activeSkillByKey.value.get(`${reqId}|${skill.memberIndex}`);
+                                        return s && isSkillActive(s.instanceId, internalIdx, s);
+                                    });
+                                    if (conditionMet) effectVal += effect.bonusVal;
+                                }
+                                dmg *= (1 - effectVal);
+                                applied = true;
+                            }
+                        }
+                        if (applied) appliedNames.add(skill.name);
+                    }
+                    totalRemaining += dmg;
+                }
+                result[internalIdx] = Math.floor(totalRemaining);
+            }
+            return result;
+        });
+
+        const calculateDamage = (_row, internalIdx) => damageByRow.value[internalIdx] ?? 0;
 
         // ── Variant switching ─────────────────────────────────
         const switchVariant = (internalIdx, variantIdx) => {

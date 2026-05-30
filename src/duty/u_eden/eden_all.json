@@ -94,7 +94,7 @@
         {"phase": "鑽石星塵", "castingTime": "03:35", "hitTime": "03:35", "skill": "罪神聖", "damage": [{"label": "傷害", "amount": 65000, "type": "魔法"}], "type": "魔法"},
         {"phase": "鑽石星塵", "castingTime": "03:37", "hitTime": "03:37", "skill": "罪神聖", "damage": [{"label": "傷害", "amount": 65000, "type": "魔法"}], "type": "魔法"},
         {
-            "phase": "鑽石星塵", "castingTime": "03:40", "hitTime": "01:05",  "isRandom": true,
+            "phase": "鑽石星塵", "castingTime": "03:40", "hitTime": "03:40",  "isRandom": true,
             "commonDesc": "閒前靜後，閒寂:Boss前方先安地，靜寂:Boss後方先安地。",
             "variants": [
               { "skill": "靜寂的雙劍技", "damage": [], "type": "" },

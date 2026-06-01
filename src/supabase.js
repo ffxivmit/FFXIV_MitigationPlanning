@@ -82,6 +82,34 @@ export const buildEditUrl  = (editToken) =>
 export const buildReadUrl  = (readToken) =>
     `${window.location.origin}${window.location.pathname}?view=${readToken}`;
 
+// ── Bookmark helpers ──────────────────────────────────────────
+
+// 取得指定使用者的所有書籤文件（含文件資料）
+export const fetchBookmarkedDocuments = (userId) =>
+    sb.rpc('fetch_bookmarked_documents', { p_user_id: userId });
+
+// 新增書籤
+export const addBookmark = (userId, documentId, token, tokenType) =>
+    sb.from('bookmarks')
+        .insert({ user_id: userId, document_id: documentId, token, token_type: tokenType })
+        .select()
+        .single();
+
+// 移除書籤
+export const removeBookmark = (userId, documentId) =>
+    sb.from('bookmarks')
+        .delete()
+        .eq('user_id', userId)
+        .eq('document_id', documentId);
+
+// 查詢是否已加入書籤
+export const checkBookmark = (userId, documentId) =>
+    sb.from('bookmarks')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('document_id', documentId)
+        .maybeSingle();
+
 // ── Realtime Broadcast ────────────────────────────────────────
 
 // 訂閱文件頻道，當其他編輯者儲存後會收到 doc_updated 事件

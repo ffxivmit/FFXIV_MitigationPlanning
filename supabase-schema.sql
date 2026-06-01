@@ -116,3 +116,50 @@ $$;
 create index documents_owner_id_idx  on public.documents(owner_id);
 create index documents_edit_token_idx on public.documents(edit_token);
 create index documents_read_token_idx on public.documents(read_token);
+
+-- ── 7. bookmarks（書籤：將他人分享的文件加入自己的清單）────────
+create table public.bookmarks (
+    id          uuid        default gen_random_uuid() primary key,
+    user_id     uuid        references public.profiles(id) on delete cascade not null,
+    document_id uuid        references public.documents(id) on delete cascade not null,
+    token       text        not null,
+    token_type  text        not null check (token_type in ('edit', 'read')),
+    created_at  timestamptz default now(),
+    unique (user_id, document_id)
+);
+alter table public.bookmarks enable row level security;
+
+-- 使用者只能管理自己的書籤
+create policy "bookmarks_self" on public.bookmarks
+    for all using (auth.uid() = user_id);
+
+create index bookmarks_user_id_idx     on public.bookmarks(user_id);
+create index bookmarks_document_id_idx on public.bookmarks(document_id);
+
+-- RPC：取得指定使用者的所有書籤文件（security definer 繞過 documents RLS）
+create or replace function public.fetch_bookmarked_documents(p_user_id uuid)
+returns table (
+    document_id uuid,
+    duty_key    text,
+    name        text,
+    data        jsonb,
+    token       text,
+    token_type  text,
+    updated_at  timestamptz,
+    owner_id    uuid
+)
+language sql security definer as $$
+    select
+        d.id,
+        d.duty_key,
+        d.name,
+        d.data,
+        b.token,
+        b.token_type,
+        d.updated_at,
+        d.owner_id
+    from public.bookmarks b
+    join public.documents d on d.id = b.document_id
+    where b.user_id = p_user_id
+    order by d.updated_at desc;
+$$;

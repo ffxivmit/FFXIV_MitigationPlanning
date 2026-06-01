@@ -1,4 +1,4 @@
-import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel } from './src/supabase.js';
+import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark } from './src/supabase.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -284,6 +284,11 @@ createApp({
         const isReadOnly = computed(() => tokenMode.value === 'read');
         const currentUser = ref(null);
         const authLoading = ref(true);
+        const tokenDocOwnerId = ref('');
+        const isDocOwner = computed(() => !!currentUser.value && currentUser.value.id === tokenDocOwnerId.value);
+        const isBookmarked = ref(false);
+        const bookmarkLoading = ref(false);
+        const bookmarkedDocuments = ref([]);
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
@@ -1267,6 +1272,44 @@ createApp({
             if (data.hideTargeted !== undefined) hideTargeted.value = data.hideTargeted;
         };
 
+        // 用 token 載入文件（供 loadFromShareParam 與 openBookmark 共用）
+        const loadByToken = async (token, { updateUrl = false } = {}) => {
+            try {
+                const { data, error } = await getDocumentByToken(token);
+                if (error || !data) return false;
+                tokenMode.value       = data.token_type;
+                activeToken.value     = token;
+                tokenDocName.value    = data.name || '';
+                tokenLoadedAt.value   = data.updated_at || '';
+                tokenBaseData.value   = JSON.parse(JSON.stringify(data.data || {}));
+                tokenDocOwnerId.value = data.owner_id || '';
+                isViewingSharedPlan.value = true;
+                _applySharedData(data.data);
+                if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
+                tokenDocId.value = data.id || '';
+                if (tokenDocId.value) _realtimeChannel = subscribeDocChannel(tokenDocId.value, _onRealtimeUpdate);
+                // 更新 URL（從書籤開啟時使用）
+                if (updateUrl) {
+                    const params = new URLSearchParams(window.location.search);
+                    params.delete('s');
+                    if (data.token_type === 'edit') { params.set('edit', token); params.delete('view'); }
+                    else { params.set('view', token); params.delete('edit'); }
+                    history.pushState(null, '', window.location.pathname + '?' + params.toString());
+                }
+                // 若已登入則檢查是否已加入書籤
+                if (currentUser.value && tokenDocId.value) {
+                    const { data: bm } = await checkBookmark(currentUser.value.id, tokenDocId.value);
+                    isBookmarked.value = !!bm;
+                } else {
+                    isBookmarked.value = false;
+                }
+                return true;
+            } catch (e) {
+                console.error('載入分享連結失敗', e);
+                return false;
+            }
+        };
+
         const loadFromShareParam = async () => {
             const params = new URLSearchParams(window.location.search);
             const shareId   = params.get('s');
@@ -1275,26 +1318,7 @@ createApp({
 
             // Supabase token-based share
             if (editToken || viewToken) {
-                const token = editToken || viewToken;
-                try {
-                    const { data, error } = await getDocumentByToken(token);
-                    if (error || !data) return false;
-                    tokenMode.value     = data.token_type;  // 'edit' | 'read'
-                    activeToken.value   = token;
-                    tokenDocName.value  = data.name || '';
-                    tokenLoadedAt.value = data.updated_at || '';
-                    tokenBaseData.value = JSON.parse(JSON.stringify(data.data || {}));
-                    isViewingSharedPlan.value = true;
-                    _applySharedData(data.data);
-                    // 訂閱 Realtime 頻道
-                    if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
-                    tokenDocId.value = data.id || '';
-                    if (tokenDocId.value) _realtimeChannel = subscribeDocChannel(tokenDocId.value, _onRealtimeUpdate);
-                    return true;
-                } catch (e) {
-                    console.error('載入分享連結失敗', e);
-                    return false;
-                }
+                return loadByToken(editToken || viewToken);
             }
 
             // Legacy Cloudflare Worker share
@@ -1311,6 +1335,59 @@ createApp({
                 console.error('載入分享連結失敗', e);
                 return false;
             }
+        };
+
+        // 加入書籤（非擁有者，在分享頁面點擊）
+        const addBookmarkAction = async () => {
+            if (!currentUser.value || !tokenDocId.value || bookmarkLoading.value) return;
+            bookmarkLoading.value = true;
+            try {
+                const { error } = await addBookmark(currentUser.value.id, tokenDocId.value, activeToken.value, tokenMode.value);
+                if (!error) {
+                    isBookmarked.value = true;
+                    await fetchDocuments();
+                } else {
+                    alert('加入書籤失敗，請稍後再試。');
+                }
+            } finally {
+                bookmarkLoading.value = false;
+            }
+        };
+
+        // 移除書籤（工具列按鈕）
+        const removeBookmarkAction = async () => {
+            if (!currentUser.value || !tokenDocId.value || bookmarkLoading.value) return;
+            if (!confirm('確定要移出書籤？')) return;
+            bookmarkLoading.value = true;
+            try {
+                const { error } = await removeBookmark(currentUser.value.id, tokenDocId.value);
+                if (!error) {
+                    isBookmarked.value = false;
+                    await fetchDocuments();
+                } else {
+                    alert('移除書籤失敗，請稍後再試。');
+                }
+            } finally {
+                bookmarkLoading.value = false;
+            }
+        };
+
+        // 移除書籤（從側邊欄清單操作）
+        const removeBookmarkFromSidebar = async (bm) => {
+            if (!confirm(`確定要移出書籤「${bm.name}」？`)) return;
+            const { error } = await removeBookmark(currentUser.value.id, bm.document_id);
+            if (!error) {
+                if (isBookmarked.value && tokenDocId.value === bm.document_id) isBookmarked.value = false;
+                await fetchDocuments();
+            } else {
+                alert('移除書籤失敗，請稍後再試。');
+            }
+        };
+
+        // 從側邊欄開啟書籤（用 token 重新載入，不換頁）
+        const openBookmark = async (bm) => {
+            sidebarOpen.value = false;
+            await loadByToken(bm.token, { updateUrl: true });
         };
 
         const saveSharedPlanToLocal = () => {
@@ -1714,8 +1791,12 @@ createApp({
         const fetchDocuments = async () => {
             if (!currentUser.value) return;
             docsLoading.value = true;
-            const { data, error } = await fetchMyDocuments();
-            if (!error && data) myDocuments.value = data;
+            const [ownedRes, bookmarkedRes] = await Promise.all([
+                fetchMyDocuments(),
+                fetchBookmarkedDocuments(currentUser.value.id),
+            ]);
+            if (!ownedRes.error && ownedRes.data) myDocuments.value = ownedRes.data;
+            if (!bookmarkedRes.error && bookmarkedRes.data) bookmarkedDocuments.value = bookmarkedRes.data;
             docsLoading.value = false;
         };
 
@@ -1724,6 +1805,15 @@ createApp({
             for (const doc of myDocuments.value) {
                 if (!groups[doc.duty_key]) groups[doc.duty_key] = [];
                 groups[doc.duty_key].push(doc);
+            }
+            return groups;
+        });
+
+        const bookmarksByDuty = computed(() => {
+            const groups = {};
+            for (const bm of bookmarkedDocuments.value) {
+                if (!groups[bm.duty_key]) groups[bm.duty_key] = [];
+                groups[bm.duty_key].push(bm);
             }
             return groups;
         });
@@ -1746,7 +1836,7 @@ createApp({
         };
 
         const loadTemplate = (doc) => {
-            if (!confirm(`載入「${doc.name}」？目前未儲存的變更將會遺失。`)) return;
+            if (!confirm(`將載入「${doc.name}」範本資料，目前未儲存的變更將會遺失。`)) return;
             _applySharedData(doc.data);
             sidebarOpen.value = false;
         };
@@ -1801,11 +1891,18 @@ createApp({
             expandedDutySections.value[dutyKey] = !expandedDutySections.value[dutyKey];
         };
 
-        watch(currentUser, (user) => {
+        watch(currentUser, async (user) => {
             if (user) {
-                fetchDocuments();
+                await fetchDocuments();
+                // 若此時正在瀏覽分享頁面，更新書籤狀態
+                if (tokenDocId.value) {
+                    const { data: bm } = await checkBookmark(user.id, tokenDocId.value);
+                    isBookmarked.value = !!bm;
+                }
             } else {
                 myDocuments.value = [];
+                bookmarkedDocuments.value = [];
+                isBookmarked.value = false;
                 sidebarOpen.value = false;
             }
         });
@@ -1846,6 +1943,8 @@ createApp({
             tokenMode, tokenDocName, tokenSaving, isReadOnly, saveByEditToken, pullLatest,
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
             realtimeNotif,
+            isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,
+            addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
         };
     }
 }).mount('#app');

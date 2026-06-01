@@ -1,5 +1,20 @@
 import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel } from './src/supabase.js';
 
+// Service Worker 註冊：偵測到新版本時自動重新載入頁面
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // 有舊版 SW 在控制中，代表這是「更新」而非初次安裝，直接刷新
+                    window.location.reload();
+                }
+            });
+        });
+    }).catch(() => {});
+}
+
 const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
 const MEMBER_COLORS = [

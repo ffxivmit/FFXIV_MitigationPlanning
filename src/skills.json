@@ -3,7 +3,7 @@
         "name": "騎士",
         "icon": "src/Job_icons/01_TANK/Job/Paladin.png",
         "skills": [
-            { "id": "pld_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/01_PLD/Role_Actions/Reprisal.png" },
+            { "id": "pld_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/01_PLD/Role_Actions/Reprisal.png" },
             { "id": "pld_poa", "name": "武裝戍衛", "tags": ["減傷"], "title":"效果時間內自身的格擋發動率變為100%，範圍內的隊員受到的傷害減輕15%", "effects": [{ "type": "mit_all", "val": 0.15 }], "duration": 18, "cooldown": 120, "icon": "src/Skill_icons/01_PLD/Passage_of_Arms.png" },
             { "id": "pld_div", "name": "聖光幕簾", "tags": ["護盾"], "title":"為自身與周圍隊員附加騎士最大HP10%的護盾","effects": [{ "type": "shield_maxhp", "val": 0.10 }], "duration": 30, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Divine_Veil.png" },
             { "id": "pld_clm",  "name": "深仁厚澤", "title":"恢復目標的HP，恢復力：1000\n追加效果：對小隊隊員發動該技能時，自身恢復目標所恢復HP的一半", "effects": [], "duration": 1, "cooldown": 2.5, "icon": "src/Skill_icons/01_PLD/Clemency.png", "personal": true },
@@ -20,7 +20,7 @@
         "name": "戰士",
         "icon": "src/Job_icons/01_TANK/Job/Warrior.png",
         "skills": [
-            { "id": "war_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Role_Actions/Reprisal.png" },
+            { "id": "war_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Role_Actions/Reprisal.png" },
             { "id": "war_sio", "name": "擺脫", "tags": ["護盾", "HOT"], "title":"為自身與周圍隊員附加能夠抵禦一定傷害的防護罩,\n該防護罩能夠抵消相當於目標最大HP15%的傷害量\n另外，若自身處於戰慄、戮罪、原初的血氣狀態，發動該技能會解除這些狀態\n每解除一個狀態，防護罩的效果量上升2%", "effects": [{ "type": "shield_maxhp", "val": 0.15 }, { "type": "hot", "val": 300 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Shake_It_Off.png" },
             { "id": "war_ramp",  "name": "鐵壁", "tags": ["減傷"], "title":"20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Role_Actions/Rampart.png", "personal": true },
             { "id": "war_eqb",  "name": "泰然自若", "tags": ["HOT"], "title":"恢復自身HP，恢復力：1200\n追加效果：持續恢復自身的HP，恢復力：200", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Equilibrium.png", "personal": true },
@@ -36,7 +36,7 @@
         "name": "暗黑騎士",
         "icon": "src/Job_icons/01_TANK/Job/DarkKnight.png",
         "skills": [
-            { "id": "drk_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Role_Actions/Reprisal.png" },
+            { "id": "drk_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/03_DRK/Role_Actions/Reprisal.png" },
             { "id": "drk_dmissi",  "name": "暗黑佈道", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/03_DRK/Dark_Missionary.png" },
             { "id": "drk_tbn",  "name": "至黑之夜", "tags": ["護盾"], "title":"為自身或一名隊員附加能夠抵禦目標最大HP25%傷害的防護罩，持續時間：7秒", "effects": [{ "type": "shield_maxhp", "val": 0.25 }], "duration": 7, "cooldown": 15, "icon": "src/Skill_icons/03_DRK/The_Blackest_Night.png", "personal": true },
             { "id": "drk_obl",  "name": "獻奉", "tags": ["減傷"], "title":"令自身或一名隊員受到的傷害減輕10%，持續時間：10秒", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "charges": 2, "icon": "src/Skill_icons/03_DRK/Oblation.png", "personal": true },
@@ -52,7 +52,7 @@
         "name": "絕槍戰士",
         "icon": "src/Job_icons/01_TANK/Job/Gunbreaker.png",
         "skills": [
-            { "id": "gnb_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 10, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Role_Actions/Reprisal.png" },
+            { "id": "gnb_rep", "name": "雪仇", "tags": ["減傷"], "title":"使自身周圍的敵人攻擊傷害降低10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Role_Actions/Reprisal.png" },
             { "id": "gnb_hol", "name": "光之心", "tags": ["減傷"], "title":"15秒內，令自身和周圍隊員所受到的物理傷害減輕5%、魔法傷害減輕10%", "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "mit_physical", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Heart_of_Light.png" },
             { "id": "gnb_hoc",  "name": "剛玉之心", "tags": ["減傷"], "title":"8秒內，自身受到的傷害減輕15%\n前4秒額外再減輕15%（乘算共減輕27.75%）\nHP 低於50%時或持續時間結束後自動恢復，恢復力：900。", "effects": [{ "type": "mit_all", "val": 0.15 }, { "type": "mit_all", "val": 0.15, "duration": 4 }], "duration": 8, "cooldown": 25, "icon": "src/Skill_icons/04_GNB/Heart_of_Corundum.png", "personal": true },
             { "id": "gnb_aura",  "name": "極光", "tags": ["HOT"], "title":"令目標HP持續恢復，恢復力：300\n持續時間：18秒，累積次數：2", "effects": [], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Aurora.png", "personal": true },

@@ -1,3 +1,5 @@
+import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel } from './src/supabase.js';
+
 const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
 const MEMBER_COLORS = [
@@ -95,6 +97,147 @@ let _insertHideTimer = null;
 // ── Worker URL（部署後請替換為你的 Worker 網址）────────────────
 const WORKER_URL = 'https://mit-planner.ffxivmit.workers.dev';
 
+// ── Realtime 模組層級狀態（非 reactive，跨元件生命週期）───────
+let _realtimeChannel = null;
+let _realtimeNotifTimer = null;
+
+// ── 三向 diff merge helpers（純函式，不依賴 Vue）────────────────
+
+// 比較兩個施放索引陣列是否相同（忽略順序）
+const _arrEq = (a, b) => {
+    const sa = [...(a || [])].sort((x, y) => x - y);
+    const sb = [...(b || [])].sort((x, y) => x - y);
+    return sa.length === sb.length && sa.every((v, i) => v === sb[i]);
+};
+
+/**
+ * 三向合併：base（我載入時的快照）、dbData（DB 目前版本）、local（我要儲存的版本）
+ * 回傳 { merged, conflicts }
+ * conflicts 是陣列，每個元素描述一個衝突欄位
+ */
+function mergePayloads(base, dbData, local) {
+    const conflicts = [];
+    const merged = {};
+
+    merged.duty = local.duty || dbData.duty || base.duty;
+
+    // ── mitMap ────────────────────────────────────────────────
+    const bm = base.mits || {};
+    const dm = dbData.mits || {};
+    const lm = local.mits || {};
+    const allMitKeys = new Set([...Object.keys(bm), ...Object.keys(dm), ...Object.keys(lm)]);
+    const mergedMits = {};
+
+    for (const key of allMitKeys) {
+        const bv = bm[key] || [];
+        const dv = dm[key] || [];
+        const lv = lm[key] || [];
+        const lChg = !_arrEq(lv, bv);
+        const dChg = !_arrEq(dv, bv);
+
+        if (lChg && dChg && !_arrEq(lv, dv)) {
+            conflicts.push({ type: 'skill', key });
+            if (dv.length) mergedMits[key] = dv;       // 衝突：保留 DB（他人）版本
+        } else if (lChg) {
+            if (lv.length) mergedMits[key] = lv;        // 只有我改：用我的
+        } else {
+            if (dv.length) mergedMits[key] = dv;        // 只有他改或都沒改：用 DB
+        }
+    }
+    merged.mits = mergedMits;
+
+    // ── selectedVariants ──────────────────────────────────────
+    const bsv = base.selectedVariants || {};
+    const dsv = dbData.selectedVariants || {};
+    const lsv = local.selectedVariants || {};
+    const allSVKeys = new Set([...Object.keys(bsv), ...Object.keys(dsv), ...Object.keys(lsv)]);
+    const mergedSV = {};
+
+    for (const key of allSVKeys) {
+        const bv = bsv[key], dv = dsv[key], lv = lsv[key];
+        const lChg = lv !== bv, dChg = dv !== bv;
+        if (lChg && dChg && lv !== dv) {
+            conflicts.push({ type: 'variant', key });
+            if (dv !== undefined) mergedSV[key] = dv;
+        } else if (lChg) {
+            if (lv !== undefined) mergedSV[key] = lv;
+        } else {
+            if (dv !== undefined) mergedSV[key] = dv;
+        }
+    }
+    merged.selectedVariants = mergedSV;
+
+    // ── party ─────────────────────────────────────────────────
+    const bp = base.party || [];
+    const dp = dbData.party || [];
+    const lp = local.party || [];
+    const _partyEq = (x, y) => x.length === y.length && x.every((v, i) => v === y[i]);
+    const lPartyChg = !_partyEq(lp, bp);
+    const dPartyChg = !_partyEq(dp, bp);
+
+    if (lPartyChg && dPartyChg && !_partyEq(lp, dp)) {
+        conflicts.push({ type: 'party' });
+        merged.party = dp;
+    } else if (lPartyChg) {
+        merged.party = lp;
+    } else {
+        merged.party = dp;
+    }
+
+    // ── customRowsByDuty ──────────────────────────────────────
+    const bc = base.customRowsByDuty || {};
+    const dc = dbData.customRowsByDuty || {};
+    const lc = local.customRowsByDuty || {};
+    const allDuties = new Set([...Object.keys(bc), ...Object.keys(dc), ...Object.keys(lc)]);
+    const mergedCR = {};
+
+    for (const duty of allDuties) {
+        const bById = Object.fromEntries((bc[duty] || []).map(r => [r.id, r]));
+        const dById = Object.fromEntries((dc[duty] || []).map(r => [r.id, r]));
+        const lById = Object.fromEntries((lc[duty] || []).map(r => [r.id, r]));
+        const allIds = new Set([...Object.keys(bById), ...Object.keys(dById), ...Object.keys(lById)]);
+        const rows = [];
+
+        for (const id of allIds) {
+            const bSer = JSON.stringify(bById[id]);
+            const dSer = JSON.stringify(dById[id]);
+            const lSer = JSON.stringify(lById[id]);
+            const lChg = lSer !== bSer, dChg = dSer !== bSer;
+
+            if (lChg && dChg && lSer !== dSer) {
+                conflicts.push({ type: 'customRow', duty, id });
+                if (dById[id]) rows.push(dById[id]);
+            } else if (lChg) {
+                if (lById[id]) rows.push(lById[id]);
+            } else {
+                if (dById[id]) rows.push(dById[id]);
+            }
+        }
+
+        if (rows.length > 0) {
+            rows.sort((a, b) => timeToSeconds(a.hitTime) - timeToSeconds(b.hitTime));
+            mergedCR[duty] = rows;
+        }
+    }
+    merged.customRowsByDuty = mergedCR;
+
+    // ── 顯示設定（boolean）────────────────────────────────────
+    for (const field of ['hideNonDmg', 'hideTargeted']) {
+        const bv = base[field], dv = dbData[field], lv = local[field];
+        if (lv !== bv && dv !== bv && lv !== dv) {
+            conflicts.push({ type: field });
+            merged[field] = dv;
+        } else if (lv !== bv) {
+            merged[field] = lv;
+        } else {
+            merged[field] = dv !== undefined ? dv : bv;
+        }
+    }
+
+    return { merged, conflicts };
+}
+
+
 createApp({
     setup() {
         const categoryDb = ref({});
@@ -108,13 +251,24 @@ createApp({
         const hideNonDmg = ref(false);
         const hideTargeted = ref(false);
         const currentCat = ref('Tank');
-        const settingsOpen = ref(false);
         const compactMode = ref(true);
         const selectedVariants = ref({});
         const expandedPersonalMembers = ref([]);
         const shareToastVisible = ref(false);
         const shareLoading = ref(false);
         const isViewingSharedPlan = ref(false);
+        const tokenMode = ref(null);    // null | 'edit' | 'read'
+        const activeToken = ref('');
+        const tokenDocName = ref('');
+        const tokenLoadedAt = ref('');
+        const tokenBaseData = ref(null); // 載入時的資料快照，用於三向 merge
+        const tokenDocId   = ref('');
+        const tokenSaving  = ref(false);
+        const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
+        const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
+        const isReadOnly = computed(() => tokenMode.value === 'read');
+        const currentUser = ref(null);
+        const authLoading = ref(true);
 
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
@@ -232,6 +386,7 @@ createApp({
         // 在兩列之間插入自訂列，時間預設為中間值；若無前後列則各加減 5 秒
         // 插入後自動聚焦時間輸入框讓使用者立即編輯
         const insertCustomRowBetween = (timeBefore, timeAfter) => {
+            if (isReadOnly.value) return;
             let suggestedSecs;
             if (timeBefore == null) {
                 suggestedSecs = timeToSeconds(timeAfter) - 5;
@@ -265,6 +420,7 @@ createApp({
 
         // 刪除自訂列，並修正 mitMap 中所有受影響的 internalIdx（大於被刪除索引的都要 -1）
         const removeCustomRow = (customId) => {
+            if (isReadOnly.value) return;
             const rows = customRowsByDuty.value[selectedDutyKey.value];
             if (!rows) return;
             const crIdx = rows.findIndex(cr => cr.id === customId);
@@ -294,6 +450,7 @@ createApp({
         };
 
         const updateCustomRow = (customId, field, value) => {
+            if (isReadOnly.value) return;
             const rows = customRowsByDuty.value[selectedDutyKey.value];
             if (!rows) return;
             const row = rows.find(cr => cr.id === customId);
@@ -589,6 +746,7 @@ createApp({
         // 多充能技能：模擬插入後驗算後方施放是否會因充能不足產生衝突並詢問使用者
         // 單充能技能：若新施放點的冷卻覆蓋到後方已記錄的施放點，同樣詢問是否取消衝突
         const toggleSkillCast = (skillInstanceId, internalIdx, skill) => {
+            if (isReadOnly.value) return;
             const key = mitKeyForSkill(skillInstanceId);
             const castRows = [...(mitMap.value[key] || [])];
             const idx = castRows.indexOf(internalIdx);
@@ -818,16 +976,26 @@ createApp({
                 console.error("資料載入失敗，請確認檔案路徑是否正確 (src/)", err);
                 alert("無法讀取 JSON 資料，請檢查控制台錯誤訊息。");
             }
+            try {
+                const { data: { session } } = await getSession();
+                currentUser.value = session?.user ?? null;
+            } catch (e) {
+                console.warn('Auth session check failed:', e);
+            } finally {
+                authLoading.value = false;
+            }
         });
 
         // ── Party ─────────────────────────────────────────────
         const addToParty = (jobId) => {
+            if (isReadOnly.value) return;
             if (party.value.length < 8) {
                 party.value.push(jobId);
             }
         };
 
         const removeFromParty = (index) => {
+            if (isReadOnly.value) return;
             party.value.splice(index, 1);
         };
 
@@ -1026,6 +1194,7 @@ createApp({
         };
 
         const clearSkill = (instanceId, skillName) => {
+            if (isReadOnly.value) return;
             const skill = activeSkills.value.find(s => s.instanceId === instanceId);
             let hasPair = false;
             if (skill && skill.togglesWithId) {
@@ -1056,6 +1225,7 @@ createApp({
         };
 
         const clearMember = (pIdx, jobName) => {
+            if (isReadOnly.value) return;
             if (!confirm(`確定要清除 ${jobName} 的所有施放紀錄？`)) return;
             const prefix = `${selectedDutyKey.value}-p${pIdx}-`;
             const newMap = { ...mitMap.value };
@@ -1066,6 +1236,7 @@ createApp({
         };
 
         const clearAll = () => {
+            if (isReadOnly.value) return;
             if (!confirm('確定要清除所有施放紀錄？此操作無法復原。')) return;
             mitMap.value = {};
         };
@@ -1082,13 +1253,42 @@ createApp({
         };
 
         const loadFromShareParam = async () => {
-            const id = new URLSearchParams(window.location.search).get('s');
-            if (!id) return false;
+            const params = new URLSearchParams(window.location.search);
+            const shareId   = params.get('s');
+            const editToken = params.get('edit');
+            const viewToken = params.get('view');
+
+            // Supabase token-based share
+            if (editToken || viewToken) {
+                const token = editToken || viewToken;
+                try {
+                    const { data, error } = await getDocumentByToken(token);
+                    if (error || !data) return false;
+                    tokenMode.value     = data.token_type;  // 'edit' | 'read'
+                    activeToken.value   = token;
+                    tokenDocName.value  = data.name || '';
+                    tokenLoadedAt.value = data.updated_at || '';
+                    tokenBaseData.value = JSON.parse(JSON.stringify(data.data || {}));
+                    isViewingSharedPlan.value = true;
+                    _applySharedData(data.data);
+                    // 訂閱 Realtime 頻道
+                    if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
+                    tokenDocId.value = data.id || '';
+                    if (tokenDocId.value) _realtimeChannel = subscribeDocChannel(tokenDocId.value, _onRealtimeUpdate);
+                    return true;
+                } catch (e) {
+                    console.error('載入分享連結失敗', e);
+                    return false;
+                }
+            }
+
+            // Legacy Cloudflare Worker share
+            if (!shareId) return false;
             try {
-                const res = await fetch(`${WORKER_URL}/load/${id}`);
+                const res = await fetch(`${WORKER_URL}/load/${shareId}`);
                 if (!res.ok) return false;
                 const data = await res.json();
-                isViewingSharedPlan.value = true;   // 必須在 _applySharedData 之前設定，確保 watcher 觸發時已有 flag
+                isViewingSharedPlan.value = true;
                 _applySharedData(data);
                 return true;
             } catch (e) {
@@ -1149,6 +1349,240 @@ createApp({
                 shareLoading.value = false;
             }
         };
+
+        // 將 rawConflicts 陣列加上可讀的顯示資訊，供 modal 使用
+        const _enrichConflicts = (rawConflicts, dbData, localData) => {
+            const toTimes = (indices) =>
+                [...(indices || [])].sort((a, b) => a - b)
+                    .map(i => allRowsFlat.value[i]?.hitTime || `#${i}`);
+
+            const parseMitKey = (key) => {
+                const known = dutyIndex.value.duties.find(d => key.startsWith(d.key + '-'));
+                if (known) {
+                    const m = key.slice(known.key.length + 1).match(/^p(\d+)-(.+)$/);
+                    if (m) return { pIdx: parseInt(m[1]), skillInstId: m[2] };
+                }
+                const m = key.match(/^.+-p(\d+)-(.+)$/);
+                return m ? { pIdx: parseInt(m[1]), skillInstId: m[2] } : null;
+            };
+
+            return rawConflicts.map(c => {
+                if (c.type === 'skill') {
+                    const parsed = parseMitKey(c.key);
+                    const pIdx = parsed?.pIdx ?? 0;
+                    const skillId = (parsed?.skillInstId ?? c.key).replace(/-v\d+$/, '');
+                    const skillName = skillNameById.value[skillId] || skillId;
+                    const jobKey = localData.party?.[pIdx] || dbData.party?.[pIdx];
+                    const jobName = jobKey ? (jobDb.value[jobKey]?.name || jobKey) : '';
+                    return {
+                        ...c,
+                        label: `P${pIdx + 1}${jobName ? ' ' + jobName : ''}「${skillName}」`,
+                        dbDisplay:    toTimes(dbData.mits?.[c.key]),
+                        localDisplay: toTimes(localData.mits?.[c.key]),
+                        choice: 'db',
+                    };
+                }
+                if (c.type === 'party') {
+                    const n = k => jobDb.value[k]?.name || k;
+                    return {
+                        ...c,
+                        label: '職業配置',
+                        dbDisplay:    (dbData.party    || []).map((k, i) => `P${i + 1} ${n(k)}`),
+                        localDisplay: (localData.party || []).map((k, i) => `P${i + 1} ${n(k)}`),
+                        choice: 'db',
+                    };
+                }
+                if (c.type === 'variant') {
+                    const row = allRowsFlat.value[parseInt(c.key)];
+                    const vars = row?.variants || [];
+                    const n = idx => vars[idx]?.skill || `選項 ${idx}`;
+                    return {
+                        ...c,
+                        label: `招式變體：${row?.skill || `列 #${c.key}`}`,
+                        dbDisplay:    [n(dbData.selectedVariants?.[c.key])],
+                        localDisplay: [n(localData.selectedVariants?.[c.key])],
+                        choice: 'db',
+                    };
+                }
+                if (c.type === 'customRow') {
+                    const dr = (dbData.customRowsByDuty?.[c.duty]    || []).find(r => r.id === c.id);
+                    const lr = (localData.customRowsByDuty?.[c.duty] || []).find(r => r.id === c.id);
+                    return {
+                        ...c,
+                        label: `自訂時間點（${getDutyDisplayName(c.duty)}）`,
+                        dbDisplay:    dr ? [`${dr.hitTime}　${dr.skill || '（無名稱）'}`] : ['（已刪除）'],
+                        localDisplay: lr ? [`${lr.hitTime}　${lr.skill || '（無名稱）'}`] : ['（已刪除）'],
+                        choice: 'db',
+                    };
+                }
+                if (c.type === 'hideNonDmg')   return { ...c, label: '顯示設定：隱藏無傷害招式', dbDisplay: [dbData.hideNonDmg    ? '開啟' : '關閉'], localDisplay: [localData.hideNonDmg    ? '開啟' : '關閉'], choice: 'db' };
+                if (c.type === 'hideTargeted') return { ...c, label: '顯示設定：隱藏單體攻擊',   dbDisplay: [dbData.hideTargeted  ? '開啟' : '關閉'], localDisplay: [localData.hideTargeted  ? '開啟' : '關閉'], choice: 'db' };
+                return { ...c, label: c.key || c.type, dbDisplay: [], localDisplay: [], choice: 'db' };
+            });
+        };
+
+        const _commitSave = async (dataToSave) => {
+            const { error } = await updateByEditToken(activeToken.value, dataToSave);
+            if (error) throw error;
+            _applySharedData(dataToSave);
+            const { data: saved } = await getDocumentByToken(activeToken.value);
+            if (saved) {
+                tokenLoadedAt.value = saved.updated_at;
+                tokenBaseData.value = JSON.parse(JSON.stringify(dataToSave));
+            }
+            realtimeNotif.value = null;
+            // 廣播給其他編輯者／唯讀者
+            if (_realtimeChannel && saved) {
+                _realtimeChannel.send({
+                    type: 'broadcast',
+                    event: 'doc_updated',
+                    payload: { data: dataToSave, updatedAt: saved.updated_at },
+                });
+            }
+            if (_toastTimer) clearTimeout(_toastTimer);
+            shareToastVisible.value = true;
+            _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
+        };
+
+        const saveByEditToken = async () => {
+            if (tokenMode.value !== 'edit' || tokenSaving.value) return;
+            tokenSaving.value = true;
+            try {
+                const { data: latest, error: fetchErr } = await getDocumentByToken(activeToken.value);
+                if (fetchErr || !latest) throw new Error('無法取得文件資訊');
+                const local = buildPayload();
+                if (latest.updated_at !== tokenLoadedAt.value) {
+                    const { merged: autoMerged, conflicts: rawConflicts } = mergePayloads(
+                        tokenBaseData.value || {}, latest.data || {}, local
+                    );
+                    if (rawConflicts.length > 0) {
+                        conflictDialog.value = {
+                            open: true,
+                            enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
+                            autoMerged,
+                            dbData:    latest.data || {},
+                            localData: local,
+                        };
+                        return; // 等 user 在 modal 決定後再繼續
+                    }
+                    await _commitSave(autoMerged);
+                } else {
+                    await _commitSave(local);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('儲存失敗，請稍後再試。');
+            } finally {
+                tokenSaving.value = false;
+            }
+        };
+
+        const resolveConflictDialog = async () => {
+            const { enriched, autoMerged, dbData, localData } = conflictDialog.value;
+            const final = JSON.parse(JSON.stringify(autoMerged));
+
+            for (const c of enriched) {
+                if (c.choice !== 'local') continue;
+                if (c.type === 'skill') {
+                    const lv = localData.mits?.[c.key] || [];
+                    if (lv.length) final.mits[c.key] = lv; else delete final.mits[c.key];
+                } else if (c.type === 'party') {
+                    final.party = localData.party || [];
+                } else if (c.type === 'variant') {
+                    const lv = localData.selectedVariants?.[c.key];
+                    if (lv !== undefined) final.selectedVariants[c.key] = lv;
+                    else delete final.selectedVariants[c.key];
+                } else if (c.type === 'customRow') {
+                    const lr = (localData.customRowsByDuty?.[c.duty] || []).find(r => r.id === c.id);
+                    const rows = final.customRowsByDuty[c.duty] || [];
+                    const ei = rows.findIndex(r => r.id === c.id);
+                    if (lr) { if (ei >= 0) rows[ei] = lr; else rows.push(lr); }
+                    else if (ei >= 0) rows.splice(ei, 1);
+                    if (rows.length) final.customRowsByDuty[c.duty] = rows;
+                    else delete final.customRowsByDuty[c.duty];
+                } else if (c.type === 'hideNonDmg')   { final.hideNonDmg   = localData.hideNonDmg; }
+                  else if (c.type === 'hideTargeted') { final.hideTargeted = localData.hideTargeted; }
+            }
+
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, localData: null };
+            tokenSaving.value = true;
+            try { await _commitSave(final); }
+            catch (e) { console.error(e); alert('儲存失敗，請稍後再試。'); }
+            finally { tokenSaving.value = false; }
+        };
+
+        const cancelConflictDialog = () => {
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, localData: null };
+        };
+
+        const _onRealtimeUpdate = ({ data: remoteData, updatedAt }) => {
+            if (updatedAt === tokenLoadedAt.value) return; // 自己廣播的 echo，忽略
+            if (tokenMode.value === 'read') {
+                _applySharedData(remoteData);
+                tokenLoadedAt.value = updatedAt;
+                tokenBaseData.value = JSON.parse(JSON.stringify(remoteData || {}));
+                realtimeNotif.value = { type: 'auto' };
+                clearTimeout(_realtimeNotifTimer);
+                _realtimeNotifTimer = setTimeout(() => { realtimeNotif.value = null; }, 3000);
+                return;
+            }
+            // 編輯模式：提示使用者儲存時會自動 merge
+            realtimeNotif.value = { type: 'pending' };
+        };
+
+        const setAllConflictChoices = (choice) => {
+            conflictDialog.value.enriched.forEach(c => { c.choice = choice; });
+        };
+
+        const pullLatest = async () => {
+            if (tokenMode.value !== 'edit' || tokenSaving.value) return;
+            tokenSaving.value = true;
+            try {
+                const { data: latest, error } = await getDocumentByToken(activeToken.value);
+                if (error || !latest) throw new Error('無法取得文件資訊');
+                if (latest.updated_at === tokenLoadedAt.value) {
+                    realtimeNotif.value = null;
+                    return;
+                }
+                const local = buildPayload();
+                const { merged, conflicts: rawConflicts } = mergePayloads(
+                    tokenBaseData.value || {}, latest.data || {}, local
+                );
+                if (rawConflicts.length === 0) {
+                    _applySharedData(merged);
+                    tokenLoadedAt.value = latest.updated_at;
+                    tokenBaseData.value = JSON.parse(JSON.stringify(merged));
+                    realtimeNotif.value = null;
+                } else {
+                    conflictDialog.value = {
+                        open: true,
+                        enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
+                        autoMerged: merged,
+                        dbData: latest.data || {},
+                        localData: local,
+                    };
+                }
+            } catch (e) {
+                console.error(e);
+                alert('載入最新版本失敗，請稍後再試。');
+            } finally {
+                tokenSaving.value = false;
+            }
+        };
+
+        const _copyToClipboard = async (url) => {
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch {
+                prompt('複製以下連結：', url);
+            }
+            if (_toastTimer) clearTimeout(_toastTimer);
+            shareToastVisible.value = true;
+            _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
+        };
+
+        const copyEditLink = (doc) => _copyToClipboard(buildEditUrl(doc.edit_token));
+        const copyReadLink = (doc) => _copyToClipboard(buildReadUrl(doc.read_token));
 
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
@@ -1237,10 +1671,134 @@ createApp({
             dutyDropdownOpen.value = false;
         };
 
+        // ── Discord Auth ──────────────────────────────────────
+        sbAuthChange((_event, session) => {
+            currentUser.value = session?.user ?? null;
+        });
+
+        const loginWithDiscord = () => signInWithDiscord();
+        const logoutUser = async () => {
+            await signOut();
+            currentUser.value = null;
+        };
+        const discordAvatarUrl = computed(() =>
+            currentUser.value?.user_metadata?.avatar_url ?? null
+        );
+        const discordUsername = computed(() =>
+            currentUser.value?.user_metadata?.full_name ||
+            currentUser.value?.user_metadata?.user_name ||
+            '使用者'
+        );
+
+        // ── 側邊欄 / 我的範本 ─────────────────────────────────
+        const sidebarOpen = ref(false);
+        const myDocuments = ref([]);
+        const docsLoading = ref(false);
+        const expandedDutySections = ref({});
+
+        const fetchDocuments = async () => {
+            if (!currentUser.value) return;
+            docsLoading.value = true;
+            const { data, error } = await fetchMyDocuments();
+            if (!error && data) myDocuments.value = data;
+            docsLoading.value = false;
+        };
+
+        const documentsByDuty = computed(() => {
+            const groups = {};
+            for (const doc of myDocuments.value) {
+                if (!groups[doc.duty_key]) groups[doc.duty_key] = [];
+                groups[doc.duty_key].push(doc);
+            }
+            return groups;
+        });
+
+        const getDutyDisplayName = (dutyKey) =>
+            dutyIndex.value.duties.find(d => d.key === dutyKey)?.name ?? dutyKey;
+
+        const saveCurrentTemplate = async () => {
+            if (!currentUser.value || !selectedDutyKey.value) return;
+            const defaultName = getDutyDisplayName(selectedDutyKey.value) + ' 範本';
+            const name = prompt('請輸入範本名稱：', defaultName);
+            if (!name || !name.trim()) return;
+            const { error } = await createDocument(currentUser.value.id, selectedDutyKey.value, name.trim(), buildPayload());
+            if (!error) {
+                await fetchDocuments();
+                expandedDutySections.value[selectedDutyKey.value] = true;
+            } else {
+                alert('儲存失敗，請稍後再試。');
+            }
+        };
+
+        const loadTemplate = (doc) => {
+            if (!confirm(`載入「${doc.name}」？目前未儲存的變更將會遺失。`)) return;
+            _applySharedData(doc.data);
+            sidebarOpen.value = false;
+        };
+
+        const buildPayload = () => ({
+            duty: selectedDutyKey.value,
+            party: party.value,
+            mits: mitMap.value,
+            selectedVariants: selectedVariants.value,
+            customRowsByDuty: customRowsByDuty.value,
+            hideNonDmg: hideNonDmg.value,
+            hideTargeted: hideTargeted.value,
+        });
+
+        const updateTemplate = async (doc) => {
+            if (!confirm(`用目前狀態覆蓋「${doc.name}」？`)) return;
+            const { error } = await updateDocument(doc.id, buildPayload());
+            if (!error) {
+                await fetchDocuments();
+            } else {
+                alert('更新失敗，請稍後再試。');
+            }
+        };
+
+        const deleteTemplate = async (doc) => {
+            if (!confirm(`確定要刪除「${doc.name}」？`)) return;
+            const { error } = await deleteDocument(doc.id);
+            if (!error) {
+                await fetchDocuments();
+            } else {
+                alert('刪除失敗，請稍後再試。');
+            }
+        };
+
+        const renameTemplate = async (doc) => {
+            const newName = prompt('請輸入新名稱：', doc.name);
+            if (!newName || !newName.trim() || newName.trim() === doc.name) return;
+            const { error } = await renameDocument(doc.id, newName.trim());
+            if (!error) {
+                await fetchDocuments();
+            } else {
+                alert('重新命名失敗，請稍後再試。');
+            }
+        };
+
+        const shareLinksDocId = ref(null);
+        const toggleShareLinks = (doc) => {
+            shareLinksDocId.value = shareLinksDocId.value === doc.id ? null : doc.id;
+        };
+
+        const toggleDutySection = (dutyKey) => {
+            expandedDutySections.value[dutyKey] = !expandedDutySections.value[dutyKey];
+        };
+
+        watch(currentUser, (user) => {
+            if (user) {
+                fetchDocuments();
+            } else {
+                myDocuments.value = [];
+                sidebarOpen.value = false;
+            }
+        });
+
         return {
             categoryDb, jobDb, dutyDb, dutyIndex,
             selectedDutyKey, party, mitMap,
-            hideNonDmg, hideTargeted, settingsOpen, compactMode, currentCat,
+            hideNonDmg, hideTargeted, compactMode, currentCat,
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage,
             exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
@@ -1266,6 +1824,13 @@ createApp({
             hoverInsert, onRowMouseMove, onRowMouseLeave, onInsertBtnEnter, onInsertBtnLeave,
             skillTooltip, showSkillTooltip, hideSkillTooltip, keepSkillTooltip, skillNameById,
             darkMode, toggleDarkMode, customRowStyle,
+            currentUser, authLoading, loginWithDiscord, logoutUser, discordAvatarUrl, discordUsername,
+            sidebarOpen, myDocuments, docsLoading, expandedDutySections, documentsByDuty,
+            getDutyDisplayName, saveCurrentTemplate, updateTemplate, loadTemplate, deleteTemplate, renameTemplate, toggleDutySection,
+            copyEditLink, copyReadLink, shareLinksDocId, toggleShareLinks,
+            tokenMode, tokenDocName, tokenSaving, isReadOnly, saveByEditToken, pullLatest,
+            conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
+            realtimeNotif,
         };
     }
 }).mount('#app');

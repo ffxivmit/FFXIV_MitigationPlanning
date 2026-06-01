@@ -264,6 +264,16 @@ body.dark .text-green-600   { color: #55d98c !important; }
 body.dark .bg-green-50      { background-color: rgba(85,217,140,0.14) !important; }
 body.dark .border-green-200 { border-color: rgba(85,217,140,0.38) !important; }
 
+/* indigo（共同編輯模式 / 分享面板） */
+body.dark .text-indigo-600              { color: #c7d2fe !important; }
+body.dark .text-indigo-700              { color: #c7d2fe !important; }
+body.dark .hover\:text-indigo-600:hover { color: #c7d2fe !important; }
+body.dark .bg-indigo-100                  { background-color: rgba(99,102,241,0.18) !important; }
+body.dark .hover\:bg-indigo-100:hover    { background-color: rgba(99,102,241,0.18) !important; }
+body.dark .hover\:bg-indigo-50:hover     { background-color: rgba(99,102,241,0.10) !important; }
+body.dark .hover\:bg-indigo-200:hover    { background-color: rgba(99,102,241,0.28) !important; }
+body.dark .border-indigo-300             { border-color: rgba(99,102,241,0.45) !important; }
+
 /* 無敵（violet） */
 body.dark .text-violet-600   { color: #c084fc !important; }
 body.dark .bg-violet-50      { background-color: rgba(192,132,252,0.14) !important; }

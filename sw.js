@@ -24,7 +24,7 @@ self.addEventListener('fetch', e => {
 
     const path = url.pathname;
     if (
-        path === '/' ||
+        path === '/' || path.endsWith('/') ||
         path.endsWith('.html') ||
         path.endsWith('.js') ||
         path.endsWith('.css')

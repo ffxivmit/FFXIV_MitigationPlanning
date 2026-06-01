@@ -2,7 +2,7 @@ import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChan
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(reg => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
         reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {

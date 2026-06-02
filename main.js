@@ -22,7 +22,7 @@ const MEMBER_COLORS = [
     { bg: '#f0fdf4', border: '#22c55e', headerBg: '#dcfce7' },
     { bg: '#faf5ff', border: '#a855f7', headerBg: '#f3e8ff' },
     { bg: '#fffbeb', border: '#f59e0b', headerBg: '#fef3c7' },
-    { bg: '#fff1f2', border: '#f43f5e', headerBg: '#ffe4e6' },
+    { bg: '#f8e4f4', border: '#f366df', headerBg: '#fae3f5' },
     { bg: '#ecfeff', border: '#06b6d4', headerBg: '#cffafe' },
     { bg: '#fff7ed', border: '#f97316', headerBg: '#ffedd5' },
     { bg: '#f0fdfa', border: '#14b8a6', headerBg: '#ccfbf1' },
@@ -33,9 +33,9 @@ const DARK_MEMBER_COLORS = [
     { bg: 'rgba(61,189,114,0.12)',  border: '#3dbd72', headerBg: 'rgba(61,189,114,0.18)'  },
     { bg: 'rgba(192,132,252,0.13)', border: '#c084fc', headerBg: 'rgba(192,132,252,0.20)' },
     { bg: 'rgba(214,163,84,0.13)',  border: '#d6a354', headerBg: 'rgba(214,163,84,0.20)'  },
-    { bg: 'rgba(255,118,111,0.13)', border: '#ff766f', headerBg: 'rgba(255,118,111,0.20)' },
+    { bg: 'rgba(243,102,223,0.13)', border: '#f366df', headerBg: 'rgba(243,102,223,0.20)' },
     { bg: 'rgba(122,199,255,0.13)', border: '#7ac7ff', headerBg: 'rgba(122,199,255,0.20)' },
-    { bg: 'rgba(196,148,58,0.13)',  border: '#c49438', headerBg: 'rgba(196,148,58,0.20)'  },
+    { bg: 'rgba(240,152,90,0.13)',  border: '#f0985a', headerBg: 'rgba(240,152,90,0.20)'  },
     { bg: 'rgba(130,216,166,0.13)', border: '#82d8a6', headerBg: 'rgba(130,216,166,0.20)' },
 ];
 

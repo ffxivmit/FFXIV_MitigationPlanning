@@ -554,7 +554,7 @@
                             </button>
                             <template v-if="expandedDutySections['bm-' + dutyKey] !== false">
                                 <div v-for="bm in bookmarks" :key="bm.document_id"
-                                     class="px-4 py-2.5 border-b border-[#303842] hover:bg-slate-50 group transition-colors">
+                                     class="px-4 py-2.5 hover:bg-slate-50 group transition-colors">
                                     <div class="flex items-center justify-between gap-2">
                                         <button @click="openBookmark(bm)"
                                             class="text-sm font-semibold text-slate-700 text-left flex-1 truncate hover:text-amber-600 transition-colors">

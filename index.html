@@ -363,9 +363,12 @@
                                 <div v-else class="flex items-center justify-center">
                                     <div v-if="skill.passive"
                                          class="skill-covered" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="被動常駐減傷">∞</div>
+                                    <button v-else-if="isSkillCastOrigin(skill.instanceId, row._internalIdx) && skill.multiState && getSkillCastState(skill.instanceId, row._internalIdx) === 1"
+                                            class="skill-cast skill-cast--absorbed" :style="`background:${skill.memberCast}; border:2px solid ${skill.memberBorder}`"
+                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="吸收觸發（點擊取消）"><svg width="12" height="13" viewBox="0 0 20 22" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M10 1.5 L2.5 4.5 L2.5 10 C2.5 15.8 6 19.8 10 21.5 C14 19.8 17.5 15.8 17.5 10 L17.5 4.5 Z"/><polyline fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="10,1.5 7.5,8 12.5,11 7.5,16 10,21.5"/><polyline fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" points="10,1.5 7.5,8 12.5,11 7.5,16 10,21.5"/></svg></button>
                                     <button v-else-if="isSkillCastOrigin(skill.instanceId, row._internalIdx)"
                                             class="skill-cast" :style="`background:${skill.memberCast}; border:2px solid ${skill.memberBorder}`"
-                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消">✓</button>
+                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消（再按升至吸收觸發）">✓</button>
                                     <div v-else-if="isSkillOnCooldown(skill.instanceId, row._internalIdx, skill)" class="skill-cooldown" title="冷卻中"></div>
                                     <div v-else-if="isSkillActive(skill.instanceId, row._internalIdx, skill)"
                                          class="skill-covered" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="技能覆蓋中">✓</div>

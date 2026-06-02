@@ -157,8 +157,8 @@
         "icon": "src/Job_icons/03_DPS/Job/Pictomancer.png",
         "skills": [
             { "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], "title":"15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" },
-            { "id": "pct_tpc", "name": "坦培拉塗層", "tags": ["護盾"], "title":"為自身附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於最大HP20%的傷害量，持續時間：10秒\n防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短60秒", "effects": [], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/17_PCT/Tempera_Coat.png", "personal": true },
-            { "id": "pct_tpg", "name": "油性坦培拉塗層", "tags": ["護盾"], "title":"解除自身附加的坦培拉塗層，為自身及周圍隊員附加能夠抵消一定傷害量的防護罩\n該防護罩能夠抵消相當於目標最大HP10%的傷害量，持續時間：10秒\n發動條件：坦培拉塗層狀態中\n附加自身的防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短30秒", "effects": [], "duration": 10, "cooldown": 1, "icon": "src/Skill_icons/17_PCT/Tempera_Grassa.png","personal": true ,"conditionSkillId": "pct_tpc", "conditionOnce": true  }
+            { "id": "pct_tpc", "name": "坦培拉塗層", "tags": ["護盾"], "title":"為自身附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於最大HP20%的傷害量，持續時間：10秒\n防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短60秒", "effects": [], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/17_PCT/Tempera_Coat.png", "personal": true, "multiState": true, "stateCooldowns": [120, 60], "upgradeSkillId": "pct_tpg" },
+            { "id": "pct_tpg", "name": "油性坦培拉塗層", "tags": ["護盾"], "title":"解除自身附加的坦培拉塗層，為自身及周圍隊員附加能夠抵消一定傷害量的防護罩\n該防護罩能夠抵消相當於目標最大HP10%的傷害量，持續時間：10秒\n發動條件：坦培拉塗層狀態中\n附加自身的防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短30秒", "effects": [], "duration": 10, "cooldown": 1, "icon": "src/Skill_icons/17_PCT/Tempera_Grassa.png","personal": true ,"conditionSkillId": "pct_tpc", "conditionOnce": true, "multiState": true  }
         ]
     },
     "WHM": {

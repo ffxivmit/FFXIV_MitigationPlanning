@@ -109,6 +109,11 @@ tr:hover .skill-cell { filter: brightness(0.96); }
 }
 .skill-cast:hover { opacity: 0.75; }
 
+/* multiState 吸收觸發（state 1）：同底色，破盾 SVG */
+.skill-cast--absorbed {
+    padding: 0;
+}
+
 .skill-covered {
     width: 20px; height: 20px;
     border-radius: 4px;

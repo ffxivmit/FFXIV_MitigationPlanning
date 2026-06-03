@@ -75,7 +75,12 @@
             <div class="flex items-center gap-1 flex-wrap">
                 <span class="text-[10px] text-slate-400 font-medium shrink-0">{{ party.length }}/8</span>
                 <div v-for="(jobKey, pIdx) in party" :key="pIdx"
-                     @click="removeFromParty(pIdx)" class="group relative cursor-pointer">
+                     draggable="true"
+                     @dragstart="partyDragStart(pIdx, $event)"
+                     @dragover.prevent="partyDragOverItem(pIdx)"
+                     @dragend="partyDragEnd"
+                     @click="handlePartyClick(pIdx)"
+                     :class="['group relative transition-opacity select-none', draggedPartyIdx === pIdx ? 'opacity-30 cursor-grabbing' : 'cursor-grab']">
                     <img v-if="jobDb[jobKey]" :src="jobDb[jobKey].icon" :alt="jobDb[jobKey].name"
                          class="w-7 h-7 object-contain rounded hover:scale-110 transition-transform" :title="jobDb[jobKey].name">
                     <span class="absolute -bottom-0.5 -right-1 text-white text-[7px] px-0.5 rounded-full font-extrabold leading-tight"

@@ -1457,6 +1457,62 @@ createApp({
             party.value.splice(index, 1);
         };
 
+        const draggedPartyIdx = ref(null);
+        let _partyDidDrag = false;
+
+        const partyDragStart = (idx, e) => {
+            draggedPartyIdx.value = idx;
+            _partyDidDrag = false;
+            e.dataTransfer.effectAllowed = 'move';
+        };
+
+        // Shared: perform one reorder step (party array + mitMap/skillStateMap remapping)
+        const _applyPartySwap = (fromIdx, toIdx) => {
+            const n = party.value.length;
+            const oldToNew = Array.from({ length: n }, (_, i) => i);
+            if (fromIdx < toIdx) {
+                oldToNew[fromIdx] = toIdx;
+                for (let i = fromIdx + 1; i <= toIdx; i++) oldToNew[i] = i - 1;
+            } else {
+                oldToNew[fromIdx] = toIdx;
+                for (let i = toIdx; i < fromIdx; i++) oldToNew[i] = i + 1;
+            }
+            const remapKeys = (map) => {
+                const out = {};
+                for (const [key, val] of Object.entries(map)) {
+                    out[key.replace(/-p(\d+)-/, (_, p) => {
+                        const ni = oldToNew[parseInt(p)];
+                        return ni !== undefined ? `-p${ni}-` : `-p${p}-`;
+                    })] = val;
+                }
+                return out;
+            };
+            mitMap.value = remapKeys(mitMap.value);
+            skillStateMap.value = remapKeys(skillStateMap.value);
+            const arr = [...party.value];
+            const [moved] = arr.splice(fromIdx, 1);
+            arr.splice(toIdx, 0, moved);
+            party.value = arr;
+        };
+
+        // Toolbar: live swap on dragover (items are small, no flickering)
+        const partyDragOverItem = (idx) => {
+            if (draggedPartyIdx.value === null || draggedPartyIdx.value === idx) return;
+            _partyDidDrag = true;
+            _applyPartySwap(draggedPartyIdx.value, idx);
+            draggedPartyIdx.value = idx;
+        };
+
+        const partyDragEnd = () => {
+            draggedPartyIdx.value = null;
+            _partyDidDrag = false;
+        };
+
+        const handlePartyClick = (idx) => {
+            if (_partyDidDrag) return;
+            removeFromParty(idx);
+        };
+
         const togglePersonalSkills = (pIdx) => {
             const arr = expandedPersonalMembers.value;
             if (arr.includes(pIdx)) {
@@ -2497,6 +2553,7 @@ createApp({
             hideNonDmg, hideTargeted, compactMode, currentCat,
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage,
+            draggedPartyIdx, partyDragStart, partyDragOverItem, partyDragEnd, handlePartyClick,
             exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
             isViewingSharedPlan, saveSharedPlanToLocal,
             hasOriginalDamage, isTargetedAttack,

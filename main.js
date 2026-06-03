@@ -1034,6 +1034,67 @@ createApp({
             return getCastRows(skillInstanceId).includes(internalIdx);
         };
 
+        // 找出新技能效果窗口內，已排定的互斥技能施放記錄（雙向：本技能被封鎖者 + 本技能封鎖者）
+        const findForwardBlockConflicts = (skill, internalIdx) => {
+            const rowTime = rowTimes.value[internalIdx];
+            const skillEnd = rowTime + skill.duration;
+            const flat = allRowsFlat.value;
+            const conflicts = [];
+            const checkedIds = new Set();
+
+            const checkBlocker = (blockerId) => {
+                if (checkedIds.has(blockerId)) return;
+                checkedIds.add(blockerId);
+                const blockerSkill = activeSkillByKey.value.get(`${blockerId}|${skill.memberIndex}`);
+                if (!blockerSkill) return;
+                const blockerKey = mitKeyForSkill(blockerSkill.instanceId);
+                for (const ci of (mitMap.value[blockerKey] || [])) {
+                    const ct = timeToSeconds(flat[ci]?.hitTime);
+                    if (ct > rowTime && ct < skillEnd) {
+                        conflicts.push({ key: blockerKey, rowIdx: ci, time: flat[ci]?.hitTime, skillName: blockerSkill.name });
+                    }
+                }
+            };
+
+            for (const blockerId of (skill.blockedBySkillId || [])) checkBlocker(blockerId);
+            for (const s of activeSkills.value) {
+                if (s.memberIndex !== skill.memberIndex) continue;
+                if (s.blockedBySkillId?.includes(skill.id)) checkBlocker(s.id);
+            }
+            return conflicts;
+        };
+
+        // 找出在條件技能特定施放窗口內，已排定的所有依賴施放記錄
+        // 用於取消條件技能時自動連帶取消相依技能（無需確認）
+        const findConditionedCasts = (condSkill, canceledRowTime) => {
+            const flat = allRowsFlat.value;
+            const removals = [];
+            for (const s of activeSkills.value) {
+                if (s.memberIndex !== condSkill.memberIndex) continue;
+                if (s.conditionSkillId !== condSkill.id) continue;
+                const condWindow = s.conditionDuration ?? condSkill.duration;
+                const windowEnd = canceledRowTime + condWindow;
+                const sKey = mitKeyForSkill(s.instanceId);
+                for (const ci of (mitMap.value[sKey] || [])) {
+                    const ct = timeToSeconds(flat[ci]?.hitTime);
+                    if (ct >= canceledRowTime && ct <= windowEnd) {
+                        removals.push({ key: sKey, rowIdx: ci });
+                    }
+                }
+            }
+            return removals;
+        };
+
+        // 將互斥衝突移除套用到指定 map（直接修改傳入物件）
+        const applyBlockConflictRemovals = (conflicts, targetMap) => {
+            for (const { key, rowIdx } of conflicts) {
+                const arr = [...(targetMap[key] || [])];
+                const i = arr.indexOf(rowIdx);
+                if (i >= 0) arr.splice(i, 1);
+                if (arr.length) targetMap[key] = arr; else delete targetMap[key];
+            }
+        };
+
         // 找出 castRows 中會與 rowTime 產生冷卻衝突的後方施放點，詢問使用者是否取消衝突
         // 若使用者取消操作回傳 false，否則移除衝突施放點並回傳 true
         const removeForwardConflicts = (skill, castRows, rowTime, flat) => {
@@ -1070,6 +1131,12 @@ createApp({
                     if (idx < 0) {
                         if (!isSkillConditionMet(skill, internalIdx)) return;
                         if (isSkillBlocked(skill, internalIdx)) return;
+                        const tpcFwdConflicts = findForwardBlockConflicts(skill, internalIdx);
+                        if (tpcFwdConflicts.length > 0) {
+                            const desc = tpcFwdConflicts.map(c => `${c.skillName}（${c.time}）`).join('、');
+                            if (!confirm(`「${skill.name}」與互斥技能「${desc}」衝突，確認是否覆蓋並取消衝突紀錄。`)) return;
+                            applyBlockConflictRemovals(tpcFwdConflicts, newMap);
+                        }
                         if (isSkillOnCooldown(skillInstanceId, internalIdx, skill)) return;
                         if (isSkillActive(skillInstanceId, internalIdx, skill)) return;
                         const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
@@ -1078,7 +1145,7 @@ createApp({
                         castRows.sort((a, b) => a - b);
                         newMap[key] = castRows;
                     } else {
-                        // 已施放 → 取消，連帶取消窗口內的 TPG
+                        // 已施放 → 取消，連帶取消窗口內的 TPG 與條件式技能
                         const tpcTimeSecs = timeToSeconds(flat[internalIdx]?.hitTime);
                         const upgInst = activeSkillByKey.value.get(`${skill.upgradeSkillId}|${skill.memberIndex}`);
                         const upgKey = upgInst ? mitKeyForSkill(upgInst.instanceId) : null;
@@ -1094,6 +1161,7 @@ createApp({
                                 if (upgCastRows.length) { newMap[upgKey] = upgCastRows; } else { delete newMap[upgKey]; }
                             }
                         }
+                        applyBlockConflictRemovals(findConditionedCasts(skill, tpcTimeSecs), newMap);
                     }
                 } else {
                     // ── TPG 邏輯（conditionSkillId = TPC，multiState，無 upgradeSkillId）──
@@ -1114,11 +1182,21 @@ createApp({
             }
             // ── 原有邏輯 ─────────────────────────────────────────
 
+            let fwdBlockConflicts = [];
+            let conditionedCascade = [];
             if (idx >= 0) {
                 castRows.splice(idx, 1);
+                // 連帶取消此窗口內的條件式技能施放（預期行為，無需確認）
+                const canceledRowTime = timeToSeconds(flat[internalIdx]?.hitTime);
+                conditionedCascade = findConditionedCasts(skill, canceledRowTime);
             } else {
                 if (!isSkillConditionMet(skill, internalIdx)) return;
                 if (isSkillBlocked(skill, internalIdx)) return;
+                fwdBlockConflicts = findForwardBlockConflicts(skill, internalIdx);
+                if (fwdBlockConflicts.length > 0) {
+                    const desc = fwdBlockConflicts.map(c => `${c.skillName}（${c.time}）`).join('、');
+                    if (!confirm(`「${skill.name}」與互斥技能「${desc}」衝突，確認是否覆蓋並取消衝突紀錄。`)) return;
+                }
                 if (isSkillAetherDepleted(skill, internalIdx)) return;
                 if (isSkillAddersgallDepleted(skill, internalIdx)) return;
 
@@ -1166,6 +1244,8 @@ createApp({
             }
 
             const newMap = { ...mitMap.value };
+            applyBlockConflictRemovals(fwdBlockConflicts, newMap);
+            applyBlockConflictRemovals(conditionedCascade, newMap);
             if (castRows.length) {
                 newMap[key] = castRows;
             } else {

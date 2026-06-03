@@ -1609,9 +1609,9 @@ createApp({
                     for (const skill of nonPassiveSkills) {
                         const castTimes = castTimesCache.value.get(skill.instanceId);
                         if (!castTimes || !castTimes.length) continue;
-                        const activeCastTime = castTimes.find(ct => rowTime >= ct && rowTime <= ct + skill.duration) ?? null;
-                        if (activeCastTime === null) continue;
                         if (appliedNames.has(skill.name)) continue;
+                        const activeCastTime = castTimes.find(ct => rowTime >= ct && rowTime <= ct + skill.duration);
+                        if (activeCastTime == null) continue;
                         let applied = false;
                         for (const effect of skill.effects) {
                             if (effect.duration != null && rowTime > activeCastTime + effect.duration) continue;

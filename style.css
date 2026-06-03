@@ -311,8 +311,9 @@ body.dark .hover\:bg-amber-50\/70:hover { background-color: rgba(214,163,84,0.16
 body.dark .bg-amber-50.border.border-amber-200 { background-color: rgba(214,163,84,0.08) !important; }
 
 /* ── 輸入框文字顏色 ── */
-body.dark input { color: #e8e4dc; }
+body.dark input { color: #e8e4dc; background-color: #56525c21; border-color: #4a4643; }
 body.dark input::placeholder { color: #585450; }
+body.dark input:focus { border-color: #6c6460; outline: none; }
 
 /* ── 表格：Table container ── */
 body.dark .table-container { background: #20262c; }

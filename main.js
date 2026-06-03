@@ -303,6 +303,178 @@ createApp({
             localStorage.setItem('ffxiv_dark_mode', darkMode.value ? '1' : '0');
         };
 
+        // ── Raid Params ───────────────────────────────────────
+        const DEFAULT_RAID_PARAMS = {
+            tankHp: 225800,
+            teamMinHp: 142000,
+            healerMnd: { WHM: 3250, SCH: 3250, AST: 3250, SGE: 3250 }
+        };
+        const raidParams = ref(JSON.parse(JSON.stringify(DEFAULT_RAID_PARAMS)));
+        const allRaidParams = ref({});
+        const raidParamsDialog = ref({ open: false });
+        const raidParamsDraft = ref(JSON.parse(JSON.stringify(DEFAULT_RAID_PARAMS)));
+
+        const HEALER_JOB_MAP    = { whm: 'WHM', sch: 'SCH', ast: 'AST', sge: 'SGE' };
+        const TANK_JOB_PREFIXES = new Set(['pld', 'war', 'drk', 'gnb']);
+        const HEALER_MIND_SCALING = 0.81 / 100;
+        const SHIELD_EFFECT_TYPES = new Set(['shield_maxhp', 'shield_potency']);
+        const MIT_EFFECT_TYPES    = new Set(['mit_all', 'mit_physical', 'mit_magic', 'invincible']);
+
+        const getJobPrefix = (skill) => (skill.id || '').split('_')[0];
+        const getHealerMnd = (skill) => {
+            const jobKey = HEALER_JOB_MAP[getJobPrefix(skill)];
+            return jobKey ? (raidParams.value.healerMnd[jobKey] || 3250) : null;
+        };
+        const getMaxHpForSkill = (skill) =>
+            TANK_JOB_PREFIXES.has(getJobPrefix(skill))
+                ? raidParams.value.tankHp
+                : raidParams.value.teamMinHp;
+
+        const calcShieldDisplay = (skill) => {
+            if (!skill?.effects?.length) return [];
+            const results = [];
+            const healerMnd = getHealerMnd(skill);
+            const critMult = skill.recitationCritMult || null;
+
+            for (const eff of skill.effects) {
+                if (eff.type === 'shield_maxhp') {
+                    const pct = Math.round(eff.val * 100);
+                    const baseHp = getMaxHpForSkill(skill);
+                    const shieldHp = Math.floor(baseHp * eff.val);
+                    results.push({ label: `護盾（HP×${pct}%）`, value: shieldHp });
+                } else if (eff.type === 'shield_potency') {
+                    if (eff.useTankStats) {
+                        results.push({ label: `護盾恢復力 ${eff.val}`, note: '（坦克自身能力值計算）' });
+                        continue;
+                    }
+                    if (!healerMnd) continue;
+                    const shieldRatio = eff.shieldRatio || 1.0;
+                    const showRatio = shieldRatio !== 1.0;
+                    const healAmount = Math.floor(eff.val * (healerMnd * HEALER_MIND_SCALING));
+                    const shieldAmount = Math.floor(healAmount * shieldRatio);
+                    const critShieldAmount = critMult !== null ? Math.floor(shieldAmount * critMult) : null;
+                    const stacks = eff.stacks || 1;
+                    if (stacks > 1) {
+                        results.push({
+                            label: `護盾 ×${stacks}層`,
+                            value: shieldAmount,
+                            total: shieldAmount * stacks,
+                            healAmount,
+                            shieldRatio: showRatio ? shieldRatio : null,
+                            critValue: critShieldAmount,
+                            critTotal: critShieldAmount !== null ? critShieldAmount * stacks : null,
+                        });
+                    } else {
+                        results.push({
+                            label: '護盾',
+                            value: shieldAmount,
+                            healAmount: showRatio ? healAmount : null,
+                            shieldRatio: showRatio ? shieldRatio : null,
+                            critValue: critShieldAmount,
+                        });
+                    }
+                }
+            }
+            return results;
+        };
+
+        // healOutMult 只影響 shield_potency 類型，shield_maxhp 類型不受治療量加成影響
+        const calcShieldValue = (skill, healOutMult = 1.0) => {
+            if (!skill?.effects?.length) return 0;
+            let total = 0;
+            const healerMnd = getHealerMnd(skill);
+            for (const eff of skill.effects) {
+                if (eff.type === 'shield_maxhp') {
+                    total += Math.floor(getMaxHpForSkill(skill) * eff.val);
+                } else if (eff.type === 'shield_potency' && !eff.useTankStats && healerMnd) {
+                    const shieldRatio = eff.shieldRatio || 1.0;
+                    const healAmount = Math.floor(eff.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
+                    total += Math.floor(healAmount * shieldRatio) * (eff.stacks || 1);
+                }
+            }
+            return total;
+        };
+
+        // 計算施放者在指定時間點的治療量提升倍率（累乘）
+        // personal 技能只對自己成員有效；非 personal 技能對全隊有效
+        const getHealOutMult = (memberIndex, castTime) => {
+            let mult = 1.0;
+            for (const skill of activeSkills.value) {
+                if (!skill.effects?.length) continue;
+                if (skill.personal === true && skill.memberIndex !== memberIndex) continue;
+                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+                const isActive = castTimes.some(ct => castTime >= ct && castTime <= ct + skill.duration);
+                if (!isActive) continue;
+                for (const eff of skill.effects) {
+                    if (eff.type === 'heal_out_magic' && eff.val != null) {
+                        mult *= (1 + eff.val);
+                    }
+                }
+            }
+            return mult;
+        };
+
+        const _getCurrentDutyCategory = () => {
+            const dutyEntry = dutyIndex.value.duties.find(d => d.key === selectedDutyKey.value);
+            return dutyEntry?.category || null;
+        };
+
+        const loadRaidParamsForDuty = (dutyKey) => {
+            const dutyEntry = dutyIndex.value.duties.find(d => d.key === dutyKey);
+            const catKey = dutyEntry?.category || null;
+            if (catKey && allRaidParams.value[catKey]) {
+                raidParams.value = JSON.parse(JSON.stringify(allRaidParams.value[catKey]));
+                return;
+            }
+            if (catKey) {
+                const catDef = dutyIndex.value.categories[catKey]?.params;
+                if (catDef) {
+                    raidParams.value = JSON.parse(JSON.stringify(catDef));
+                    return;
+                }
+            }
+            raidParams.value = JSON.parse(JSON.stringify(DEFAULT_RAID_PARAMS));
+        };
+
+        const openRaidParamsDialog = () => {
+            raidParamsDraft.value = {
+                tankHp: raidParams.value.tankHp,
+                teamMinHp: raidParams.value.teamMinHp,
+                healerMnd: { ...raidParams.value.healerMnd }
+            };
+            raidParamsDialog.value.open = true;
+        };
+
+        const closeRaidParamsDialog = () => {
+            raidParamsDialog.value.open = false;
+        };
+
+        const resetRaidParamsDraftToDefault = () => {
+            const catKey = _getCurrentDutyCategory();
+            const catDef = catKey ? dutyIndex.value.categories[catKey]?.params : null;
+            raidParamsDraft.value = JSON.parse(JSON.stringify(catDef || DEFAULT_RAID_PARAMS));
+        };
+
+        const saveRaidParams = () => {
+            const parsed = {
+                tankHp: parseInt(raidParamsDraft.value.tankHp) || DEFAULT_RAID_PARAMS.tankHp,
+                teamMinHp: parseInt(raidParamsDraft.value.teamMinHp) || DEFAULT_RAID_PARAMS.teamMinHp,
+                healerMnd: {
+                    WHM: parseInt(raidParamsDraft.value.healerMnd.WHM) || DEFAULT_RAID_PARAMS.healerMnd.WHM,
+                    SCH: parseInt(raidParamsDraft.value.healerMnd.SCH) || DEFAULT_RAID_PARAMS.healerMnd.SCH,
+                    AST: parseInt(raidParamsDraft.value.healerMnd.AST) || DEFAULT_RAID_PARAMS.healerMnd.AST,
+                    SGE: parseInt(raidParamsDraft.value.healerMnd.SGE) || DEFAULT_RAID_PARAMS.healerMnd.SGE,
+                }
+            };
+            raidParams.value = parsed;
+            const catKey = _getCurrentDutyCategory();
+            if (catKey) {
+                allRaidParams.value = { ...allRaidParams.value, [catKey]: JSON.parse(JSON.stringify(parsed)) };
+            }
+            localStorage.setItem('ffxiv_raid_params', JSON.stringify(allRaidParams.value));
+            raidParamsDialog.value.open = false;
+        };
+
         const customRowStyle = computed(() =>
             darkMode.value ? 'background:rgba(214,163,84,0.10);' : 'background:#fffdf0;'
         );
@@ -612,21 +784,6 @@ createApp({
             return mitMap.value[key] || [];
         };
 
-        const getSkillCastState = (skillInstanceId, internalIdx) => {
-            const key = mitKeyForSkill(skillInstanceId);
-            return skillStateMap.value[key]?.[internalIdx] ?? 0;
-        };
-
-        const setSkillCastState = (skillInstanceId, internalIdx, state) => {
-            const key = mitKeyForSkill(skillInstanceId);
-            if (!skillStateMap.value[key]) skillStateMap.value[key] = {};
-            skillStateMap.value[key][internalIdx] = state;
-        };
-
-        const removeSkillCastState = (skillInstanceId, internalIdx) => {
-            const key = mitKeyForSkill(skillInstanceId);
-            if (skillStateMap.value[key]) delete skillStateMap.value[key][internalIdx];
-        };
 
         // 找出某技能在指定秒數對應的 internalIdx（用於從 castTimesCache 反查 state）
         const findCastRowIdx = (skillInstanceId, timeSecs) => {
@@ -653,22 +810,26 @@ createApp({
             return null;
         };
 
-        // 根據 TPC 的施放時間與 state，計算其有效 CD
-        // TPC state 1 → 60s；TPG state 1 在該次窗口內 → 90s；否則 → 120s（skill.cooldown）
+        // 檢查指定技能在特定施放時間點的護盾是否已被完全吸收
+        const isShieldDepleted = (skillInst, castTimeSecs) => {
+            const castTimes = castTimesCache.value.get(skillInst.instanceId) || [];
+            const ci = castTimes.indexOf(castTimeSecs);
+            if (ci < 0) return false;
+            return shieldCoverageByRow.value.depletionAt.get(`${skillInst.instanceId}-${ci}`) != null;
+        };
+
+        // 根據護盾是否耗盡自動計算 TPC 的有效 CD
+        // TPC 護盾耗盡 → 60s；TPG 護盾耗盡 → 90s；否則 → 120s（skill.cooldown）
         const getTpcEffectiveCooldown = (tpcSkill, tpcCastTimeSecs) => {
-            const tpcIdx = findCastRowIdx(tpcSkill.instanceId, tpcCastTimeSecs);
-            if (tpcIdx !== null && getSkillCastState(tpcSkill.instanceId, tpcIdx) === 1) {
-                return tpcSkill.stateCooldowns[1];
+            if (isShieldDepleted(tpcSkill, tpcCastTimeSecs)) {
+                return tpcSkill.stateCooldowns?.[1] ?? 60;
             }
             if (tpcSkill.upgradeSkillId) {
                 const upgInst = activeSkillByKey.value.get(`${tpcSkill.upgradeSkillId}|${tpcSkill.memberIndex}`);
                 if (upgInst) {
                     const tpgTime = findTpgTimeSecs(tpcSkill, tpcCastTimeSecs);
-                    if (tpgTime != null) {
-                        const tpgIdx = findCastRowIdx(upgInst.instanceId, tpgTime);
-                        if (tpgIdx !== null && getSkillCastState(upgInst.instanceId, tpgIdx) === 1) {
-                            return tpcSkill.cooldown - 30;
-                        }
+                    if (tpgTime != null && isShieldDepleted(upgInst, tpgTime)) {
+                        return tpcSkill.cooldown - 30;
                     }
                 }
             }
@@ -734,19 +895,30 @@ createApp({
             const condSkill = activeSkillByKey.value.get(`${skill.conditionSkillId}|${skill.memberIndex}`);
             if (!condSkill) return false;
             const condCastTimes = castTimesCache.value.get(condSkill.instanceId) || [];
+            const condDuration = skill.conditionDuration ?? condSkill.duration;
+
+            let condWindowStart;
             if (skill.conditionDuration != null) {
-                return condCastTimes.some(ct => rowTime >= ct && rowTime <= ct + skill.conditionDuration);
+                condWindowStart = condCastTimes.find(ct => rowTime >= ct && rowTime <= ct + condDuration);
+                if (condWindowStart === undefined) return false;
+            } else {
+                if (!isSkillActive(condSkill.instanceId, internalIdx, condSkill)) return false;
+                condWindowStart = condCastTimes.find(ct => rowTime > ct && rowTime <= ct + condDuration);
             }
-            if (!isSkillActive(condSkill.instanceId, internalIdx, condSkill)) return false;
-            // multiState 的條件技能（如 TPC）：只有在 state 0 時才允許施放升級技（TPG）
-            if (condSkill.multiState) {
-                const activeCastTime = condCastTimes.find(ct => {
-                    const eff = getTpcEffectiveDuration(condSkill, ct);
-                    return rowTime >= ct && rowTime <= ct + eff;
-                });
-                if (activeCastTime == null) return false;
-                const condIdx = findCastRowIdx(condSkill.instanceId, activeCastTime);
-                if (condIdx !== null && getSkillCastState(condSkill.instanceId, condIdx) !== 0) return false;
+
+            if (skill.conditionOnce && condWindowStart !== undefined) {
+                const condEnd = condWindowStart + condDuration;
+                const myCastTimes = castTimesCache.value.get(skill.instanceId) || [];
+                const existingCi = myCastTimes.findIndex(ct => ct !== rowTime && ct >= condWindowStart && ct <= condEnd);
+                if (existingCi >= 0) {
+                    const existingTime = myCastTimes[existingCi];
+                    const existingActiveEnd = existingTime + skill.duration;
+                    if (rowTime < existingTime || rowTime > existingActiveEnd) return false;
+                    if (isPureShieldSkill(skill)) {
+                        const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-${existingCi}`);
+                        if (depletionIdx != null && internalIdx > depletionIdx) return false;
+                    }
+                }
             }
             return true;
         };
@@ -764,13 +936,20 @@ createApp({
             const castTimes = castTimesCache.value.get(skillInstanceId);
             if (!castTimes || !castTimes.length) return false;
             const rowTime = rowTimes.value[internalIdx];
-            if (skill.upgradeSkillId) {
-                return castTimes.some(ct => {
-                    const effectiveDuration = getTpcEffectiveDuration(skill, ct);
-                    return rowTime >= ct && rowTime <= ct + effectiveDuration;
-                });
-            }
-            return castTimes.some(ct => rowTime >= ct && rowTime <= ct + skill.duration);
+            const pureShield = isPureShieldSkill(skill);
+            return castTimes.some((ct, ci) => {
+                const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct) : skill.duration;
+                // upgradeSkillId 技能（TPC）被 TPG 施放時立即消耗，用嚴格小於避免邊界重疊
+                const inWindow = skill.upgradeSkillId
+                    ? (rowTime >= ct && rowTime < ct + dur)
+                    : (rowTime >= ct && rowTime <= ct + dur);
+                if (!inWindow) return false;
+                if (pureShield) {
+                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
+                    if (depletionIdx != null && internalIdx > depletionIdx) return false;
+                }
+                return true;
+            });
         };
 
         // 判斷技能在指定列是否處於冷卻中，需處理多種複雜情境：
@@ -822,42 +1001,51 @@ createApp({
 
             if (!myCastTimes.length) return false;
 
-            if (skill.conditionOnce && skill.conditionSkillId) {
-                const condSkillInst = activeSkillByKey.value.get(`${skill.conditionSkillId}|${skill.memberIndex}`);
-                if (condSkillInst) {
-                    const condDuration = skill.conditionDuration ?? condSkillInst.duration;
-                    for (const condCastTime of (castTimesCache.value.get(condSkillInst.instanceId) || [])) {
-                        const windowEnd = condCastTime + condDuration;
-                        if (rowTime > condCastTime && rowTime <= windowEnd) {
-                            const existingTime = myCastTimes.find(ct => ct !== rowTime && ct >= condCastTime && ct <= windowEnd);
-                            if (existingTime !== undefined && rowTime > existingTime + skill.duration) return true;
-                        }
-                    }
-                }
-            }
-
             if (skill.charges > 1) {
                 if (isSkillActive(skillInstanceId, internalIdx, skill)) return false;
                 return chargesAvailableAt(skillInstanceId, rowTime, skill) === 0;
             }
 
             if (skill.multiState && skill.upgradeSkillId) {
-                return myCastTimes.some(ct => {
+                return myCastTimes.some((ct, ci) => {
                     const diff = rowTime - ct;
+                    if (diff < 0) return false;
                     const effectiveDuration = getTpcEffectiveDuration(skill, ct);
                     const effectiveCd = getTpcEffectiveCooldown(skill, ct);
-                    return diff > effectiveDuration && diff < effectiveCd;
+                    if (diff >= effectiveDuration && diff < effectiveCd) return true;
+                    // 護盾耗盡後，在 CD 結束前也顯示為冷卻中
+                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
+                    return depletionIdx != null && internalIdx > depletionIdx && diff < effectiveCd;
                 });
             }
 
-            return myCastTimes.some(ct => {
+            return myCastTimes.some((ct, ci) => {
                 const diff = rowTime - ct;
-                return diff > skill.duration && diff < skill.cooldown;
+                if (diff > skill.duration && diff < skill.cooldown) return true;
+                if (isPureShieldSkill(skill)) {
+                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
+                    return depletionIdx != null && internalIdx > depletionIdx && diff >= 0 && diff < skill.cooldown;
+                }
+                return false;
             });
         };
 
         const isSkillCastOrigin = (skillInstanceId, internalIdx) => {
             return getCastRows(skillInstanceId).includes(internalIdx);
+        };
+
+        // 找出 castRows 中會與 rowTime 產生冷卻衝突的後方施放點，詢問使用者是否取消衝突
+        // 若使用者取消操作回傳 false，否則移除衝突施放點並回傳 true
+        const removeForwardConflicts = (skill, castRows, rowTime, flat) => {
+            const forwardConflicts = castRows.filter(ci => {
+                const d = timeToSeconds(flat[ci]?.hitTime) - rowTime;
+                return d > 0 && d < skill.cooldown;
+            });
+            if (forwardConflicts.length === 0) return true;
+            const conflictTimes = forwardConflicts.map(ci => flat[ci]?.hitTime).join('、');
+            if (!confirm(`「${skill.name}」與較晚的施放點（${conflictTimes}）衝突，已自動取消衝突紀錄。`)) return false;
+            forwardConflicts.forEach(ci => { const i = castRows.indexOf(ci); if (i >= 0) castRows.splice(i, 1); });
+            return true;
         };
 
         // 切換技能在指定列的施放記錄（核心互動函式）
@@ -873,83 +1061,51 @@ createApp({
             const flat = allRowsFlat.value;
 
             // ── multiState 技能（TPC / TPG）分支 ─────────────────
+            // CD 縮短已改為自動依護盾耗盡判斷，不再需要手動切換破盾狀態
             if (skill.multiState) {
                 const newMap = { ...mitMap.value };
 
                 if (skill.upgradeSkillId) {
                     // ── TPC 邏輯 ──────────────────────────────────
                     if (idx < 0) {
-                        // 未施放 → state 0（普通施放）
                         if (!isSkillConditionMet(skill, internalIdx)) return;
                         if (isSkillBlocked(skill, internalIdx)) return;
                         if (isSkillOnCooldown(skillInstanceId, internalIdx, skill)) return;
                         if (isSkillActive(skillInstanceId, internalIdx, skill)) return;
                         const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
-                        const forwardConflicts = castRows.filter(ci => {
-                            const d = timeToSeconds(flat[ci]?.hitTime) - rowTime;
-                            return d > 0 && d < skill.cooldown;
-                        });
-                        if (forwardConflicts.length > 0) {
-                            const conflictTimes = forwardConflicts.map(ci => flat[ci]?.hitTime).join('、');
-                            if (!confirm(`「${skill.name}」與較晚的施放點（${conflictTimes}）衝突，已自動取消衝突紀錄。`)) return;
-                            forwardConflicts.forEach(ci => { const i = castRows.indexOf(ci); if (i >= 0) castRows.splice(i, 1); });
-                        }
+                        if (!removeForwardConflicts(skill, castRows, rowTime, flat)) return;
                         castRows.push(internalIdx);
                         castRows.sort((a, b) => a - b);
                         newMap[key] = castRows;
-                        setSkillCastState(skillInstanceId, internalIdx, 0);
                     } else {
-                        // 已施放：判斷現在的 state 與是否有 TPG 在窗口內
-                        const currentState = getSkillCastState(skillInstanceId, internalIdx);
+                        // 已施放 → 取消，連帶取消窗口內的 TPG
                         const tpcTimeSecs = timeToSeconds(flat[internalIdx]?.hitTime);
                         const upgInst = activeSkillByKey.value.get(`${skill.upgradeSkillId}|${skill.memberIndex}`);
                         const upgKey = upgInst ? mitKeyForSkill(upgInst.instanceId) : null;
                         const tpgTimeSecs = findTpgTimeSecs(skill, tpcTimeSecs);
-
-                        if (currentState === 0 && tpgTimeSecs == null) {
-                            // state 0 + 無 TPG → state 1（護盾吸收觸發，CD 縮短至 60s）
-                            setSkillCastState(skillInstanceId, internalIdx, 1);
-                            newMap[key] = castRows;
-                        } else {
-                            // state 0 + 有 TPG，或 state 1 → 取消
-                            castRows.splice(idx, 1);
-                            removeSkillCastState(skillInstanceId, internalIdx);
-                            if (castRows.length) { newMap[key] = castRows; } else { delete newMap[key]; }
-                            // 連帶取消 TPG
-                            if (upgKey && tpgTimeSecs != null) {
-                                const tpgIdx = findCastRowIdx(upgInst.instanceId, tpgTimeSecs);
-                                if (tpgIdx !== null) {
-                                    const upgCastRows = [...(mitMap.value[upgKey] || [])];
-                                    const ti = upgCastRows.indexOf(tpgIdx);
-                                    if (ti >= 0) upgCastRows.splice(ti, 1);
-                                    removeSkillCastState(upgInst.instanceId, tpgIdx);
-                                    if (upgCastRows.length) { newMap[upgKey] = upgCastRows; } else { delete newMap[upgKey]; }
-                                }
+                        castRows.splice(idx, 1);
+                        if (castRows.length) { newMap[key] = castRows; } else { delete newMap[key]; }
+                        if (upgKey && tpgTimeSecs != null) {
+                            const tpgIdx = findCastRowIdx(upgInst.instanceId, tpgTimeSecs);
+                            if (tpgIdx !== null) {
+                                const upgCastRows = [...(mitMap.value[upgKey] || [])];
+                                const ti = upgCastRows.indexOf(tpgIdx);
+                                if (ti >= 0) upgCastRows.splice(ti, 1);
+                                if (upgCastRows.length) { newMap[upgKey] = upgCastRows; } else { delete newMap[upgKey]; }
                             }
                         }
                     }
                 } else {
                     // ── TPG 邏輯（conditionSkillId = TPC，multiState，無 upgradeSkillId）──
                     if (idx < 0) {
-                        // 未施放 → state 0（普通施放）
                         if (!isSkillConditionMet(skill, internalIdx)) return;
                         if (isSkillOnCooldown(skillInstanceId, internalIdx, skill)) return;
                         castRows.push(internalIdx);
                         castRows.sort((a, b) => a - b);
                         newMap[key] = castRows;
-                        setSkillCastState(skillInstanceId, internalIdx, 0);
                     } else {
-                        const currentState = getSkillCastState(skillInstanceId, internalIdx);
-                        if (currentState === 0) {
-                            // state 0 → state 1（護盾吸收觸發，TPC CD 縮短至 90s）
-                            setSkillCastState(skillInstanceId, internalIdx, 1);
-                            newMap[key] = castRows;
-                        } else {
-                            // state 1 → 取消，TPC 恢復完整持續時間與 state 0
-                            castRows.splice(idx, 1);
-                            removeSkillCastState(skillInstanceId, internalIdx);
-                            if (castRows.length) { newMap[key] = castRows; } else { delete newMap[key]; }
-                        }
+                        castRows.splice(idx, 1);
+                        if (castRows.length) { newMap[key] = castRows; } else { delete newMap[key]; }
                     }
                 }
 
@@ -1001,18 +1157,7 @@ createApp({
                     if (isSkillActive(skillInstanceId, internalIdx, skill)) return;
                     if (!skill.togglesWithId) {
                         const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
-                        const forwardConflicts = castRows.filter(ci => {
-                            const d = timeToSeconds(flat[ci]?.hitTime) - rowTime;
-                            return d > 0 && d < skill.cooldown;
-                        });
-                        if (forwardConflicts.length > 0) {
-                            const conflictTimes = forwardConflicts.map(ci => flat[ci]?.hitTime).join('、');
-                            if (!confirm(`「${skill.name}」與較晚的施放點（${conflictTimes}）衝突，已自動取消衝突紀錄。`)) return;
-                            forwardConflicts.forEach(ci => {
-                                const i = castRows.indexOf(ci);
-                                if (i >= 0) castRows.splice(i, 1);
-                            });
-                        }
+                        if (!removeForwardConflicts(skill, castRows, rowTime, flat)) return;
                     }
                 }
 
@@ -1148,6 +1293,10 @@ createApp({
             }
         });
 
+        watch(selectedDutyKey, (key) => {
+            if (key) loadRaidParamsForDuty(key);
+        });
+
         onMounted(async () => {
             try {
                 const [catRes, skillsRes, indexRes] = await Promise.all([
@@ -1165,6 +1314,11 @@ createApp({
                     document.body.classList.add('dark');
                 }
 
+                const savedRaidParams = localStorage.getItem('ffxiv_raid_params');
+                if (savedRaidParams) {
+                    allRaidParams.value = JSON.parse(savedRaidParams);
+                }
+
                 if (!await loadFromShareParam()) {
                     readUrlParams();
                     const saved = localStorage.getItem('ffxiv_planner_data');
@@ -1176,6 +1330,7 @@ createApp({
                         customRowsByDuty.value = parsed.customRowsByDuty || {};
                         mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
                         skillStateMap.value = parsed.skillStateMap || {};
+                        if (parsed.selectedDutyKey) loadRaidParamsForDuty(parsed.selectedDutyKey);
                     }
                 }
                 syncStickyRow();
@@ -1324,6 +1479,10 @@ createApp({
                 const rowTime = rowTimes.value[internalIdx];
                 let totalRemaining = 0;
                 for (const hit of damages) {
+                    const mitigates = (t) =>
+                        t === 'mit_all' ||
+                        (t === 'mit_physical' && hit.type === '物理') ||
+                        (t === 'mit_magic'    && hit.type === '魔法');
                     let dmg = hit.amount;
                     const appliedNames = new Set();
                     for (const skill of skills) {
@@ -1331,11 +1490,7 @@ createApp({
                             if (appliedNames.has(skill.name)) continue;
                             let applied = false;
                             for (const effect of skill.effects) {
-                                const t = effect.type;
-                                const mitigates = t === 'mit_all' ||
-                                    (t === 'mit_physical' && hit.type === '物理') ||
-                                    (t === 'mit_magic'    && hit.type === '魔法');
-                                if (mitigates && effect.val != null) {
+                                if (mitigates(effect.type) && effect.val != null) {
                                     dmg *= (1 - effect.val);
                                     applied = true;
                                 }
@@ -1351,13 +1506,9 @@ createApp({
                         let applied = false;
                         for (const effect of skill.effects) {
                             if (effect.duration != null && rowTime > activeCastTime + effect.duration) continue;
-                            const t = effect.type;
-                            const mitigates = t === 'mit_all' ||
-                                (t === 'mit_physical' && hit.type === '物理') ||
-                                (t === 'mit_magic'    && hit.type === '魔法');
-                            if (mitigates && effect.val != null) {
+                            if (mitigates(effect.type) && effect.val != null) {
                                 let effectVal = effect.val;
-                                if (effect.bonusVal != null && Array.isArray(effect.bonusRequiresIds) && effect.bonusRequiresIds.length > 0) {
+                                if (effect.bonusVal != null && effect.bonusRequiresIds?.length) {
                                     const conditionMet = effect.bonusRequiresIds.some(reqId => {
                                         const s = activeSkillByKey.value.get(`${reqId}|${skill.memberIndex}`);
                                         return s && isSkillActive(s.instanceId, internalIdx, s);
@@ -1377,7 +1528,76 @@ createApp({
             return result;
         });
 
-        const calculateDamage = (_row, internalIdx) => damageByRow.value[internalIdx] ?? 0;
+        const isPureShieldSkill = (skill) => {
+            if (!skill?.effects?.length) return false;
+            const hasShield = skill.effects.some(e => SHIELD_EFFECT_TYPES.has(e.type));
+            const hasMit    = skill.effects.some(e => MIT_EFFECT_TYPES.has(e.type));
+            return hasShield && !hasMit;
+        };
+
+        const shieldCoverageByRow = computed(() => {
+            if (!selectedDutyKey.value) return { absorption: [], depletionAt: new Map() };
+            const flat = allRowsFlat.value;
+            const times = rowTimes.value;
+            const postMitDmg = damageByRow.value;
+            const absorption = new Array(flat.length).fill(0);
+            const depletionAt = new Map();
+            const shields = [];
+            for (const skill of activeSkills.value) {
+                if (!skill.effects?.some(e => SHIELD_EFFECT_TYPES.has(e.type))) continue;
+                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+                if (!castTimes.length) continue;
+                const critMult = skill.recitationCritMult ?? null;
+                let recCastTimes = [];
+                let recDuration = 1;
+                if (critMult !== null) {
+                    const recSkill = activeSkills.value.find(s => s.id === 'sch_rec' && s.memberIndex === skill.memberIndex);
+                    if (recSkill) {
+                        recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
+                        recDuration = recSkill.duration ?? 1;
+                    }
+                }
+                for (let ci = 0; ci < castTimes.length; ci++) {
+                    const ct = castTimes[ci];
+                    const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct) : skill.duration;
+                    if (dur <= 0) continue; // TPC 被同秒 TPG 立即消耗，跳過
+                    const endTime = ct + dur;
+                    const healOutMult = getHealOutMult(skill.memberIndex, ct);
+                    let shieldVal = calcShieldValue(skill, healOutMult);
+                    if (shieldVal <= 0) continue;
+                    if (critMult !== null && recCastTimes.some(rt => ct >= rt && ct <= rt + recDuration)) {
+                        shieldVal = Math.floor(shieldVal * critMult);
+                    }
+                    const exclusiveEnd = !!skill.upgradeSkillId;
+                    shields.push({ key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd });
+                }
+            }
+            for (let i = 0; i < flat.length; i++) {
+                if (flat[i]._isCustom) continue;
+                if (hideTargeted.value && isTargetedAttack(flat[i], i)) continue;
+                const rowTime = times[i];
+                const rowDmg = postMitDmg[i];
+                if (!rowDmg) continue;
+                let remainingDmg = rowDmg;
+                for (const sh of shields) {
+                    if (sh.depletionRowIdx !== null || remainingDmg <= 0) continue;
+                    if (rowTime < sh.castTime || (sh.exclusiveEnd ? rowTime >= sh.endTime : rowTime > sh.endTime)) continue;
+                    const absorbed = Math.min(sh.remaining, remainingDmg);
+                    sh.remaining -= absorbed;
+                    remainingDmg -= absorbed;
+                    absorption[i] += absorbed;
+                    if (sh.remaining <= 0) sh.depletionRowIdx = i;
+                }
+            }
+            for (const sh of shields) depletionAt.set(sh.key, sh.depletionRowIdx);
+            return { absorption, depletionAt };
+        });
+
+        const calculateDamage = (_row, internalIdx) => {
+            const base = damageByRow.value[internalIdx] ?? 0;
+            const absorbed = shieldCoverageByRow.value.absorption[internalIdx] ?? 0;
+            return Math.max(0, base - absorbed);
+        };
 
         // ── Variant switching ─────────────────────────────────
         const switchVariant = (internalIdx, variantIdx) => {
@@ -1884,7 +2104,7 @@ createApp({
 
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
-        watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty, skillStateMap], () => {
+        watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty], () => {
             if (isViewingSharedPlan.value) return;
             localStorage.setItem('ffxiv_planner_data', JSON.stringify({
                 selectedDutyKey: selectedDutyKey.value,
@@ -2144,7 +2364,7 @@ createApp({
             hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
             selectedVariants, switchVariant, getSelectedVariantIdx, getDamageTypeIcon,
-            isSkillActive, isSkillOnCooldown, isSkillCastOrigin, toggleSkillCast, getSkillCastState,
+            isSkillActive, isSkillOnCooldown, isSkillCastOrigin, toggleSkillCast,
             getDamageTypeIconByType,
             expandedPersonalMembers, togglePersonalSkills,
             dutyDropdownOpen, expandedCategories, selectedDutyName,
@@ -2171,6 +2391,9 @@ createApp({
             realtimeNotif,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,
             addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
+            raidParams, raidParamsDialog, raidParamsDraft,
+            openRaidParamsDialog, closeRaidParamsDialog, saveRaidParams, resetRaidParamsDraftToDefault,
+            calcShieldDisplay,
         };
     }
 }).mount('#app');

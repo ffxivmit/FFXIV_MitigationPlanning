@@ -2045,6 +2045,24 @@ createApp({
         const loadTemplate = (doc) => {
             if (!confirm(`將載入「${doc.name}」範本資料，目前未儲存的變更將會遺失。`)) return;
             _applySharedData(doc.data);
+            tokenMode.value       = 'edit';
+            activeToken.value     = doc.edit_token || '';
+            tokenDocName.value    = doc.name;
+            tokenDocId.value      = doc.id || '';
+            tokenDocOwnerId.value = currentUser.value?.id || '';
+            tokenLoadedAt.value   = doc.updated_at || '';
+            tokenBaseData.value   = JSON.parse(JSON.stringify(doc.data || {}));
+            isViewingSharedPlan.value = true;
+            isBookmarked.value    = false;
+            realtimeNotif.value   = null;
+            if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
+            if (tokenDocId.value) _realtimeChannel = subscribeDocChannel(tokenDocId.value, _onRealtimeUpdate);
+            const params = new URLSearchParams(window.location.search);
+            params.delete('s');
+            params.delete('view');
+            if (doc.edit_token) { params.set('edit', doc.edit_token); } else { params.delete('edit'); }
+            const qs = params.toString();
+            history.pushState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
             sidebarOpen.value = false;
         };
 

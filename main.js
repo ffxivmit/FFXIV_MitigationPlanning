@@ -120,9 +120,10 @@ let _realtimeNotifTimer = null;
 
 // 比較兩個施放索引陣列是否相同（忽略順序）
 const _arrEq = (a, b) => {
+    if ((a?.length ?? 0) !== (b?.length ?? 0)) return false;
     const sa = [...(a || [])].sort((x, y) => x - y);
     const sb = [...(b || [])].sort((x, y) => x - y);
-    return sa.length === sb.length && sa.every((v, i) => v === sb[i]);
+    return sa.every((v, i) => v === sb[i]);
 };
 
 /**
@@ -882,6 +883,7 @@ createApp({
         //   3. conditionSkillId（無 duration）：需要條件技能目前處於效果中
         const isSkillConditionMet = (skill, internalIdx) => {
             const rowTime = rowTimes.value[internalIdx];
+            if (skill.combatOnly && rowTime < 0) return false;
             if (skill.togglesWithId) {
                 const pairedSkill = activeSkillByKey.value.get(`${skill.togglesWithId}|${skill.memberIndex}`);
                 const myCastTimes = castTimesCache.value.get(skill.instanceId) || [];
@@ -1259,24 +1261,31 @@ createApp({
         // 結果為 { pIdx: [每列的乙太存量] } 的映射，供 isSkillAetherDepleted 查詢
         const aetherStacksByMember = computed(() => {
             const result = {};
+            const dutyPrefix = selectedDutyKey.value + '-';
             party.value.forEach((jobKey, pIdx) => {
                 if (jobKey !== 'SCH') return;
                 const jobEntry = jobDb.value[jobKey];
                 if (!jobEntry || !jobEntry.skills) return;
                 const flat = allRowsFlat.value;
+                // 預先建好 Set，避免在每個 row 裡重複做字串拼接 + Map 查找 + Array.includes
+                const aetherSkills = jobEntry.skills
+                    .filter(s => s.aetherProvide || s.aetherCost)
+                    .map(s => ({
+                        skill: s,
+                        castSet: new Set(mitMap.value[`${dutyPrefix}p${pIdx}-${s.id}`] || []),
+                    }));
                 let stacks = 0;
                 const byRow = [];
                 for (let ri = 0; ri < flat.length; ri++) {
-                    for (const skill of jobEntry.skills) {
-                        if (!skill.aetherProvide && !skill.aetherCost) continue;
-                        if (isSkillCastOrigin(`p${pIdx}-${skill.id}`, ri)) {
-                            if (skill.aetherProvide) {
-                                stacks = Math.min(3, stacks + skill.aetherProvide);
-                            }
-                            if (skill.aetherCost) {
-                                stacks = Math.max(0, stacks - skill.aetherCost);
-                            }
-                        }
+                    // 乙太超流與轉化無法在戰鬥開始前使用，負數時間的列固定為 0，且不更新存量狀態
+                    if (timeToSeconds(flat[ri].hitTime) < 0) {
+                        byRow.push(0);
+                        continue;
+                    }
+                    for (const { skill, castSet } of aetherSkills) {
+                        if (!castSet.has(ri)) continue;
+                        if (skill.aetherProvide) stacks = Math.min(3, stacks + skill.aetherProvide);
+                        if (skill.aetherCost)    stacks = Math.max(0, stacks - skill.aetherCost);
                     }
                     byRow.push(stacks);
                 }
@@ -1290,6 +1299,7 @@ createApp({
 
         const isSkillAetherDepleted = (skill, internalIdx) => {
             if (!skill.aetherCost) return false;
+            if (rowTimes.value[internalIdx] < 0) return true; // 戰鬥開始前沒有乙太
             const pIdx = skill.memberIndex - 1;
             return (aetherStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 0) === 0;
         };
@@ -1299,11 +1309,19 @@ createApp({
         // 使用「根素」+1，使用消耗蛇膽的技能 -1
         const addersgallStacksByMember = computed(() => {
             const result = {};
+            const dutyPrefix = selectedDutyKey.value + '-';
             party.value.forEach((jobKey, pIdx) => {
                 if (jobKey !== 'SGE') return;
                 const jobEntry = jobDb.value[jobKey];
                 if (!jobEntry || !jobEntry.skills) return;
                 const flat = allRowsFlat.value;
+                // 預先建好 Set，避免在每個 row 裡重複做字串拼接 + Map 查找 + Array.includes
+                const addersgallSkills = jobEntry.skills
+                    .filter(s => s.addersgallProvide || s.addersgallCost)
+                    .map(s => ({
+                        skill: s,
+                        castSet: new Set(mitMap.value[`${dutyPrefix}p${pIdx}-${s.id}`] || []),
+                    }));
                 let stacks = 3;
                 let lastTickCount = 0;
                 const byRow = [];
@@ -1315,12 +1333,10 @@ createApp({
                         stacks = Math.min(3, stacks + newTicks);
                         lastTickCount = tickCount;
                     }
-                    for (const skill of jobEntry.skills) {
-                        if (!skill.addersgallProvide && !skill.addersgallCost) continue;
-                        if (isSkillCastOrigin(`p${pIdx}-${skill.id}`, ri)) {
-                            if (skill.addersgallProvide) stacks = Math.min(3, stacks + skill.addersgallProvide);
-                            if (skill.addersgallCost) stacks = Math.max(0, stacks - skill.addersgallCost);
-                        }
+                    for (const { skill, castSet } of addersgallSkills) {
+                        if (!castSet.has(ri)) continue;
+                        if (skill.addersgallProvide) stacks = Math.min(3, stacks + skill.addersgallProvide);
+                        if (skill.addersgallCost)    stacks = Math.max(0, stacks - skill.addersgallCost);
                     }
                     byRow.push(stacks);
                 }
@@ -1551,6 +1567,30 @@ createApp({
             const flat = allRowsFlat.value;
             const result = new Array(flat.length).fill(0);
             const skills = activeSkills.value;
+
+            // Passive 技能不依賴時間，預先合算一次，避免在每個 row×hit 裡重複掃描
+            const passiveMult = { '物理': 1, '魔法': 1, _other: 1 };
+            const passiveAppliedNames = new Set();
+            const nonPassiveSkills = [];
+            for (const skill of skills) {
+                if (!skill.passive) { nonPassiveSkills.push(skill); continue; }
+                if (passiveAppliedNames.has(skill.name)) continue;
+                let applied = false;
+                for (const effect of skill.effects) {
+                    if (effect.val == null) continue;
+                    const f = 1 - effect.val;
+                    if (effect.type === 'mit_all') {
+                        passiveMult['物理'] *= f; passiveMult['魔法'] *= f; passiveMult._other *= f;
+                        applied = true;
+                    } else if (effect.type === 'mit_physical') {
+                        passiveMult['物理'] *= f; applied = true;
+                    } else if (effect.type === 'mit_magic') {
+                        passiveMult['魔法'] *= f; applied = true;
+                    }
+                }
+                if (applied) passiveAppliedNames.add(skill.name);
+            }
+
             for (let internalIdx = 0; internalIdx < flat.length; internalIdx++) {
                 const row = flat[internalIdx];
                 if (row._isCustom) continue;
@@ -1563,21 +1603,10 @@ createApp({
                         t === 'mit_all' ||
                         (t === 'mit_physical' && hit.type === '物理') ||
                         (t === 'mit_magic'    && hit.type === '魔法');
-                    let dmg = hit.amount;
-                    const appliedNames = new Set();
-                    for (const skill of skills) {
-                        if (skill.passive) {
-                            if (appliedNames.has(skill.name)) continue;
-                            let applied = false;
-                            for (const effect of skill.effects) {
-                                if (mitigates(effect.type) && effect.val != null) {
-                                    dmg *= (1 - effect.val);
-                                    applied = true;
-                                }
-                            }
-                            if (applied) appliedNames.add(skill.name);
-                            continue;
-                        }
+                    let dmg = hit.amount * (passiveMult[hit.type] ?? passiveMult._other);
+                    // 以 passiveAppliedNames 為初始值，確保 passive/active 同名去重的行為不變
+                    const appliedNames = new Set(passiveAppliedNames);
+                    for (const skill of nonPassiveSkills) {
                         const castTimes = castTimesCache.value.get(skill.instanceId);
                         if (!castTimes || !castTimes.length) continue;
                         const activeCastTime = castTimes.find(ct => rowTime >= ct && rowTime <= ct + skill.duration) ?? null;
@@ -1623,6 +1652,28 @@ createApp({
             const absorption = new Array(flat.length).fill(0);
             const depletionAt = new Map();
             const shields = [];
+
+            // 秘策（sch_rec）是一次性消耗：同一窗口內，四招（鼓舞、意氣、不屈、深謀）中
+            // 任何一招的第一次施放就消耗掉效果，後續施放不再套爆擊。
+            // 這裡先跨技能掃描，找出每個秘策窗口內最早的合格施放時間。
+            // key: `${memberIndex}-${recWindowStartTime}` → earliest eligible cast time
+            const recWindowFirstCast = new Map();
+            for (const skill of activeSkills.value) {
+                if (skill.recitationCritMult == null) continue;
+                const recSkill = activeSkills.value.find(s => s.id === 'sch_rec' && s.memberIndex === skill.memberIndex);
+                if (!recSkill) continue;
+                const recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
+                const recDuration = recSkill.duration ?? 1;
+                for (const ct of (castTimesCache.value.get(skill.instanceId) || [])) {
+                    const rt = recCastTimes.find(r => ct >= r && ct <= r + recDuration);
+                    if (rt === undefined) continue;
+                    const key = `${skill.memberIndex}-${rt}`;
+                    if (!recWindowFirstCast.has(key) || ct < recWindowFirstCast.get(key)) {
+                        recWindowFirstCast.set(key, ct);
+                    }
+                }
+            }
+
             for (const skill of activeSkills.value) {
                 if (!skill.effects?.some(e => SHIELD_EFFECT_TYPES.has(e.type))) continue;
                 const castTimes = castTimesCache.value.get(skill.instanceId) || [];
@@ -1645,8 +1696,15 @@ createApp({
                     const healOutMult = getHealOutMult(skill.memberIndex, ct);
                     let shieldVal = calcShieldValue(skill, healOutMult);
                     if (shieldVal <= 0) continue;
-                    if (critMult !== null && recCastTimes.some(rt => ct >= rt && ct <= rt + recDuration)) {
-                        shieldVal = Math.floor(shieldVal * critMult);
+                    if (critMult !== null) {
+                        const recWindowStart = recCastTimes.find(rt => ct >= rt && ct <= rt + recDuration);
+                        if (recWindowStart !== undefined) {
+                            // 只有四招中「最先施放」的那一個才套爆擊（跨技能判斷）
+                            const windowKey = `${skill.memberIndex}-${recWindowStart}`;
+                            if (recWindowFirstCast.get(windowKey) === ct) {
+                                shieldVal = Math.floor(shieldVal * critMult);
+                            }
+                        }
                     }
                     const exclusiveEnd = !!skill.upgradeSkillId;
                     shields.push({ key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd });

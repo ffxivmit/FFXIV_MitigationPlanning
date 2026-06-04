@@ -223,7 +223,7 @@
         {"phase": "時間切", "castingTime": "09:47", "hitTime": "09:47", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切", "castingTime": "09:51", "hitTime": "09:51", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切", "castingTime": "09:54", "hitTime": "09:54", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切", "castingTime": "10:06", "hitTime": "10:06", "skill": "シアー・ハート・アタック", "damage": [], "type": ""},
+        {"phase": "時間切", "castingTime": "10:06", "hitTime": "10:06", "skill": "驟然心痛", "damage": [], "type": ""},
         {"phase": "時間切", "castingTime": "10:09", "hitTime": "10:09", "skill": "蜂蜂落幕曲", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
     ]
 }

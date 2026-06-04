@@ -629,12 +629,7 @@ createApp({
                 if (!key.startsWith(prefix)) continue;
                 const updated = castArr
                     .filter(i => i !== removedIdx)
-                    .map(i => {
-                        if (i > removedIdx) {
-                            return i - 1;
-                        }
-                        return i;
-                    });
+                    .map(i => i > removedIdx ? i - 1 : i);
                 if (!updated.length) {
                     delete newMap[key];
                 } else {
@@ -714,18 +709,20 @@ createApp({
             const rect = tr.getBoundingClientRect();
             const isTop = event.clientY - rect.top < rect.height / 2;
             const { prevTime, nextTime } = getVisibleNeighbors(displayIdx);
+            const container = tr.closest('.table-container') || document.querySelector('.table-container');
+            const xPos = (container ? container.getBoundingClientRect().left : rect.left) + 40;
             if (isTop) {
                 hoverInsert.value = {
                     timeBefore: prevTime,
                     timeAfter: row.hitTime,
-                    x: rect.left + 40,
+                    x: xPos,
                     y: rect.top,
                 };
             } else {
                 hoverInsert.value = {
                     timeBefore: row.hitTime,
                     timeAfter: nextTime,
-                    x: rect.left + 40,
+                    x: xPos,
                     y: rect.bottom,
                 };
             }
@@ -859,9 +856,7 @@ createApp({
         // 計算在指定時間點（checkTime）時技能剩餘的充能數（用於插入前向衝突的模擬驗算）
         const chargesAvailableAtTime = (checkTime, skill, sortedContextTimes) => {
             const castsBefore = sortedContextTimes.filter(ct => ct < checkTime);
-            if (!castsBefore.length) {
-                return skill.charges;
-            }
+            if (!castsBefore.length) return skill.charges;
             const restoreTimes = computeChargeRestoreTimes(castsBefore, skill.cooldown);
             const inRecharge = castsBefore.filter((_ct, i) => checkTime < restoreTimes[i]).length;
             return Math.max(0, skill.charges - inRecharge);
@@ -870,11 +865,7 @@ createApp({
         // 計算在某個時間軸列時，技能實際剩餘充能數（根據 mitMap 中該技能的所有施放記錄推算）
         const chargesAvailableAt = (skillInstanceId, rowTime, skill) => {
             const allTimes = castTimesCache.value.get(skillInstanceId) || [];
-            const castTimes = allTimes.filter(ct => ct < rowTime);
-            if (!castTimes.length) return skill.charges;
-            const restoreTimes = computeChargeRestoreTimes(castTimes, skill.cooldown);
-            const inRecharge = castTimes.filter((_ct, i) => rowTime < restoreTimes[i]).length;
-            return Math.max(0, skill.charges - inRecharge);
+            return chargesAvailableAtTime(rowTime, skill, allTimes);
         };
 
         // 判斷技能的「前提條件」是否滿足，涵蓋三種情境：
@@ -1381,16 +1372,15 @@ createApp({
         };
 
         watch(selectedDutyKey, async (key) => {
-            if (!key || dutyDb.value[key]) return;
-            const entry = dutyIndex.value.duties.find(d => d.key === key);
-            if (entry) {
-                const res = await fetch(`src/duty/${entry.file}`);
-                dutyDb.value[key] = await res.json();
+            if (!key) return;
+            loadRaidParamsForDuty(key);
+            if (!dutyDb.value[key]) {
+                const entry = dutyIndex.value.duties.find(d => d.key === key);
+                if (entry) {
+                    const res = await fetch(`src/duty/${entry.file}`);
+                    dutyDb.value[key] = await res.json();
+                }
             }
-        });
-
-        watch(selectedDutyKey, (key) => {
-            if (key) loadRaidParamsForDuty(key);
         });
 
         onMounted(async () => {
@@ -1517,11 +1507,9 @@ createApp({
 
         const togglePersonalSkills = (pIdx) => {
             const arr = expandedPersonalMembers.value;
-            if (arr.includes(pIdx)) {
-                expandedPersonalMembers.value = arr.filter(p => p !== pIdx);
-            } else {
-                expandedPersonalMembers.value = [...arr, pIdx];
-            }
+            expandedPersonalMembers.value = arr.includes(pIdx)
+                ? arr.filter(p => p !== pIdx)
+                : [...arr, pIdx];
         };
 
         // ── Active skills ─────────────────────────────────────
@@ -1715,10 +1703,15 @@ createApp({
             // 任何一招的第一次施放就消耗掉效果，後續施放不再套爆擊。
             // 這裡先跨技能掃描，找出每個秘策窗口內最早的合格施放時間。
             // key: `${memberIndex}-${recWindowStartTime}` → earliest eligible cast time
+            const recSkillByMember = new Map();
+            for (const s of activeSkills.value) {
+                if (s.id === 'sch_rec') recSkillByMember.set(s.memberIndex, s);
+            }
+
             const recWindowFirstCast = new Map();
             for (const skill of activeSkills.value) {
                 if (skill.recitationCritMult == null) continue;
-                const recSkill = activeSkills.value.find(s => s.id === 'sch_rec' && s.memberIndex === skill.memberIndex);
+                const recSkill = recSkillByMember.get(skill.memberIndex);
                 if (!recSkill) continue;
                 const recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
                 const recDuration = recSkill.duration ?? 1;
@@ -1740,7 +1733,7 @@ createApp({
                 let recCastTimes = [];
                 let recDuration = 1;
                 if (critMult !== null) {
-                    const recSkill = activeSkills.value.find(s => s.id === 'sch_rec' && s.memberIndex === skill.memberIndex);
+                    const recSkill = recSkillByMember.get(skill.memberIndex);
                     if (recSkill) {
                         recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
                         recDuration = recSkill.duration ?? 1;
@@ -1811,18 +1804,15 @@ createApp({
 
         const memberHasAnyCast = (pIdx) => {
             const prefix = `${selectedDutyKey.value}-p${pIdx}-`;
-            return Object.keys(mitMap.value).some(key =>
-                key.startsWith(prefix) && mitMap.value[key].length > 0
+            return Object.entries(mitMap.value).some(([key, val]) =>
+                key.startsWith(prefix) && val.length > 0
             );
         };
 
         const clearSkill = (instanceId, skillName) => {
             if (isReadOnly.value) return;
             const skill = activeSkills.value.find(s => s.instanceId === instanceId);
-            let hasPair = false;
-            if (skill && skill.togglesWithId) {
-                hasPair = true;
-            }
+            const hasPair = !!skill?.togglesWithId;
             let msg;
             if (hasPair) {
                 msg = `確定要清除「${skillName}」及其配對技能的所有施放紀錄？`;

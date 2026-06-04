@@ -146,9 +146,13 @@
 
         <!-- 工具 -->
         <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+            <!-- 使用說明 -->
+            <button @click="openHelp"
+                    class="flex items-center justify-center w-8 h-8 text-sm font-black text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg transition shrink-0"
+                    title="使用說明">?</button>
             <!-- 側邊欄開關 -->
             <button @click="sidebarOpen = !sidebarOpen"
-                    :class="['flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition font-semibold shrink-0',
+                    :class="['flex items-center gap-1.5 text-xs px-2.5 h-8 rounded-lg border transition font-semibold shrink-0',
                              sidebarOpen ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200']">
                 <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -599,7 +603,7 @@
                             </div>
                         </label>
                         <label class="flex items-center justify-between gap-3 cursor-pointer">
-                            <span class="text-sm text-slate-700 font-medium">隱藏單體／點名攻擊</span>
+                            <span class="text-sm text-slate-700 font-medium">隱藏AA、死刑攻擊</span>
                             <div class="relative shrink-0">
                                 <input type="checkbox" v-model="hideTargeted" class="sr-only peer">
                                 <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
@@ -715,7 +719,7 @@
                         </svg>
                         <span class="text-base font-black text-slate-800">參數設定</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">設定後的護盾值將即時更新於技能提示中，預計傷害也會減去護盾值，設定依副本類型分開儲存</p>
+                    <p class="text-xs text-slate-400 mt-1">設定後的護盾值將即時更新於技能提示中，</br>預計傷害也會減去護盾值，設定依副本類型分開儲存</p>
                 </div>
 
                 <!-- Body -->
@@ -953,6 +957,142 @@
                     </div>
                 </div>
             </template>
+        </div>
+    </Teleport>
+
+    <!-- ── 使用說明 Wizard Modal ── -->
+    <Teleport to="body">
+        <div v-if="helpOpen"
+             class="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4"
+             @click.self="closeHelp">
+            <div class="bg-white rounded-2xl shadow-2xl flex flex-col h-[90vh] w-[max(50vw,640px)]">
+
+                <!-- Header -->
+                <div class="px-5 py-4 border-b border-slate-200 shrink-0 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl font-black text-slate-800">{{ helpStep === 0 ? '公告' : '使用說明' }}</span>
+                        <span class="text-xs text-slate-400 font-medium">{{ helpStep === 0 ? '' : `${helpStep} / ${HELP_TOTAL - 1}` }}</span>
+                    </div>
+                    <button @click="closeHelp" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+                </div>
+
+                <!-- 步驟指示條（公告頁不顯示） -->
+                <div v-if="helpStep > 0" class="flex gap-1.5 px-5 pt-3 shrink-0">
+                    <div v-for="i in HELP_TOTAL - 1" :key="i"
+                         :class="['h-1 flex-1 rounded-full transition-colors',
+                                  i <= helpStep ? 'bg-indigo-500' : 'bg-slate-200']"></div>
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+
+                    <!-- Step 0：公告 -->
+                    <template v-if="helpStep === 0">
+                        <div v-for="ann in sortedAnnouncements" :key="ann.id"
+                             class="border border-slate-200 rounded-xl p-4 space-y-2">
+                            <!-- Title + badge -->
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="font-bold text-slate-800 text-base leading-snug">{{ ann.title }}</h3>
+                                <span :class="[
+                                    'text-xs rounded-full px-2 py-0.5 font-semibold shrink-0 border',
+                                    ann.status === '置頂'  ? 'bg-amber-100 text-amber-600 border-amber-200' :
+                                    ann.status === '進行中' ? 'bg-green-100 text-green-700 border-green-200' :
+                                                              'bg-slate-100 text-slate-400 border-slate-200'
+                                ]">{{ ann.status }}</span>
+                            </div>
+                            <!-- Body -->
+                            <p class="text-sm text-slate-500 leading-relaxed">{{ ann.body }}</p>
+                            <!-- Footer: link + date -->
+                            <div class="flex items-center justify-between pt-1">
+                                <a v-if="ann.link" :href="ann.link.url" target="_blank"
+                                   class="px-3 py-1.5 text-sm font-semibold bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition">
+                                    {{ ann.link.text }}
+                                </a>
+                                <span v-else></span>
+                                <span v-if="ann.date" class="text-xs text-slate-400">{{ ann.date }}</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Step 1：使用說明1 -->
+                    <template v-if="helpStep === 1">
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            1. 點選左上角的【選擇副本】開始你想要規劃的副本。
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            2. 點選職能組成，最多8名成員，職業可重複，拖曳右側職能圖示可排序，點擊則刪除。
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            3. 部分職業可點選職業圖示展開個人技能列表，</br>可搭配個人排軸外，展開後的技能也會納入在預計傷害，方便判斷死刑等單體傷害
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            4. 右上選單點開後可登入Discord帳號，登入後可新建自己的範本，並複製共同編輯或唯讀連結分享給隊友。
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            5. 可隱藏機制等無傷害招式、AA及死刑等對坦傷害，<br>預設為精簡模式，關閉精簡模式則會顯示BOSS階段及初始傷害值
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            6. 可分享配點參數給其他人套用(未登入可)
+                        </p>
+                        <img src="src/help/easy_sop.png" alt=""
+                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
+                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
+                    </template>
+
+                    <!-- Step 2：加入職業 -->
+                    <template v-if="helpStep === 2">
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            7. 新建的範本若有修改，在上方工具列可儲存修改
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            8. 他人分享的連結可以加入到自己的書籤內隨時開啟。
+                        </p>
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            9. 書籤會有icon標記，方便用於區別
+                        </p>
+                        <img src="src/help/bookmark.png" alt=""
+                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
+                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
+                    </template>
+
+                    <template v-if="helpStep === 3">
+                        <p class="text-base text-slate-600 leading-relaxed">
+                            10. 懸浮於技能圖示中會有技能說明，>各個技能會有不同標籤方便區別用途<br>選單中的參數設定會影響護盾計算值。
+                        </p>
+                        <img src="src/help/skill.png" alt=""
+                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
+                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
+                    </template>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="px-5 py-3.5 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0 bg-slate-50 rounded-b-2xl">
+                    <button @click="helpPrev" :disabled="helpStep === 0"
+                            class="px-4 py-2 text-sm text-slate-500 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 transition disabled:opacity-30">
+                        上一步
+                    </button>
+                    <button v-if="helpStep < HELP_TOTAL - 1" @click="helpNext"
+                            class="px-5 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
+                        下一步
+                    </button>
+                    <button v-else @click="closeHelp"
+                            class="px-5 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
+                        完成
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- ── 圖片 Lightbox ── -->
+    <Teleport to="body">
+        <div v-if="lightboxSrc"
+             class="fixed inset-0 z-[500] bg-black/85 flex items-center justify-center cursor-zoom-out"
+             @click="lightboxSrc = null">
+            <img :src="lightboxSrc" alt=""
+                 class="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl select-none">
         </div>
     </Teleport>
 

@@ -1395,14 +1395,16 @@ createApp({
 
         onMounted(async () => {
             try {
-                const [catRes, skillsRes, indexRes] = await Promise.all([
+                const [catRes, skillsRes, indexRes, annRes] = await Promise.all([
                     fetch('src/jobs.json'),
                     fetch('src/skills.json'),
-                    fetch('src/duty/index.json')
+                    fetch('src/duty/index.json'),
+                    fetch('src/announcements.json')
                 ]);
                 categoryDb.value = await catRes.json();
                 jobDb.value = await skillsRes.json();
                 dutyIndex.value = await indexRes.json();
+                announcements.value = await annRes.json();
 
                 const savedDark = localStorage.getItem('ffxiv_dark_mode');
                 if (savedDark === '1') {
@@ -2403,6 +2405,26 @@ createApp({
             '使用者'
         );
 
+        // ── 使用說明 Wizard ────────────────────────────────────
+        const helpOpen = ref(false);
+        const helpStep = ref(0);
+        const HELP_TOTAL = 4;
+        const openHelp  = () => { helpStep.value = 0; helpOpen.value = true; };
+        const closeHelp = () => { helpOpen.value = false; };
+        const helpNext  = () => { if (helpStep.value < HELP_TOTAL - 1) helpStep.value++; };
+        const helpPrev  = () => { if (helpStep.value > 0) helpStep.value--; };
+        const announcements = ref([]);
+        const sortedAnnouncements = computed(() => {
+            const statusOrder = { '置頂': 0, '進行中': 1, '已完成': 2 };
+            return [...announcements.value].sort((a, b) => {
+                const sa = statusOrder[a.status] ?? 99;
+                const sb = statusOrder[b.status] ?? 99;
+                if (sa !== sb) return sa - sb;
+                return new Date(b.date.replace(/\//g, '-')) - new Date(a.date.replace(/\//g, '-'));
+            });
+        });
+        const lightboxSrc = ref(null);
+
         // ── 側邊欄 / 我的範本 ─────────────────────────────────
         const sidebarOpen = ref(false);
         const myDocuments = ref([]);
@@ -2447,11 +2469,31 @@ createApp({
             const defaultName = getDutyDisplayName(selectedDutyKey.value) + ' 範本';
             const name = prompt('請輸入範本名稱：', defaultName);
             if (!name || !name.trim()) return;
-            const { error } = await createDocument(currentUser.value.id, selectedDutyKey.value, name.trim(), buildPayload());
-            if (!error) {
+            const { data: newDoc, error } = await createDocument(currentUser.value.id, selectedDutyKey.value, name.trim(), buildPayload());
+            if (!error && newDoc) {
                 await fetchDocuments();
                 expandedDutySections.value[selectedDutyKey.value] = true;
-            } else {
+                // 自動切換到新範本的編輯狀態
+                tokenMode.value       = 'edit';
+                activeToken.value     = newDoc.edit_token || '';
+                tokenDocName.value    = newDoc.name;
+                tokenDocId.value      = newDoc.id || '';
+                tokenDocOwnerId.value = currentUser.value?.id || '';
+                tokenLoadedAt.value   = newDoc.updated_at || '';
+                tokenBaseData.value   = JSON.parse(JSON.stringify(newDoc.data || {}));
+                isViewingSharedPlan.value = true;
+                isBookmarked.value    = false;
+                realtimeNotif.value   = null;
+                if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
+                if (newDoc.id) _realtimeChannel = subscribeDocChannel(newDoc.id, _onRealtimeUpdate);
+                const params = new URLSearchParams(window.location.search);
+                params.delete('s');
+                params.delete('view');
+                if (newDoc.edit_token) { params.set('edit', newDoc.edit_token); } else { params.delete('edit'); }
+                const qs = params.toString();
+                history.pushState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+                sidebarOpen.value = false;
+            } else if (error) {
                 alert('儲存失敗，請稍後再試。');
             }
         };
@@ -2589,6 +2631,7 @@ createApp({
             raidParams, raidParamsDialog, raidParamsDraft,
             openRaidParamsDialog, closeRaidParamsDialog, saveRaidParams, resetRaidParamsDraftToDefault,
             calcShieldDisplay,
+            helpOpen, helpStep, HELP_TOTAL, openHelp, closeHelp, helpNext, helpPrev, sortedAnnouncements, lightboxSrc,
         };
     }
 }).mount('#app');

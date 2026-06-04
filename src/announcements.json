@@ -1,0 +1,45 @@
+[
+    {
+        "id": 1,
+        "title": "BUG 回報 & 功能建議",
+        "body": "基本功能建置完成，若有發現 BUG 或有任何建議，歡迎到 Github Issue 回報！",
+        "status": "置頂",
+        "date": "2026/06/03",
+        "link": {
+            "text": "前往 Github Issue 回報",
+            "url": "https://github.com/ffxivmit/FFXIV_MitigationPlanning/issues"
+        }
+    },
+    {
+        "id": 2,
+        "title": "【更新】護盾計算功能",
+        "body": "新增技能提示中的護盾計算功能，會根據設定的血量參數顯示每個技能提供的護盾值，幫助評估減傷效果是否足夠。",
+        "status": "已完成",
+        "date": "2026/06/03",
+        "link": null
+    },
+    {
+        "id": 3,
+        "title": "【更新】新增 Discord 帳號連動",
+        "body": "目前只需登入 Discord 帳號，即可新增自己的減傷範本，並且可以分享編輯／唯讀連結，方便與團隊成員協作！",
+        "status": "已完成",
+        "date": "2026/06/01",
+        "link": null
+    },
+    {
+        "id": 4,
+        "title": "【更新】新增使用說明，放在公告後面",
+        "body": "新增簡略的使用操作說明，點選下一步即可查看，方便新使用者快速上手。",
+        "status": "已完成",
+        "date": "2026/06/04",
+        "link": null
+    },
+    {
+        "id": 5,
+        "title": "【進行中】慢慢監修時間軸內容",
+        "body": "目前僅完成M1S~M4S的時間軸內容，若有繁中版的招式翻譯，歡迎丟到Github Issue提供，謝謝。",
+        "status": "進行中",
+        "date": "2026/06/04",
+        "link": null
+    }
+]

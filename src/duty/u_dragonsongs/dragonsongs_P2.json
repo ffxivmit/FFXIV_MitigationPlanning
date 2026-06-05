@@ -48,6 +48,6 @@
         {"phase": "時間切れ", "castingTime": "02:44", "hitTime": "02:44", "skill": "アルティメットエンド", "damage": [{"label": "傷害", "amount": 96000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れ", "castingTime": "02:57", "hitTime": "02:57", "skill": "大振り", "damage": [], "type": ""},
         {"phase": "時間切れ", "castingTime": "03:05", "hitTime": "03:05", "skill": "大振り", "damage": [], "type": ""},
-        {"phase": "時間切れ", "castingTime": "03:10", "hitTime": "03:10", "skill": "エーテルバースト", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れ", "castingTime": "03:10", "hitTime": "03:10", "skill": "エーテルバースト", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

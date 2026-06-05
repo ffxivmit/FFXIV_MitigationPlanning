@@ -55,8 +55,8 @@
         {"phase": "時間結晶", "castingTime": "12:41", "hitTime": "02:45", "skill": "アク・モーン", "damage": [{"label": "傷害", "amount": 60000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間結晶", "castingTime": "12:46", "hitTime": "02:50", "skill": "忘却の彼方", "damage": [{"label": "傷害", "amount": 50000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間結晶", "castingTime": "12:48", "hitTime": "02:52", "skill": "モーン・アファー", "damage": [{"label": "傷害", "amount": 160000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "時間結晶", "castingTime": "13:01", "hitTime": "03:05", "skill": "絶対零度", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間結晶", "castingTime": "13:01", "hitTime": "03:05", "skill": "エンド・オブ・メモリーズ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間結晶", "castingTime": "13:01", "hitTime": "03:05", "skill": "絶対零度", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間結晶", "castingTime": "13:01", "hitTime": "03:05", "skill": "エンド・オブ・メモリーズ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
     
 }

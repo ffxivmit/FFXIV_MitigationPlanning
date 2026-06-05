@@ -130,7 +130,7 @@
         {"phase": "時間切れまで", "castingTime": "05:53", "hitTime": "03:33", "skill": "チェイサーAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "05:55", "hitTime": "03:35", "skill": "ジャスティスAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "05:56", "hitTime": "03:36", "skill": "チェイサーAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切れまで", "castingTime": "06:05", "hitTime": "03:45", "skill": "死刑判決", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "06:05", "hitTime": "03:45", "skill": "暗黒の運命", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "06:05", "hitTime": "03:45", "skill": "死刑判決", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "06:05", "hitTime": "03:45", "skill": "暗黒の運命", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

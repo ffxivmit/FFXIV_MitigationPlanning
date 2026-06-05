@@ -76,6 +76,6 @@
         {"phase": "検知式波動砲", "castingTime": "07:11", "hitTime": "02:37", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 48000, "type": "物理"}], "type": "物理"},
         {"phase": "検知式波動砲", "castingTime": "07:26", "hitTime": "02:52", "skill": "検知式波動砲", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
         {"phase": "検知式波動砲", "castingTime": "07:29", "hitTime": "02:55", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 48000, "type": "物理"}], "type": "物理"},
-        {"phase": "検知式波動砲", "castingTime": "07:41", "hitTime": "03:07", "skill": "イオンエフラクス", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "検知式波動砲", "castingTime": "07:41", "hitTime": "03:07", "skill": "イオンエフラクス", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }    

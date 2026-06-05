@@ -39,7 +39,7 @@
         {"phase": "連携プログラムLB", "castingTime": "03:55", "hitTime": "01:51", "skill": "メテオ・オメガ", "damage": [{"label": "傷害", "amount": 49000, "type": "魔法"}], "type": "魔法"},
         {"phase": "連携プログラムLB", "castingTime": "03:55", "hitTime": "01:51", "skill": "パイルピッチ", "damage": [{"label": "傷害", "amount": 44000, "type": "魔法"}], "type": "魔法"},
         {"phase": "連携プログラムLB", "castingTime": "04:06", "hitTime": "02:02", "skill": "コスモメモリー", "damage": [{"label": "傷害", "amount": 95000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "連携プログラムLB", "castingTime": "04:34", "hitTime": "02:30", "skill": "レーザーシャワー", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "連携プログラムLB", "castingTime": "04:34", "hitTime": "02:30", "skill": "レーザーシャワー", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
     
 }    

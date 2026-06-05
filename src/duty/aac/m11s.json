@@ -218,6 +218,6 @@
         {"phase": "時間切れまで", "castingTime": "10:45", "hitTime": "10:45", "skill": "ハートブレイクキック (3 回目)", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "10:47", "hitTime": "10:47", "skill": "ハートブレイクキック (3 回目)", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "10:49", "hitTime": "10:49", "skill": "ハートブレイクキック (3 回目)", "damage": [{"label": "傷害", "amount": 80000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "時間切れまで", "castingTime": "11:02", "hitTime": "11:02", "skill": "ハートブレイカー", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "11:02", "hitTime": "11:02", "skill": "ハートブレイカー", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

@@ -117,6 +117,6 @@
         {"phase": "時間切れまで", "castingTime": "02:15", "hitTime": "02:15", "skill": "ハンドAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "02:16", "hitTime": "02:16", "skill": "リキッドAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "02:18", "hitTime": "02:18", "skill": "ハンドAA", "damage": [{"label": "傷害", "amount": 13000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切れまで", "castingTime": "02:20", "hitTime": "02:20", "skill": "カスケード", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "02:20", "hitTime": "02:20", "skill": "カスケード", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

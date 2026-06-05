@@ -71,13 +71,13 @@
         {"phase": "三蛮神(タイタン>イフ>ガルーダの場合)", "castingTime": "16:10", "hitTime": "02:19", "skill": "エリアルブラスト", "damage": [{"label": "傷害", "amount": 18500, "type": "魔法"}], "type": "魔法"},
         {"phase": "三蛮神(タイタン>イフ>ガルーダの場合)", "castingTime": "16:11", "hitTime": "02:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 6800, "type": "魔法"}], "type": "魔法"},
         {"phase": "三蛮神(タイタン>イフ>ガルーダの場合)", "castingTime": "16:18", "hitTime": "02:27", "skill": "フェザーレイン", "damage": [], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:43", "hitTime": "02:52", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:46", "hitTime": "02:55", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:49", "hitTime": "02:58", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:52", "hitTime": "03:01", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:55", "hitTime": "03:04", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "16:58", "hitTime": "03:07", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "17:01", "hitTime": "03:10", "skill": "シタデルシージ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "17:05", "hitTime": "03:14", "skill": "アルテマ・サビク", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "16:43", "hitTime": "02:52", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "16:46", "hitTime": "02:55", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "16:49", "hitTime": "02:58", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "16:52", "hitTime": "03:01", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "16:55", "hitTime": "03:04", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "16:58", "hitTime": "03:07", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "17:01", "hitTime": "03:10", "skill": "シタデルシージ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "17:05", "hitTime": "03:14", "skill": "アルテマ・サビク", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

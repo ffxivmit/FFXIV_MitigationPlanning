@@ -251,7 +251,7 @@
         {"phase": "時間切れまで", "castingTime": "09:45", "hitTime": "09:45", "skill": "AA (Blue)", "damage": [{"label": "傷害", "amount": 89000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "09:48", "hitTime": "09:48", "skill": "AA (Red)", "damage": [{"label": "傷害", "amount": 89000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "09:48", "hitTime": "09:48", "skill": "AA (Blue)", "damage": [{"label": "傷害", "amount": 89000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切れまで", "castingTime": "10:00", "hitTime": "10:00", "skill": "オーバー・ザ・フォール (Blue)", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "10:00", "hitTime": "10:00", "skill": "オーバー・ザ・フォール (Red)", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "10:00", "hitTime": "10:00", "skill": "オーバー・ザ・フォール (Blue)", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れまで", "castingTime": "10:00", "hitTime": "10:00", "skill": "オーバー・ザ・フォール (Red)", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

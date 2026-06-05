@@ -66,6 +66,6 @@
         {"phase": "息吹2回目", "castingTime": "14:07", "hitTime": "02:34", "skill": "フレーズ_AA(ウィルムクロウ)", "damage": [{"label": "傷害", "amount": 25000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "14:17", "hitTime": "02:44", "skill": "カータライズ", "damage": [], "type": ""},
         {"phase": "時間切れまで", "castingTime": "14:24", "hitTime": "02:51", "skill": "タッチダウン", "damage": [], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "14:50", "hitTime": "03:17", "skill": "最後の咆哮", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "14:50", "hitTime": "03:17", "skill": "最後の咆哮", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

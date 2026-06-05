@@ -55,6 +55,6 @@
         {"phase": "邪眼", "castingTime": "06:38", "hitTime": "03:28", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 26000, "type": "物理"}], "type": "物理"},
         {"phase": "邪眼", "castingTime": "06:47", "hitTime": "03:37", "skill": "憤怒の波動", "damage": [{"label": "傷害", "amount": 60000, "type": "魔法"}], "type": "魔法"},
         {"phase": "邪眼", "castingTime": "06:51", "hitTime": "03:41", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 26000, "type": "物理"}], "type": "物理"},
-        {"phase": "邪眼", "castingTime": "07:06", "hitTime": "03:56", "skill": "最後の咆哮", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "邪眼", "castingTime": "07:06", "hitTime": "03:56", "skill": "最後の咆哮", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

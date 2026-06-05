@@ -124,6 +124,6 @@
         {"phase": "時間切れまで", "castingTime": "07:00", "hitTime": "07:00", "skill": "スカージブレス or ラプターナックル", "damage": [{"label": "傷害", "amount": 45000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "07:04", "hitTime": "07:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 100000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "07:07", "hitTime": "07:07", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 100000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "時間切れまで", "castingTime": "07:18", "hitTime": "07:18", "skill": "オーバーキュア・オーバーキル", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "07:18", "hitTime": "07:18", "skill": "オーバーキュア・オーバーキル", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }    

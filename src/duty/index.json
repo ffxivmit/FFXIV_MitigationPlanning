@@ -8,18 +8,25 @@
     "aac_light": {
       "label": "阿卡迪亞零式 - 輕量級",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 196500,
+        "teamMinHp": 123500,
+        "healerMnd": { "WHM": 4430, "SCH": 4430, "AST": 4430, "SGE": 4430 }
       }
     },
-    "aac_cruiser": { "label": "阿卡迪亞零式 - 次重量級" },
+    "aac_cruiser": { 
+      "label": "阿卡迪亞零式 - 次重量級",
+      "params": {
+        "tankHp": 225000,
+        "teamMinHp": 143700,
+        "healerMnd": { "WHM": 5130, "SCH": 5130, "AST": 5130, "SGE": 5130 }
+      }
+    },
     "aac_heavy": {
       "label": "阿卡迪亞零式 - 重量級",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 296200,
+        "teamMinHp": 186800,
+        "healerMnd": { "WHM": 6300, "SCH": 6300, "AST": 6300, "SGE": 6300 }
       }
     },
     "ultimate_eden": {
@@ -27,39 +34,47 @@
       "params": {
         "tankHp": 225800,
         "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "healerMnd": { "WHM": 5320, "SCH": 5320, "AST": 5320, "SGE": 5320 }
       }
     },
     "ultimate_omega": {
       "label": "絕歐米茄",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 122000,
+        "teamMinHp": 82000,
+        "healerMnd": { "WHM": 3000, "SCH": 3000, "AST": 3000, "SGE": 3000 }
       }
     },
     "ultimate_dragonsongs": {
       "label": "絕龍詩",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 96000,
+        "teamMinHp": 69000,
+        "healerMnd": { "WHM": 2600, "SCH": 2600, "AST": 2600, "SGE": 2600 }
       }
     },
     "ultimate_alexander": {
       "label": "絕亞歷山大",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 53000,
+        "teamMinHp": 33400,
+        "healerMnd": { "WHM": 1710, "SCH": 1710, "AST": 1710, "SGE": 1710 }
       }
     },
     "ultimate_ultima": {
       "label": "絕究極武器",
       "params": {
-        "tankHp": 225800,
-        "teamMinHp": 142000,
-        "healerMnd": { "WHM": 3250, "SCH": 3250, "AST": 3250, "SGE": 3250 }
+        "tankHp": 29800,
+        "teamMinHp": 19600,
+        "healerMnd": { "WHM": 1325, "SCH": 1325, "AST": 1325, "SGE": 1325 }
+      }
+    },
+    "ultimate_bahamult": {
+      "label": "絕巴哈姆特",
+      "params": {
+        "tankHp": 27400,
+        "teamMinHp": 18100,
+        "healerMnd": { "WHM": 1255, "SCH": 1255, "AST": 1255, "SGE": 1255 }
       }
     }
   },
@@ -68,6 +83,10 @@
     { "key": "m2s", "file": "aac/m2s.json", "name": "阿卡迪亞零式 M2S", "category": "aac_light" },
     { "key": "m3s", "file": "aac/m3s.json", "name": "阿卡迪亞零式 M3S", "category": "aac_light" },
     { "key": "m4s", "file": "aac/m4s.json", "name": "阿卡迪亞零式 M4S", "category": "aac_light" },
+    { "key": "m5s", "file": "aac/m5s.json", "name": "阿卡迪亞零式 M5S", "category": "aac_cruiser" },
+    { "key": "m6s", "file": "aac/m6s.json", "name": "阿卡迪亞零式 M6S", "category": "aac_cruiser" },
+    { "key": "m7s", "file": "aac/m7s.json", "name": "阿卡迪亞零式 M7S", "category": "aac_cruiser" },
+    { "key": "m8s", "file": "aac/m8s.json", "name": "阿卡迪亞零式 M8S", "category": "aac_cruiser" },
     { "key": "m9s", "file": "aac/m9s.json", "name": "阿卡迪亞零式 M9S", "category": "aac_heavy" },
     { "key": "m10s", "file": "aac/m10s.json", "name": "阿卡迪亞零式 M10S", "category": "aac_heavy" },
     { "key": "m11s", "file": "aac/m11s.json", "name": "阿卡迪亞零式 M11S", "category": "aac_heavy" },
@@ -99,6 +118,12 @@
     { "key": "u_ultima_P2", "file": "u_ultima/ultima_P2.json", "name": "絕究極武器(P2)", "category": "ultimate_ultima" },
     { "key": "u_ultima_P3", "file": "u_ultima/ultima_P3.json", "name": "絕究極武器(P3)", "category": "ultimate_ultima" },
     { "key": "u_ultima_P4", "file": "u_ultima/ultima_P4.json", "name": "絕究極武器(P4)", "category": "ultimate_ultima" },
-    { "key": "u_ultima_P5", "file": "u_ultima/ultima_P5.json", "name": "絕究極武器(P5)", "category": "ultimate_ultima" }
+    { "key": "u_ultima_P5", "file": "u_ultima/ultima_P5.json", "name": "絕究極武器(P5)", "category": "ultimate_ultima" },
+    { "key": "u_bahamult_P1", "file": "u_bahamult/bahamult_P1.json", "name": "絕巴哈姆特(P1)", "category": "ultimate_bahamult" },
+    { "key": "u_bahamult_P2", "file": "u_bahamult/bahamult_P2.json", "name": "絕巴哈姆特(P2)", "category": "ultimate_bahamult" },
+    { "key": "u_bahamult_P3", "file": "u_bahamult/bahamult_P3.json", "name": "絕巴哈姆特(P3)", "category": "ultimate_bahamult" },
+    { "key": "u_bahamult_P4", "file": "u_bahamult/bahamult_P4.json", "name": "絕巴哈姆特(P4)", "category": "ultimate_bahamult" },
+    { "key": "u_bahamult_P5", "file": "u_bahamult/bahamult_P5.json", "name": "絕巴哈姆特(P5)", "category": "ultimate_bahamult" },
+    { "key": "u_bahamult_All", "file": "u_bahamult/bahamult_all.json", "name": "絕巴哈姆特(All)", "category": "ultimate_bahamult" }
   ]
 }

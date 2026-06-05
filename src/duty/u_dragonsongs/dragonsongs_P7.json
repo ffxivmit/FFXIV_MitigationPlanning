@@ -90,8 +90,8 @@
         {"phase": "アク・モーン 3回目", "castingTime": "19:14", "hitTime": "04:24", "skill": "トリニティ(タンク)", "damage": [{"label": "傷害", "amount": 65000, "type": "魔法"}], "type": "魔法"},
         {"phase": "アク・モーン 3回目", "castingTime": "19:18", "hitTime": "04:28", "skill": "トリニティ(DPS)", "damage": [{"label": "傷害", "amount": 38000, "type": "物理"}], "type": "物理"},
         {"phase": "アク・モーン 3回目", "castingTime": "19:18", "hitTime": "04:28", "skill": "トリニティ(タンク)", "damage": [{"label": "傷害", "amount": 65000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "時間切れ", "castingTime": "19:31", "hitTime": "04:41", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れ", "castingTime": "19:34", "hitTime": "04:44", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""},
-        {"phase": "時間切れ", "castingTime": "19:37", "hitTime": "04:47", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れ", "castingTime": "19:31", "hitTime": "04:41", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れ", "castingTime": "19:34", "hitTime": "04:44", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"},
+        {"phase": "時間切れ", "castingTime": "19:37", "hitTime": "04:47", "skill": "騎竜剣モーン・アファー", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

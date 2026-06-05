@@ -205,6 +205,6 @@
         {"phase": "時間切れまで", "castingTime": "09:46", "hitTime": "09:46", "skill": "クラウドキリング", "damage": [{"label": "傷害", "amount": 220000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "09:48", "hitTime": "09:48", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 90000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "09:51", "hitTime": "09:51", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 90000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "時間切れまで", "castingTime": "10:05", "hitTime": "10:05", "skill": "フィナーレ・ファターレ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "10:05", "hitTime": "10:05", "skill": "フィナーレ・ファターレ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

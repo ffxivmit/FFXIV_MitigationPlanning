@@ -39,6 +39,6 @@
         {"phase": "時間切れまで", "castingTime": "18:13", "hitTime": "04:28", "skill": "マジックナンバー", "damage": [{"label": "傷害", "amount": 300000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "18:29", "hitTime": "04:44", "skill": "マジックナンバー", "damage": [{"label": "傷害", "amount": 300000, "type": "魔法"}], "type": "魔法"},
         {"phase": "時間切れまで", "castingTime": "18:38", "hitTime": "04:53", "skill": "コード：＊＊＊ミ＊(詠唱開始)", "damage": [], "type": ""},
-        {"phase": "時間切れまで", "castingTime": "18:54", "hitTime": "05:09", "skill": "コード：＊＊＊ミ＊", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "18:54", "hitTime": "05:09", "skill": "コード：＊＊＊ミ＊", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]     
 }    

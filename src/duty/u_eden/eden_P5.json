@@ -67,6 +67,6 @@
         {"phase": "光塵の剣 3 回目", "castingTime": "18:20", "hitTime": "05:20", "skill": "アク・モーン", "damage": [{"label": "傷害", "amount": 190000, "type": "魔法"}], "type": "魔法"},
         {"phase": "光塵の剣 3 回目", "castingTime": "18:24", "hitTime": "05:24", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 85000, "type": "物理"}], "type": "物理"},
         {"phase": "光塵の剣 3 回目", "castingTime": "18:27", "hitTime": "05:27", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 85000, "type": "物理"}], "type": "物理"},
-        {"phase": "光塵の剣 3 回目", "castingTime": "18:50", "hitTime": "05:50", "skill": "パラダイス・ロスト", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "光塵の剣 3 回目", "castingTime": "18:50", "hitTime": "05:50", "skill": "パラダイス・ロスト", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

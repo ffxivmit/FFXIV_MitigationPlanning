@@ -50,6 +50,6 @@
         {"phase": "時間切れまで", "castingTime": "11:20", "hitTime": "03:16", "skill": "アスカロンマイト", "damage": [{"label": "傷害", "amount": 110000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "11:21", "hitTime": "03:17", "skill": "アスカロンマイト", "damage": [{"label": "傷害", "amount": 110000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切れまで", "castingTime": "11:24", "hitTime": "03:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 50000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切れまで", "castingTime": "11:33", "hitTime": "03:29", "skill": "エーテルバースト", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "時間切れまで", "castingTime": "11:33", "hitTime": "03:29", "skill": "エーテルバースト", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]    
 }

@@ -56,6 +56,6 @@
         {"phase": "パントクラトル", "castingTime": "01:54", "hitTime": "01:54", "skill": "拡散波動砲P", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
         {"phase": "パントクラトル", "castingTime": "01:56", "hitTime": "01:56", "skill": "拡散波動砲P", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
         {"phase": "パントクラトル", "castingTime": "01:57", "hitTime": "01:57", "skill": "波動砲P", "damage": [{"label": "傷害", "amount": 34000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "パントクラトル", "castingTime": "02:04", "hitTime": "02:04", "skill": "アトミックレイ", "damage": [{"label": "傷害", "amount": 9999999, "type": ""}], "type": ""}
+        {"phase": "パントクラトル", "castingTime": "02:04", "hitTime": "02:04", "skill": "アトミックレイ", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }    

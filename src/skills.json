@@ -240,7 +240,7 @@
             { "id": "sge_pneuma", "name": "魂靈風息", "title":"向目標所在方向發出直線無屬性範圍魔法攻擊\n追加效果：令自身及周圍20米內的隊員恢復HP，恢復力：600\n追加效果：令帶有關心狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 120, "icon": "src/Skill_icons/21_SGE/Pneuma.png" ,"personal": true},
             { "id": "sge_philo", "name": "智慧之愛", "title":"20秒內，自身發動治療魔法的治療量提高20%\n追加效果：為自身及周圍隊員附加幸福狀態\n持續時間內魔法命中後，令帶有幸福狀態的目標恢復HP", "effects": [], "duration": 1, "cooldown": 180, "icon": "src/Skill_icons/21_SGE/Philosophia.png" ,"personal": true},
             { "id": "sge_tauro", "name": "白牛清汁", "tags": ["減傷"], "title":"恢復自身或一名隊員的HP，恢復力：700\n追加效果：目標所受傷害減輕10%，持續時間：15秒\n追加效果：恢復自身最大MP的7%\n無法與堅角清汁效果共存\n發動條件：蛇膽", "effects": [], "duration": 15, "cooldown": 45, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Taurochole.png", "personal": true },
-            { "id": "sge_druo", "name": "寄生清汁", "title":"恢復自身及周圍隊員的HP，恢復力：400\n追加效果：恢復自身最大MP的7%\n發動條件：蛇膽", "effects": [], "duration": 1, "cooldown": 30, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Ixochole.png", "personal": true },
+            { "id": "sge_ixo", "name": "寄生清汁", "title":"恢復自身及周圍隊員的HP，恢復力：400\n追加效果：恢復自身最大MP的7%\n發動條件：蛇膽", "effects": [], "duration": 1, "cooldown": 30, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Ixochole.png", "personal": true },
             { "id": "sge_druo", "name": "靈橡清汁", "title":"恢復目標的HP，恢復力：600\n追加效果：恢復自身最大MP的7%\n發動條件：蛇膽", "effects": [], "duration": 1, "cooldown": 1, "addersgallCost": 1, "icon": "src/Skill_icons/21_SGE/Druochole.png", "personal": true },
             { "id": "sge_rhizo", "name": "根素", "title":"為自身附加1階蛇膽", "effects": [], "duration": 1, "cooldown": 90, "addersgallProvide": 1, "icon": "src/Skill_icons/21_SGE/Rhizomata.png", "personal": true }
         ]

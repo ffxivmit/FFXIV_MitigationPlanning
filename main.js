@@ -294,6 +294,11 @@ createApp({
         const bookmarkLoading = ref(false);
         const bookmarkedDocuments = ref([]);
 
+        const notesMap = ref({});
+        const noteEditor = ref({ open: false, key: '', text: '', skillName: '', hitTime: '', rowSkill: '' });
+        const notesCard = ref({ open: false, pIdx: -1, x: 200, y: 200 });
+        const noteTextareaRef = ref(null);
+
         const dutyDropdownOpen = ref(false);
         const expandedCategories = ref({});
 
@@ -1418,6 +1423,7 @@ createApp({
                         customRowsByDuty.value = parsed.customRowsByDuty || {};
                         mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
                         skillStateMap.value = parsed.skillStateMap || {};
+                        notesMap.value = parsed.notes || {};
                         if (parsed.selectedDutyKey) loadRaidParamsForDuty(parsed.selectedDutyKey);
                     }
                 }
@@ -1481,6 +1487,7 @@ createApp({
             };
             mitMap.value = remapKeys(mitMap.value);
             skillStateMap.value = remapKeys(skillStateMap.value);
+            notesMap.value = remapKeys(notesMap.value);
             const arr = [...party.value];
             const [moved] = arr.splice(fromIdx, 1);
             arr.splice(toIdx, 0, moved);
@@ -1871,6 +1878,150 @@ createApp({
             skillStateMap.value = {};
         };
 
+        // ── Notes ─────────────────────────────────────────────
+        const getNoteKey = (skillInstanceId, rowIdx) =>
+            `${selectedDutyKey.value}-${skillInstanceId}-${rowIdx}`;
+
+        const hasNote = (skillInstanceId, rowIdx) =>
+            !!notesMap.value[getNoteKey(skillInstanceId, rowIdx)];
+
+        const getNote = (skillInstanceId, rowIdx) =>
+            notesMap.value[getNoteKey(skillInstanceId, rowIdx)] || '';
+
+        const openNoteEditor = (event, skillInstanceId, rowIdx, skill, row) => {
+            if (skill._isAetherIndicator || skill._isAddersgallIndicator) return;
+            event.preventDefault();
+            if (isReadOnly.value) return;
+            const key = getNoteKey(skillInstanceId, rowIdx);
+            noteEditor.value = {
+                open: true, key,
+                text: notesMap.value[key] || '',
+                skillName: skill.name,
+                hitTime: row.hitTime,
+                rowSkill: row.skill || '',
+            };
+            nextTick(() => noteTextareaRef.value?.focus());
+        };
+
+        const openNoteEditorFromList = (note) => {
+            if (isReadOnly.value) return;
+            noteEditor.value = { open: true, key: note.key, text: note.text, skillName: note.skillName, hitTime: note.hitTime, rowSkill: note.rowSkill || '' };
+            nextTick(() => noteTextareaRef.value?.focus());
+        };
+
+        const saveNote = () => {
+            const { key, text } = noteEditor.value;
+            const newMap = { ...notesMap.value };
+            if (text.trim()) {
+                newMap[key] = text.trim();
+            } else {
+                delete newMap[key];
+            }
+            notesMap.value = newMap;
+            noteEditor.value.open = false;
+        };
+
+        const sortedNotes = computed(() => {
+            if (!selectedDutyKey.value || !currentTimeline.value) return [];
+            const prefix = selectedDutyKey.value + '-';
+
+            // O(n) 建立 Map，避免 per-note O(n) find()
+            const rowMap = new Map(currentTimeline.value.map(r => [r._internalIdx, r]));
+            const skillMap = new Map(activeSkills.value.map(s => [s.instanceId, s]));
+
+            return Object.entries(notesMap.value)
+                .filter(([key]) => key.startsWith(prefix))
+                .map(([key, text]) => {
+                    const rest = key.slice(prefix.length);
+                    const lastDash = rest.lastIndexOf('-');
+                    const skillInstanceId = rest.slice(0, lastDash);
+                    const rowIdx = parseInt(rest.slice(lastDash + 1));
+                    const row = rowMap.get(rowIdx);
+                    let skill = skillMap.get(skillInstanceId);
+                    // 個人技能收合後 activeSkills 找不到，從 jobDb 補查
+                    if (!skill) {
+                        const m = skillInstanceId.match(/^p(\d+)-(.+)$/);
+                        if (m) {
+                            const pIdx = parseInt(m[1]);
+                            const rawSkill = jobDb.value[party.value[pIdx]]?.skills?.find(s => s.id === m[2]);
+                            if (rawSkill) {
+                                skill = {
+                                    name: rawSkill.name,
+                                    icon: rawSkill.icon,
+                                    memberBorder: `var(--m${pIdx % 8}-border)`,
+                                };
+                            }
+                        }
+                    }
+                    return {
+                        key, rowIdx, skillInstanceId,
+                        hitTime: row?.hitTime || '?',
+                        rowSkill: row?.skill || '',
+                        skillName: skill?.name || '?',
+                        skillIcon: skill?.icon || '',
+                        memberBorder: skill?.memberBorder || '',
+                        text,
+                    };
+                })
+                .sort((a, b) => {
+                    const ta = timeToSeconds(a.hitTime);
+                    const tb = timeToSeconds(b.hitTime);
+                    return ta !== tb ? ta - tb : a.rowIdx - b.rowIdx;
+                });
+        });
+
+        // 一次掃完 notesMap，算出每個成員的備註數量；比在 template 裡 per-member call 快
+        const memberNoteCounts = computed(() => {
+            const counts = {};
+            if (!selectedDutyKey.value) return counts;
+            const prefix = selectedDutyKey.value + '-';
+            for (const key of Object.keys(notesMap.value)) {
+                if (!key.startsWith(prefix)) continue;
+                const m = key.slice(prefix.length).match(/^p(\d+)-/);
+                if (m) {
+                    const pIdx = parseInt(m[1]);
+                    counts[pIdx] = (counts[pIdx] || 0) + 1;
+                }
+            }
+            return counts;
+        });
+
+        const memberNoteCount = (pIdx) => memberNoteCounts.value[pIdx] || 0;
+
+        const notesCardEntries = computed(() => {
+            if (!notesCard.value.open) return [];
+            if (notesCard.value.pIdx < 0) return sortedNotes.value;
+            const prefix = `p${notesCard.value.pIdx}-`;
+            return sortedNotes.value.filter(n => n.skillInstanceId.startsWith(prefix));
+        });
+
+        const openNotesCard = (event, pIdx = -1) => {
+            if (notesCard.value.open && notesCard.value.pIdx === pIdx) {
+                notesCard.value.open = false;
+                return;
+            }
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = Math.min(rect.left, window.innerWidth - 296);
+            const y = Math.min(rect.bottom + 8, window.innerHeight - 360);
+            notesCard.value = { open: true, pIdx, x, y };
+        };
+
+        const notesCardDragStart = (event) => {
+            event.preventDefault();
+            const startX = event.clientX - notesCard.value.x;
+            const startY = event.clientY - notesCard.value.y;
+            const onMove = (e) => {
+                notesCard.value.x = e.clientX - startX;
+                notesCard.value.y = e.clientY - startY;
+            };
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        };
+
         // ── Share via Cloudflare Worker + KV ─────────────────
         const _applySharedData = (data) => {
             selectedDutyKey.value = data.duty || '';
@@ -1879,6 +2030,7 @@ createApp({
             selectedVariants.value = data.selectedVariants || {};
             customRowsByDuty.value = data.customRowsByDuty || {};
             skillStateMap.value = data.skillStateMap || {};
+            notesMap.value = data.notes || {};
             if (data.hideNonDmg !== undefined) hideNonDmg.value = data.hideNonDmg;
             if (data.hideTargeted !== undefined) hideTargeted.value = data.hideTargeted;
         };
@@ -2007,6 +2159,7 @@ createApp({
                 selectedDutyKey: selectedDutyKey.value,
                 party: party.value,
                 mitMap: mitMap.value,
+                notes: notesMap.value,
                 selectedVariants: selectedVariants.value,
                 customRowsByDuty: customRowsByDuty.value,
                 skillStateMap: skillStateMap.value,
@@ -2290,12 +2443,13 @@ createApp({
 
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
-        watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty], () => {
+        watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty, notesMap], () => {
             if (isViewingSharedPlan.value) return;
             localStorage.setItem('ffxiv_planner_data', JSON.stringify({
                 selectedDutyKey: selectedDutyKey.value,
                 party: party.value,
                 mitMap: mitMap.value,
+                notes: notesMap.value,
                 selectedVariants: selectedVariants.value,
                 customRowsByDuty: customRowsByDuty.value,
                 skillStateMap: skillStateMap.value,
@@ -2344,6 +2498,7 @@ createApp({
                     selectedDutyKey.value = data.duty;
                     party.value = data.party || [];
                     mitMap.value = data.mits || {};
+                    notesMap.value = data.notes || {};
                     selectedVariants.value = data.selectedVariants || {};
                     customRowsByDuty.value = data.customRowsByDuty || {};
                 } catch (err) {
@@ -2516,6 +2671,7 @@ createApp({
             duty: selectedDutyKey.value,
             party: party.value,
             mits: mitMap.value,
+            notes: notesMap.value,
             selectedVariants: selectedVariants.value,
             customRowsByDuty: customRowsByDuty.value,
             skillStateMap: skillStateMap.value,
@@ -2622,6 +2778,8 @@ createApp({
             openRaidParamsDialog, closeRaidParamsDialog, saveRaidParams, resetRaidParamsDraftToDefault,
             calcShieldDisplay,
             helpOpen, helpStep, HELP_TOTAL, openHelp, closeHelp, helpNext, helpPrev, sortedAnnouncements, lightboxSrc,
+            notesMap, noteEditor, noteTextareaRef, notesCard, hasNote, getNote, openNoteEditor, openNoteEditorFromList, saveNote, sortedNotes,
+            memberNoteCount, memberNoteCounts, notesCardEntries, openNotesCard, notesCardDragStart,
         };
     }
 }).mount('#app');

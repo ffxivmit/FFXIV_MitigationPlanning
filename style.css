@@ -561,3 +561,35 @@ body.dark .cat-btn-inactive:hover {
     background-color: #2a3340;
     color: #e8e4dc;
 }
+
+/* ── 輸入框（textarea）暗色主題 ── */
+body.dark textarea {
+    color: #e8e4dc;
+    background-color: #20262c;
+    border-color: #4a4643;
+}
+body.dark textarea::placeholder { color: #585450; }
+body.dark textarea:focus {
+    border-color: #548ed6 !important;
+    box-shadow: 0 0 0 2px rgba(214,163,84,0.25) !important;
+}
+
+/* ── 技能備註 Modal（暗色主題） ── */
+body.dark .note-editor-modal {
+    background-color: #20262c !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
+}
+
+/* ── 備註浮動卡片（暗色主題） ── */
+body.dark .notes-float-card {
+    background-color: #20262c !important;
+    border-color: #303842 !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+}
+body.dark .notes-float-card-header {
+    background-color: #252d36 !important;
+    border-color: #303842 !important;
+}
+body.dark .notes-float-card .hover\:bg-amber-50\/60:hover {
+    background-color: rgba(255,255,255,0.04) !important;
+}

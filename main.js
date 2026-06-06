@@ -337,12 +337,12 @@ createApp({
                 : raidParams.value.teamMinHp;
 
         const calcShieldDisplay = (skill) => {
-            if (!skill?.effects?.length) return [];
+            if (!skill?.effects?.length && !skill?.neutralSectShield) return [];
             const results = [];
             const healerMnd = getHealerMnd(skill);
             const critMult = skill.recitationCritMult || null;
 
-            for (const eff of skill.effects) {
+            for (const eff of (skill.effects || [])) {
                 if (eff.type === 'shield_maxhp') {
                     const pct = Math.round(eff.val * 100);
                     const baseHp = getMaxHpForSkill(skill);
@@ -381,6 +381,17 @@ createApp({
                     }
                 }
             }
+            if (skill.neutralSectShield && healerMnd) {
+                const nss = skill.neutralSectShield;
+                const healAmount = Math.floor(nss.val * (healerMnd * HEALER_MIND_SCALING));
+                const shieldAmount = Math.floor(healAmount * nss.shieldRatio);
+                results.push({
+                    label: '護盾（需中間學派）',
+                    value: shieldAmount,
+                    healAmount,
+                    shieldRatio: nss.shieldRatio,
+                });
+            }
             return results;
         };
 
@@ -399,6 +410,33 @@ createApp({
                 }
             }
             return total;
+        };
+
+        const isNeutralSectActive = (memberIndex, castTime) => {
+            const wins = neutralSectWindowsByMember.value.get(memberIndex);
+            if (!wins) return false;
+            return wins.some(w => castTime >= w.start && castTime <= w.end);
+        };
+
+        const isNeutralSectShieldActiveForCell = (skill, internalIdx) => {
+            if (!skill.neutralSectShield) return false;
+            const rowTime = rowTimes.value[internalIdx];
+            const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+            const nss = skill.neutralSectShield;
+            for (let ci = 0; ci < castTimes.length; ci++) {
+                const ct = castTimes[ci];
+                if (!isNeutralSectActive(skill.memberIndex, ct)) continue;
+                if (rowTime < ct || rowTime > ct + nss.duration) continue;
+                const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-nss-${ci}`);
+                if (depletionIdx != null && internalIdx > depletionIdx) continue;
+                return true;
+            }
+            return false;
+        };
+
+        const isNeutralSectShieldOnlyActive = (skill, internalIdx) => {
+            if (!isNeutralSectShieldActiveForCell(skill, internalIdx)) return false;
+            return !isSkillActive(skill.instanceId, internalIdx, skill);
         };
 
         // 計算施放者在指定時間點的治療量提升倍率（累乘）
@@ -576,6 +614,20 @@ createApp({
                 map.set(instanceId, castRows.map(ci => timeToSeconds(flat[ci]?.hitTime)));
             }
             return map;
+        });
+
+        // 預建「中間學派生效窗口」Map，避免 isNeutralSectActive 每次掃全部 activeSkills
+        const neutralSectWindowsByMember = computed(() => {
+            const result = new Map(); // memberIndex -> [{start, end}]
+            for (const s of activeSkills.value) {
+                if (s.id !== 'ast_netl_S') continue;
+                const cts = castTimesCache.value.get(s.instanceId) || [];
+                if (!cts.length) continue;
+                if (!result.has(s.memberIndex)) result.set(s.memberIndex, []);
+                const wins = result.get(s.memberIndex);
+                for (const ct of cts) wins.push({ start: ct, end: ct + s.duration });
+            }
+            return result;
         });
 
         const currentTimeline = computed(() => {
@@ -1705,6 +1757,7 @@ createApp({
             const absorption = new Array(flat.length).fill(0);
             const depletionAt = new Map();
             const shields = [];
+            const nssShields = []; // 僅含 NSS 護盾的參考陣列，供快速過濾用
 
             // 秘策（sch_rec）是一次性消耗：同一窗口內，四招（鼓舞、意氣、不屈、深謀）中
             // 任何一招的第一次施放就消耗掉效果，後續施放不再套爆擊。
@@ -1768,6 +1821,27 @@ createApp({
                     shields.push({ key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd });
                 }
             }
+            // 中間學派護盾（吉星相位 / 陽星合相 在中間學派效果內施放時附加的護盾）
+            for (const skill of activeSkills.value) {
+                if (!skill.neutralSectShield) continue;
+                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+                if (!castTimes.length) continue;
+                const healerMnd = getHealerMnd(skill);
+                if (!healerMnd) continue;
+                const nss = skill.neutralSectShield;
+                for (let ci = 0; ci < castTimes.length; ci++) {
+                    const ct = castTimes[ci];
+                    if (!isNeutralSectActive(skill.memberIndex, ct)) continue;
+                    const healOutMult = getHealOutMult(skill.memberIndex, ct);
+                    const healAmount = Math.floor(nss.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
+                    const shieldVal = Math.floor(healAmount * nss.shieldRatio);
+                    if (shieldVal <= 0) continue;
+                    const endTime = ct + nss.duration;
+                    const nssEntry = { key: `${skill.instanceId}-nss-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd: false, isNSS: true, memberIndex: skill.memberIndex, initialShieldVal: shieldVal };
+                    shields.push(nssEntry);
+                    nssShields.push(nssEntry);
+                }
+            }
             for (let i = 0; i < flat.length; i++) {
                 if (flat[i]._isCustom) continue;
                 if (hideTargeted.value && isTargetedAttack(flat[i], i)) continue;
@@ -1775,14 +1849,35 @@ createApp({
                 const rowDmg = postMitDmg[i];
                 if (!rowDmg) continue;
                 let remainingDmg = rowDmg;
+                // 中間學派護盾不疊加：同成員的 NSS 護盾僅取初始值最高者（吉星相位優先於陽星合相）
+                const nssMaxByMember = new Map();
+                for (const sh of nssShields) {
+                    if (sh.depletionRowIdx !== null) continue;
+                    if (rowTime < sh.castTime || rowTime > sh.endTime) continue;
+                    const cur = nssMaxByMember.get(sh.memberIndex);
+                    if (!cur || sh.initialShieldVal > cur.initialShieldVal) nssMaxByMember.set(sh.memberIndex, sh);
+                }
                 for (const sh of shields) {
                     if (sh.depletionRowIdx !== null || remainingDmg <= 0) continue;
                     if (rowTime < sh.castTime || (sh.exclusiveEnd ? rowTime >= sh.endTime : rowTime > sh.endTime)) continue;
+                    if (sh.isNSS && nssMaxByMember.get(sh.memberIndex) !== sh) continue;
                     const absorbed = Math.min(sh.remaining, remainingDmg);
                     sh.remaining -= absorbed;
                     remainingDmg -= absorbed;
                     absorption[i] += absorbed;
-                    if (sh.remaining <= 0) sh.depletionRowIdx = i;
+                    if (sh.remaining <= 0) {
+                        sh.depletionRowIdx = i;
+                        // NSS 護盾破盾時，同成員且當下同樣生效中的其他 NSS 護盾一併消除（不疊加規則）
+                        if (sh.isNSS) {
+                            for (const other of nssShields) {
+                                if (other.memberIndex === sh.memberIndex && other !== sh
+                                    && other.depletionRowIdx === null
+                                    && rowTime >= other.castTime && rowTime <= other.endTime) {
+                                    other.depletionRowIdx = i;
+                                }
+                            }
+                        }
+                    }
                 }
             }
             for (const sh of shields) depletionAt.set(sh.key, sh.depletionRowIdx);
@@ -2753,6 +2848,7 @@ createApp({
             dutyDropdownOpen, expandedCategories, selectedDutyName,
             openDutyDropdown, toggleDutyCategory, selectDuty,
             isSkillConditionMet, isSkillBlocked,
+            isNeutralSectShieldActiveForCell, isNeutralSectShieldOnlyActive,
             getAetherStacksAt, isSkillAetherDepleted,
             getAddersgallStacksAt, isSkillAddersgallDepleted,
             skillHasAnyCast, clearSkill, memberHasAnyCast, clearMember, clearAll,

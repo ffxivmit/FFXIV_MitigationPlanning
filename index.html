@@ -488,11 +488,29 @@
                                     <div v-if="skill.passive"
                                          class="skill-covered" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="被動常駐減傷">∞</div>
                                     <button v-else-if="isSkillCastOrigin(skill.instanceId, row._internalIdx)"
-                                            class="skill-cast" :style="`background:${skill.memberCast}; border:2px solid ${skill.memberBorder}`"
-                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消">✓</button>
+                                            :class="['skill-cast', isNeutralSectShieldActiveForCell(skill, row._internalIdx) ? 'skill-cast--nss' : '']"
+                                            :style="`background:${skill.memberCast}; border:2px solid ${skill.memberBorder}`"
+                                            @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊取消">
+                                        <template v-if="isNeutralSectShieldActiveForCell(skill, row._internalIdx)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 w-full h-full opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                            <span class="relative text-[9px] leading-none font-bold z-10">✓</span>
+                                        </template>
+                                        <template v-else>✓</template>
+                                    </button>
+                                    <div v-else-if="isNeutralSectShieldOnlyActive(skill, row._internalIdx)"
+                                         class="skill-covered skill-covered--nss" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="中間學派護盾生效中">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    </div>
                                     <div v-else-if="isSkillOnCooldown(skill.instanceId, row._internalIdx, skill)" class="skill-cooldown" title="冷卻中"></div>
                                     <div v-else-if="isSkillActive(skill.instanceId, row._internalIdx, skill)"
-                                         class="skill-covered" :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="技能覆蓋中">✓</div>
+                                         :class="['skill-covered', isNeutralSectShieldActiveForCell(skill, row._internalIdx) ? 'skill-covered--nss' : '']"
+                                         :style="`background:${skill.memberCovBg}; border:2px solid ${skill.memberCovBdr}; color:${skill.memberBorder}`" title="技能覆蓋中">
+                                        <template v-if="isNeutralSectShieldActiveForCell(skill, row._internalIdx)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 w-full h-full opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                            <span class="relative text-[9px] leading-none font-bold z-10">✓</span>
+                                        </template>
+                                        <template v-else>✓</template>
+                                    </div>
                                     <div v-else-if="!isSkillConditionMet(skill, row._internalIdx)" class="skill-cond" title="條件未滿足"></div>
                                     <div v-else-if="isSkillBlocked(skill, row._internalIdx)" class="skill-blocked" title="互斥技能持續中"></div>
                                     <div v-else-if="isSkillAetherDepleted(skill, row._internalIdx)" class="skill-cond" title="乙太存量不足"></div>

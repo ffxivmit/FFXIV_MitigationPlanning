@@ -114,6 +114,12 @@ tr:hover .skill-cell { filter: brightness(0.96); }
     padding: 0;
 }
 
+/* 中間學派護盾疊加：盾輪廓為底，✓ 浮於中央 */
+.skill-cast--nss, .skill-covered--nss {
+    position: relative;
+    padding: 0;
+}
+
 .skill-covered {
     width: 20px; height: 20px;
     border-radius: 4px;

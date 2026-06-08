@@ -268,19 +268,19 @@
                         "name": "暗影牆", "tags": ["減傷"],
                         "title": "15秒內，令自身所受到的傷害減輕30%",
                         "effects": [{ "type": "mit_all", "val": 0.30 }],
-                        "icon": "src/Skill_icons/02_WAR/Vengeance.png"
+                        "icon": "src/Skill_icons/03_DRK/Shadow_Wall.png"
                     },
                     "80": {
                         "name": "暗影牆", "tags": ["減傷"],
                         "title": "15秒內，令自身所受到的傷害減輕30%",
                         "effects": [{ "type": "mit_all", "val": 0.30 }],
-                        "icon": "src/Skill_icons/02_WAR/Vengeance.png"
+                        "icon": "src/Skill_icons/03_DRK/Shadow_Wall.png"
                     },
                     "90": {
                         "name": "暗影牆", "tags": ["減傷"],
                         "title": "15秒內，令自身所受到的傷害減輕30%",
                         "effects": [{ "type": "mit_all", "val": 0.30 }],
-                        "icon": "src/Skill_icons/02_WAR/Vengeance.png"
+                        "icon": "src/Skill_icons/03_DRK/Shadow_Wall.png"
                     }
                 } 
             },

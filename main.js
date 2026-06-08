@@ -104,6 +104,14 @@ const normalizeTimeInput = (t) => {
     return `${sign}${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
+const getEffectiveSkill = (skill, levelCap) => {
+    if (!levelCap || !skill.levelRestrictions) return skill;
+    const restriction = skill.levelRestrictions[String(levelCap)];
+    if (!restriction) return skill;
+    if (restriction.unavailable) return null;
+    return { ...skill, ...restriction };
+};
+
 let _crCounter = 0;
 const newCustomId = () => `cr${Date.now()}${_crCounter++}`;
 
@@ -479,6 +487,12 @@ createApp({
             }
             raidParams.value = JSON.parse(JSON.stringify(DEFAULT_RAID_PARAMS));
         };
+
+        const currentLevelCap = computed(() => {
+            const catKey = _getCurrentDutyCategory();
+            if (!catKey) return null;
+            return dutyIndex.value.categories?.[catKey]?.levelCap ?? null;
+        });
 
         const openRaidParamsDialog = () => {
             raidParamsDraft.value = {
@@ -1002,6 +1016,19 @@ createApp({
             });
         };
 
+        // duration > cooldown 的技能（如陽星合相），在冷卻結束後但效果仍在時允許重新施放以延長
+        const isSkillRecastable = (skillInstanceId, internalIdx, skill) => {
+            if (skill.passive || skill.multiState || skill.charges > 1 || skill.togglesWithId || skill.conditionOnce) return false;
+            if (!skill.duration || !skill.cooldown || skill.duration <= skill.cooldown) return false;
+            const castTimes = castTimesCache.value.get(skillInstanceId) || [];
+            if (!castTimes.length) return false;
+            const rowTime = rowTimes.value[internalIdx];
+            return castTimes.some(ct => {
+                const diff = rowTime - ct;
+                return diff >= skill.cooldown && diff <= skill.duration;
+            });
+        };
+
         // 判斷技能在指定列是否處於冷卻中，需處理多種複雜情境：
         //   - togglesWithId：成對技能的冷卻狀態需參照配對技能的施放時間
         //   - sharedCooldownId：共享冷卻時間的技能（如任何一個在冷卻中則判定為冷卻）
@@ -1282,7 +1309,7 @@ createApp({
                     }
                 } else {
                     if (isSkillOnCooldown(skillInstanceId, internalIdx, skill)) return;
-                    if (isSkillActive(skillInstanceId, internalIdx, skill)) return;
+                    if (isSkillActive(skillInstanceId, internalIdx, skill) && !isSkillRecastable(skillInstanceId, internalIdx, skill)) return;
                     if (!skill.togglesWithId) {
                         const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
                         if (!removeForwardConflicts(skill, castRows, rowTime, flat)) return;
@@ -1587,9 +1614,14 @@ createApp({
                     headerBg: `var(--m${pSlot}-hdr)`,
                     badge:    `var(--m${pSlot}-badge)`,
                 };
-                const hasPersonalSkills = jobEntry.skills.some(s => s.personal);
-                const showPersonal = expandedPersonalMembers.value.includes(pIdx);
-                const filteredSkills = jobEntry.skills.filter(s => !s.personal || showPersonal);
+                const levelCap = currentLevelCap.value;
+                const effectiveSkills = jobEntry.skills
+                    .map(s => getEffectiveSkill(s, levelCap))
+                    .filter(Boolean);
+                const hasNonPersonalSkills = effectiveSkills.some(s => !s.personal);
+                const hasPersonalSkills = hasNonPersonalSkills && effectiveSkills.some(s => s.personal);
+                const showPersonal = !hasNonPersonalSkills || expandedPersonalMembers.value.includes(pIdx);
+                const filteredSkills = effectiveSkills.filter(s => !s.personal || showPersonal);
                 const mappedSkills = filteredSkills.map((s, sIdx) => ({
                     ...s,
                     instanceId: `p${pIdx}-${s.id}`,
@@ -2038,11 +2070,12 @@ createApp({
                         const m = skillInstanceId.match(/^p(\d+)-(.+)$/);
                         if (m) {
                             const pIdx = parseInt(m[1]);
-                            const rawSkill = jobDb.value[party.value[pIdx]]?.skills?.find(s => s.id === m[2]);
-                            if (rawSkill) {
+                            const baseSkill = jobDb.value[party.value[pIdx]]?.skills?.find(s => s.id === m[2]);
+                            const effectiveSkill = baseSkill ? getEffectiveSkill(baseSkill, currentLevelCap.value) : null;
+                            if (effectiveSkill) {
                                 skill = {
-                                    name: rawSkill.name,
-                                    icon: rawSkill.icon,
+                                    name: effectiveSkill.name,
+                                    icon: effectiveSkill.icon,
                                     memberBorder: `var(--m${pIdx % 8}-border)`,
                                 };
                             }
@@ -2842,7 +2875,7 @@ createApp({
             hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
             selectedVariants, switchVariant, getSelectedVariantIdx, getDamageTypeIcon,
-            isSkillActive, isSkillOnCooldown, isSkillCastOrigin, toggleSkillCast,
+            isSkillActive, isSkillOnCooldown, isSkillCastOrigin, isSkillRecastable, toggleSkillCast,
             getDamageTypeIconByType,
             expandedPersonalMembers, togglePersonalSkills,
             dutyDropdownOpen, expandedCategories, selectedDutyName,

@@ -2048,6 +2048,22 @@ createApp({
             noteEditor.value.open = false;
         };
 
+        const deleteNote = () => {
+            if (!confirm('確定要刪除此備註？')) return;
+            const { key } = noteEditor.value;
+            const newMap = { ...notesMap.value };
+            delete newMap[key];
+            notesMap.value = newMap;
+            noteEditor.value.open = false;
+        };
+
+        const deleteNoteFromList = (note) => {
+            if (!confirm('確定要刪除此備註？')) return;
+            const newMap = { ...notesMap.value };
+            delete newMap[note.key];
+            notesMap.value = newMap;
+        };
+
         const sortedNotes = computed(() => {
             if (!selectedDutyKey.value || !currentTimeline.value) return [];
             const prefix = selectedDutyKey.value + '-';
@@ -2148,6 +2164,19 @@ createApp({
             };
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
+        };
+
+        const scrollToRow = (rowIdx) => {
+            const container = document.querySelector('.table-container');
+            const tr = document.querySelector(`tr[data-row-idx="${rowIdx}"]`);
+            if (!tr || !container) return;
+            const stickyHead = container.querySelector('thead');
+            const headH = stickyHead ? stickyHead.getBoundingClientRect().height : 0;
+            const containerTop = container.getBoundingClientRect().top;
+            const trTop = tr.getBoundingClientRect().top;
+            container.scrollBy({ top: trTop - containerTop - headH - 8, behavior: 'smooth' });
+            tr.classList.add('note-scroll-highlight');
+            setTimeout(() => tr.classList.remove('note-scroll-highlight'), 1200);
         };
 
         // ── Share via Cloudflare Worker + KV ─────────────────
@@ -2908,7 +2937,8 @@ createApp({
             calcShieldDisplay,
             helpOpen, helpStep, HELP_TOTAL, openHelp, closeHelp, helpNext, helpPrev, sortedAnnouncements, lightboxSrc,
             notesMap, noteEditor, noteTextareaRef, notesCard, hasNote, getNote, openNoteEditor, openNoteEditorFromList, saveNote, sortedNotes,
-            memberNoteCount, memberNoteCounts, notesCardEntries, openNotesCard, notesCardDragStart,
+            memberNoteCount, memberNoteCounts, notesCardEntries, openNotesCard, notesCardDragStart, scrollToRow,
+            deleteNote, deleteNoteFromList,
         };
     }
 }).mount('#app');

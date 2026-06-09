@@ -1,6 +1,15 @@
 /* 防止 Vue mount 前的原始模板閃現 */
 [v-cloak] { display: none; }
 
+@keyframes note-row-flash {
+    0%   { background-color: #fcc50030; }
+    60%  { background-color: #fcc50030; }
+    100% { background-color: transparent; }
+}
+tr.note-scroll-highlight td {
+    animation: note-row-flash 1.2s ease-out forwards;
+}
+
 /* ──────────────────────────────────────────
     容器與基礎表格
 ────────────────────────────────────────── */

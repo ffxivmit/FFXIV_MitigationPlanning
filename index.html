@@ -206,10 +206,11 @@
                 <div class="flex items-center justify-between mt-3">
                     <div class="text-[11px] text-slate-400">Ctrl+Enter 儲存</div>
                     <div class="flex gap-2">
-                        <button @click="noteEditor.open = false"
-                                class="text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition">取消</button>
                         <button @click="saveNote"
                                 class="text-xs px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition">儲存</button>
+                        <button v-if="notesMap[noteEditor.key]"
+                                @click="deleteNote"
+                                class="text-xs px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition">刪除</button>
                     </div>
                 </div>
             </div>
@@ -251,7 +252,9 @@
                         <!-- 內文 -->
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-1 mb-0.5 min-w-0">
-                                <span class="text-xs font-mono font-bold text-amber-600 shrink-0">[{{ note.hitTime }}]</span>
+                                <button @click="scrollToRow(note.rowIdx)"
+                                        class="text-xs font-mono font-bold text-amber-600 shrink-0 hover:text-amber-800 hover:underline cursor-pointer leading-none"
+                                        title="跳至此時間點">[{{ note.hitTime }}]</button>
                                 <span v-if="note.rowSkill" class="text-xs text-slate-500 font-medium shrink-0 truncate" style="max-width:80px" :title="note.rowSkill">{{ note.rowSkill }}</span>
                                 <template v-if="note.rowSkill && note.skillName">
                                     <span class="text-xs text-slate-400 shrink-0">|</span>
@@ -260,11 +263,19 @@
                             </div>
                             <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{{ note.text }}</p>
                         </div>
-                        <!-- 編輯按鈕 -->
-                        <button v-if="!isReadOnly"
-                                @click="openNoteEditorFromList(note)"
-                                class="opacity-0 group-hover:opacity-100 transition text-slate-300 hover:text-amber-500 text-sm leading-none shrink-0 mt-1"
-                                title="編輯">✎</button>
+                        <!-- 操作按鈕 -->
+                        <div v-if="!isReadOnly" class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0 mt-1">
+                            <button @click="openNoteEditorFromList(note)"
+                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-300 hover:text-amber-500 hover:bg-amber-50 transition text-sm leading-none"
+                                    title="編輯">✎</button>
+                            <button @click="deleteNoteFromList(note)"
+                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition"
+                                    title="刪除">
+                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -374,6 +385,7 @@
                     <template v-for="(row, _di) in currentTimeline" :key="'r-' + row._internalIdx">
                         <!-- Data row -->
                         <tr v-show="isRowVisible(row, row._internalIdx)"
+                            :data-row-idx="row._internalIdx"
                             :class="['border-b border-slate-100 transition group', row._isCustom ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50']"
                             @mousemove="onRowMouseMove(row, _di, $event)"
                             @mouseleave="onRowMouseLeave()">

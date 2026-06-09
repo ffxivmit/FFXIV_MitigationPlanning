@@ -1,12 +1,10 @@
 {
   "categories": {
     "savage": { "label": "零式" },
-    "extreme": { "label": "極本" },
     "ultimate": { "label": "絕本" },
     "unreal": { "label": "幻本" },
-    "normal": { "label": "普通" },
     "aac_light": {
-      "label": "阿卡迪亞零式 - 輕量級",
+      "label": "阿卡迪亞零式 - 輕量級(7.05)",
       "params": {
         "tankHp": 196500,
         "teamMinHp": 123500,
@@ -14,7 +12,7 @@
       }
     },
     "aac_cruiser": { 
-      "label": "阿卡迪亞零式 - 次重量級",
+      "label": "阿卡迪亞零式 - 次重量級(7.2)",
       "params": {
         "tankHp": 225000,
         "teamMinHp": 143700,
@@ -22,15 +20,23 @@
       }
     },
     "aac_heavy": {
-      "label": "阿卡迪亞零式 - 重量級",
+      "label": "阿卡迪亞零式 - 重量級(7.4)",
       "params": {
         "tankHp": 296200,
         "teamMinHp": 186800,
         "healerMnd": { "WHM": 6300, "SCH": 6300, "AST": 6300, "SGE": 6300 }
       }
     },
+    "ultimate_dancingmad": {
+      "label": "絕妖星亂舞(7.51)",
+      "params": {
+        "tankHp": 325000,
+        "teamMinHp": 205000,
+        "healerMnd": { "WHM": 6490, "SCH": 6490, "AST": 6490, "SGE": 6490 }
+      }
+    },
     "ultimate_eden": {
-      "label": "絕伊甸",
+      "label": "絕伊甸(7.11)",
       "params": {
         "tankHp": 225800,
         "teamMinHp": 142000,
@@ -38,7 +44,7 @@
       }
     },
     "ultimate_omega": {
-      "label": "絕歐米茄",
+      "label": "絕歐米茄(6.31)",
       "levelCap": 90,
       "params": {
         "tankHp": 122000,
@@ -47,7 +53,7 @@
       }
     },
     "ultimate_dragonsongs": {
-      "label": "絕龍詩",
+      "label": "絕龍詩(6.11)",
       "levelCap": 90,
       "params": {
         "tankHp": 96000,
@@ -56,7 +62,7 @@
       }
     },
     "ultimate_alexander": {
-      "label": "絕亞歷山大",
+      "label": "絕亞歷山大(5.11)",
       "levelCap": 80,
       "params": {
         "tankHp": 53000,
@@ -65,7 +71,7 @@
       }
     },
     "ultimate_ultima": {
-      "label": "絕究極武器",
+      "label": "絕究極武器(4.31)",
       "levelCap": 70,
       "params": {
         "tankHp": 29800,
@@ -74,7 +80,7 @@
       }
     },
     "ultimate_bahamult": {
-      "label": "絕巴哈姆特",
+      "label": "絕巴哈姆特(4.11)",
       "levelCap": 70,
       "params": {
         "tankHp": 27400,
@@ -83,6 +89,10 @@
       }
     }
   },
+  "groups": [
+    { "key": "savage", "label": "零式", "categories": ["aac_light", "aac_cruiser", "aac_heavy"] },
+    { "key": "ultimate", "label": "絕本", "categories": ["ultimate_dancingmad", "ultimate_eden", "ultimate_omega", "ultimate_dragonsongs", "ultimate_alexander", "ultimate_ultima", "ultimate_bahamult"] }
+  ],
   "duties": [
     { "key": "m1s", "file": "aac/m1s.json", "name": "阿卡迪亞零式 M1S", "category": "aac_light" },
     { "key": "m2s", "file": "aac/m2s.json", "name": "阿卡迪亞零式 M2S", "category": "aac_light" },
@@ -97,6 +107,12 @@
     { "key": "m11s", "file": "aac/m11s.json", "name": "阿卡迪亞零式 M11S", "category": "aac_heavy" },
     { "key": "m12s_1", "file": "aac/m12s_1.json", "name": "阿卡迪亞零式 M12S (前半)", "category": "aac_heavy" },
     { "key": "m12s_2", "file": "aac/m12s_2.json", "name": "阿卡迪亞零式 M12S (後半)", "category": "aac_heavy" },
+    { "key": "u_mad_P1", "file": "u_mad/mad_P1.json", "name": "絕妖星亂舞(P1)", "category": "ultimate_dancingmad" },
+    { "key": "u_mad_P2", "file": "u_mad/mad_P2.json", "name": "絕妖星亂舞(P2)", "category": "ultimate_dancingmad" },
+    { "key": "u_mad_P3", "file": "u_mad/mad_P3.json", "name": "絕妖星亂舞(P3)", "category": "ultimate_dancingmad" },
+    { "key": "u_mad_P4", "file": "u_mad/mad_P4.json", "name": "絕妖星亂舞(P4)", "category": "ultimate_dancingmad" },
+    { "key": "u_mad_P5", "file": "u_mad/mad_P5.json", "name": "絕妖星亂舞(P5)", "category": "ultimate_dancingmad" },
+    { "key": "u_mad_all", "file": "u_mad/mad_all.json", "name": "絕妖星亂舞(All)", "category": "ultimate_dancingmad" },
     { "key": "u_eden_P1", "file": "u_eden/eden_P1.json", "name": "絕伊甸(P1)", "category": "ultimate_eden" },
     { "key": "u_eden_P2", "file": "u_eden/eden_P2.json", "name": "絕伊甸(P2)", "category": "ultimate_eden" },
     { "key": "u_eden_P3", "file": "u_eden/eden_P3.json", "name": "絕伊甸(P3)", "category": "ultimate_eden" },

@@ -2,8 +2,8 @@
 [v-cloak] { display: none; }
 
 @keyframes note-row-flash {
-    0%   { background-color: #fcc50030; }
-    60%  { background-color: #fcc50030; }
+    0%   { background-color: #ffe27b30; }
+    60%  { background-color: #ffe27b30; }
     100% { background-color: transparent; }
 }
 tr.note-scroll-highlight td {
@@ -58,8 +58,10 @@ tr.note-scroll-highlight td {
     position: sticky;
     right: 0;
     z-index: 15;
-    background-color: #f0f9ff;
+    background-color: white;
     box-shadow: -2px 0 0 0 #cbd5e1, -4px 0 6px -2px rgba(0,0,0,0.08);
+    min-width: 125px;
+    width: 125px;
 }
 
 /* ──────────────────────────────────────────
@@ -83,13 +85,13 @@ thead tr.row-group  th.sticky-col { z-index: 50; border-bottom: 1px solid #e2e8f
 thead tr.row-skills th.sticky-col { z-index: 45; }
 
 thead tr.row-group  th.sticky-right { z-index: 50; }
-thead tr.row-skills th.sticky-right { z-index: 45; background-color: #eff6ff; }
+thead tr.row-skills th.sticky-right { z-index: 45; background-color: #f8fafc; }
 
 /* ──────────────────────────────────────────
     資料列
 ────────────────────────────────────────── */
 tr:hover td.sticky-col  { background-color: #f1f5f9 !important; }
-tr:hover td.sticky-right{ background-color: #e0f2fe !important; }
+tr:hover td.sticky-right{ background-color: #f1f5f9 !important; }
 
 .skill-cell { transition: filter 0.1s; }
 tr:hover .skill-cell { filter: brightness(0.96); }
@@ -341,7 +343,7 @@ body.dark .table-container { background: #20262c; }
 /* ── 固定欄位背景 ── */
 body.dark .sticky-col  { background-color: #20262c !important; }
 body.dark .sticky-right {
-    background-color: #252d36 !important;
+    background-color: #20262c !important;
     box-shadow: -2px 0 0 0 #303842, -4px 0 6px -2px rgba(0,0,0,0.4);
 }
 
@@ -358,13 +360,13 @@ body.dark .mit-table.compact-mode td.col-name {
 body.dark thead tr.row-group th  { background-color: #232a32 !important; }
 body.dark thead tr.row-skills th { background-color: #232a32 !important; }
 body.dark thead tr.row-group  th.sticky-col   { border-bottom-color: #303842 !important; }
-body.dark thead tr.row-group  th.sticky-right { background-color: #1f262d !important; border-bottom-color: #303842 !important; }
-body.dark thead tr.row-skills th.sticky-right { background-color: #1f262d !important; }
+body.dark thead tr.row-group  th.sticky-right { background-color: #232a32 !important; border-bottom-color: #303842 !important; }
+body.dark thead tr.row-skills th.sticky-right { background-color: #232a32 !important; }
 
 /* ── tbody 列邊線與 hover ── */
 body.dark tbody tr { border-bottom-color: #272e36; }
 body.dark tr:hover td.sticky-col   { background-color: #2a3340 !important; }
-body.dark tr:hover td.sticky-right { background-color: #2d3848 !important; }
+body.dark tr:hover td.sticky-right { background-color: #2a3340 !important; }
 body.dark tr:hover .skill-cell     { filter: brightness(1.14); }
 
 /* ── 技能格狀態 ── */

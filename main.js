@@ -645,9 +645,11 @@ createApp({
         });
 
         const currentTimeline = computed(() => {
-            return allRowsFlat.value
+            const rows = allRowsFlat.value
                 .map((row, idx) => ({ ...row, _internalIdx: idx }))
                 .sort((a, b) => timeToSeconds(a.hitTime) - timeToSeconds(b.hitTime));
+            for (let i = 0; i < rows.length; i++) rows[i]._sortedIdx = i;
+            return rows;
         });
 
         // 在兩列之間插入自訂列，時間預設為中間值；若無前後列則各加減 5 秒
@@ -745,6 +747,75 @@ createApp({
             if (hideNonDmg.value && !hasOriginalDamage(row, internalIdx)) return false;
             if (hideTargeted.value && isTargetedAttack(row, internalIdx)) return false;
             return true;
+        };
+
+        // ── Virtual scrolling ─────────────────────────────────
+        const tableContainerRef = ref(null);
+        const tableScrollTop = ref(0);
+        const tableContainerHeight = ref(700);
+
+        const ROW_HEIGHT_DEFAULT = 36;
+        const VIRTUAL_OVERSCAN = 8;
+
+        const visibleTimeline = computed(() =>
+            currentTimeline.value.filter(row => isRowVisible(row, row._internalIdx))
+        );
+
+        const rowOffsets = computed(() => {
+            const rows = visibleTimeline.value;
+            const offsets = new Array(rows.length + 1);
+            offsets[0] = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                const h = r.isRandom && r.variants?.length > 1
+                    ? ROW_HEIGHT_DEFAULT + (r.variants.length - 1) * 34
+                    : ROW_HEIGHT_DEFAULT;
+                offsets[i + 1] = offsets[i] + h;
+            }
+            return offsets;
+        });
+
+        const virtualStart = computed(() => {
+            const offsets = rowOffsets.value;
+            const top = tableScrollTop.value;
+            let lo = 0, hi = Math.max(0, offsets.length - 2);
+            while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (offsets[mid + 1] <= top) lo = mid + 1;
+                else hi = mid;
+            }
+            return Math.max(0, lo - VIRTUAL_OVERSCAN);
+        });
+
+        const virtualEnd = computed(() => {
+            const offsets = rowOffsets.value;
+            const bottom = tableScrollTop.value + tableContainerHeight.value;
+            const len = visibleTimeline.value.length;
+            if (len === 0) return -1;
+            let lo = 0, hi = len - 1;
+            while (lo < hi) {
+                const mid = (lo + hi + 1) >> 1;
+                if (offsets[mid] <= bottom) lo = mid;
+                else hi = mid - 1;
+            }
+            return Math.min(len - 1, lo + VIRTUAL_OVERSCAN);
+        });
+
+        const virtualRows = computed(() =>
+            visibleTimeline.value.slice(virtualStart.value, Math.max(0, virtualEnd.value + 1))
+        );
+
+        const topSpacerHeight = computed(() => rowOffsets.value[virtualStart.value] ?? 0);
+
+        const bottomSpacerHeight = computed(() => {
+            const off = rowOffsets.value;
+            const endIdx = virtualEnd.value + 1;
+            const total = off[off.length - 1] ?? 0;
+            return total - (off[Math.min(endIdx, off.length - 1)] ?? total);
+        });
+
+        const onTableScroll = (e) => {
+            tableScrollTop.value = e.currentTarget.scrollTop;
         };
 
         // ── Floating insert button ────────────────────────────
@@ -1519,6 +1590,14 @@ createApp({
             } finally {
                 authLoading.value = false;
             }
+            nextTick(() => {
+                if (tableContainerRef.value) {
+                    tableContainerHeight.value = tableContainerRef.value.clientHeight || 700;
+                    new ResizeObserver(entries => {
+                        tableContainerHeight.value = entries[0].contentRect.height;
+                    }).observe(tableContainerRef.value);
+                }
+            });
         });
 
         // ── Party ─────────────────────────────────────────────
@@ -2167,16 +2246,21 @@ createApp({
         };
 
         const scrollToRow = (rowIdx) => {
-            const container = document.querySelector('.table-container');
-            const tr = document.querySelector(`tr[data-row-idx="${rowIdx}"]`);
-            if (!tr || !container) return;
+            const container = tableContainerRef.value;
+            if (!container) return;
+            const visIdx = visibleTimeline.value.findIndex(r => r._internalIdx === rowIdx);
+            if (visIdx < 0) return;
             const stickyHead = container.querySelector('thead');
             const headH = stickyHead ? stickyHead.getBoundingClientRect().height : 0;
-            const containerTop = container.getBoundingClientRect().top;
-            const trTop = tr.getBoundingClientRect().top;
-            container.scrollBy({ top: trTop - containerTop - headH - 8, behavior: 'smooth' });
-            tr.classList.add('note-scroll-highlight');
-            setTimeout(() => tr.classList.remove('note-scroll-highlight'), 1200);
+            const targetScrollTop = (rowOffsets.value[visIdx] ?? 0) - headH - 8;
+            container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+            setTimeout(() => {
+                const tr = container.querySelector(`tr[data-row-idx="${rowIdx}"]`);
+                if (tr) {
+                    tr.classList.add('note-scroll-highlight');
+                    setTimeout(() => tr.classList.remove('note-scroll-highlight'), 1200);
+                }
+            }, 400);
         };
 
         // ── Share via Cloudflare Worker + KV ─────────────────
@@ -2600,17 +2684,22 @@ createApp({
 
         // ── Persistence ───────────────────────────────────────
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
+        let _saveTimer = null;
         watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty, notesMap], () => {
             if (isViewingSharedPlan.value) return;
-            localStorage.setItem('ffxiv_planner_data', JSON.stringify({
-                selectedDutyKey: selectedDutyKey.value,
-                party: party.value,
-                mitMap: mitMap.value,
-                notes: notesMap.value,
-                selectedVariants: selectedVariants.value,
-                customRowsByDuty: customRowsByDuty.value,
-                skillStateMap: skillStateMap.value,
-            }));
+            clearTimeout(_saveTimer);
+            _saveTimer = setTimeout(() => {
+                if (isViewingSharedPlan.value) return;
+                localStorage.setItem('ffxiv_planner_data', JSON.stringify({
+                    selectedDutyKey: selectedDutyKey.value,
+                    party: party.value,
+                    mitMap: mitMap.value,
+                    notes: notesMap.value,
+                    selectedVariants: selectedVariants.value,
+                    customRowsByDuty: customRowsByDuty.value,
+                    skillStateMap: skillStateMap.value,
+                }));
+            }, 300);
         }, { deep: true });
 
         watch([hideNonDmg, hideTargeted, compactMode], syncUrlParams);
@@ -2618,12 +2707,16 @@ createApp({
         // 動態對齊 row-skills 的 sticky top，避免因 inline 圖片 baseline 差距造成捲動抖動
         const syncStickyRow = () => {
             nextTick(() => {
+                const ths = document.querySelectorAll('thead tr.row-skills th');
+                if (party.value.length === 0) {
+                    ths.forEach(th => { th.style.top = ''; });
+                    return;
+                }
                 const rowGroup = document.querySelector('thead tr.row-group');
                 if (!rowGroup) return;
                 const h = Math.ceil(rowGroup.getBoundingClientRect().height);
-                document.querySelectorAll('thead tr.row-skills th').forEach(th => {
-                    th.style.top = h + 'px';
-                });
+                if (h < 20) return;
+                ths.forEach(th => { th.style.top = h + 'px'; });
             });
         };
         watch([party, activeSkillsByMember], syncStickyRow, { deep: false });
@@ -2919,6 +3012,8 @@ createApp({
             insertCustomRowBetween, removeCustomRow, updateCustomRow,
             onCustomRowTimeInput, onCustomRowTimeBlur,
             isRowVisible,
+            // Virtual scrolling
+            tableContainerRef, onTableScroll, virtualRows, topSpacerHeight, bottomSpacerHeight,
             // Floating insert button
             hoverInsert, onRowMouseMove, onRowMouseLeave, onInsertBtnEnter, onInsertBtnLeave,
             skillTooltip, showSkillTooltip, hideSkillTooltip, keepSkillTooltip, skillNameById,

@@ -296,7 +296,7 @@
 
     <!-- ── 主表格 ── -->
     <div v-if="selectedDutyKey" class="bg-white rounded-xl shadow-lg" style="overflow: clip;">
-        <div class="table-container">
+        <div class="table-container" ref="tableContainerRef" @scroll.passive="onTableScroll">
             <table class="w-full mit-table" :class="{'compact-mode': compactMode}">
                 <thead>
                     <tr class="row-group border-b border-slate-200">
@@ -331,7 +331,15 @@
                                       :style="`background:${member.color.border}`">▲</span>
                             </div>
                         </th>
-                        <th class="sticky-right p-1.5 text-center" style="background:#eff6ff; border-bottom:1px solid #e2e8f0;">
+                        <th v-if="party.length === 0" :style="`background:#f8fafc; height:48px; border-bottom:1px solid ${darkMode ? '#303842' : '#e2e8f0'};`">
+                            <div class="flex flex-col items-center gap-1.5 text-slate-400">
+                                <svg class="w-7 h-7 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                        </th>
+                        <th class="sticky-right p-1.5 text-center" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                             <button v-if="selectedDutyKey" @click="openNotesCard($event, -1)"
                                     :class="['inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition font-semibold whitespace-nowrap',
                                              notesCard.open
@@ -377,17 +385,27 @@
                                 <span class="text-xs font-bold text-slate-700 leading-tight break-keep">{{ skill.name }}</span>
                             </div>
                         </th>
+                        <th v-if="party.length === 0"
+                            class="px-6 py-2 text-center align-middle font-normal"
+                            style="background:#f8fafc; min-width:300px;">
+                            <div class="flex flex-col items-center gap-1.5 text-slate-400">
+                                <span class="text-sm font-bold">請點選上方職能加入你想模擬的職業</span>
+                                <span class="text-sm font-bold text-slate-300">最多可加入八名成員</span>
+                            </div>
+                        </th>
                         <th class="p-3 text-right text-sm font-bold text-blue-600 sticky-right">預計傷害</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <template v-for="(row, _di) in currentTimeline" :key="'r-' + row._internalIdx">
+                    <tr v-if="topSpacerHeight > 0" aria-hidden="true" style="pointer-events:none">
+                        <td :style="`height:${topSpacerHeight}px;padding:0`" colspan="100"></td>
+                    </tr>
+                    <template v-for="(row, _di) in virtualRows" :key="'r-' + row._internalIdx">
                         <!-- Data row -->
-                        <tr v-show="isRowVisible(row, row._internalIdx)"
-                            :data-row-idx="row._internalIdx"
+                        <tr :data-row-idx="row._internalIdx"
                             :class="['border-b border-slate-100 transition group', row._isCustom ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50']"
-                            @mousemove="onRowMouseMove(row, _di, $event)"
+                            @mousemove="onRowMouseMove(row, row._sortedIdx, $event)"
                             @mouseleave="onRowMouseLeave()">
 
                             <!-- 階段 -->
@@ -554,6 +572,8 @@
                                      :title="getNote(skill.instanceId, row._internalIdx)"></div>
                             </td>
 
+                            <!-- 職業未選佔位欄 -->
+                            <td v-if="party.length === 0"></td>
                             <!-- 預計傷害 -->
                             <td class="p-3 sticky-right">
                                 <div class="flex items-center justify-end gap-1.5">
@@ -570,6 +590,9 @@
                         </tr>
 
                     </template>
+                    <tr v-if="bottomSpacerHeight > 0" aria-hidden="true" style="pointer-events:none">
+                        <td :style="`height:${bottomSpacerHeight}px;padding:0`" colspan="100"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>

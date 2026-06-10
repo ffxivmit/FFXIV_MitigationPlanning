@@ -486,7 +486,7 @@
                             </td>
 
                             <!-- 原始傷害 -->
-<td v-show="!compactMode" class="p-2 text-sm sticky-col col-orig" :style="row._isCustom ? customRowStyle : ''">
+                            <td v-show="!compactMode" class="p-2 text-sm sticky-col col-orig" :style="row._isCustom ? customRowStyle : ''">
                                 <div v-if="!row._isCustom && !row.isRandom && row.damage && row.damage.length > 0">
                                     <div v-for="(hit, hIdx) in row.damage" :key="hIdx" class="flex items-center justify-end gap-1 text-slate-500">
                                         <img v-if="getDamageTypeIconByType(hit.type)" :src="getDamageTypeIconByType(hit.type)" :title="hit.type" class="w-3.5 h-3.5 object-contain shrink-0 opacity-70">
@@ -1295,6 +1295,11 @@
     </div>
 
 </div>
+
+<footer class="mt-4 border-t border-slate-200 py-2 text-center text-xs text-slate-400 leading-relaxed">
+    <p>FINAL FANTASY XIV © SQUARE ENIX CO., LTD. All Rights Reserved.</p>
+    <p>本站時間軸資料來源為 <a href="https://x.com/lastagous" target="_blank" rel="noopener noreferrer" class="hover:text-slate-600 transition-colors">@lastagous</a>（本站為粉絲自製工具，無任何商業營利行為。）</p>
+</footer>
 
 </body>
 </html>

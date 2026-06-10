@@ -258,6 +258,11 @@ function mergePayloads(base, dbData, local) {
         }
     }
 
+    // ── notes / skillStateMap ─────────────────────────────────
+    // 這兩個欄位不做三向合併，直接保留 local（避免 merge 路徑清空資料）
+    merged.notes         = local.notes         || {};
+    merged.skillStateMap = local.skillStateMap || {};
+
     return { merged, conflicts };
 }
 
@@ -2036,12 +2041,8 @@ createApp({
             const key = mitKeyForSkill(instanceId);
             const newMap = { ...mitMap.value };
             const newStateMap = { ...skillStateMap.value };
-            if (key.endsWith('-sch_af')) {
-                newMap[key] = [];
-            } else {
-                delete newMap[key];
-                delete newStateMap[key];
-            }
+            delete newMap[key];
+            delete newStateMap[key];
             if (hasPair) {
                 const pIdxMatch = instanceId.match(/^p(\d+)-/);
                 if (pIdxMatch !== null) {
@@ -2558,8 +2559,9 @@ createApp({
                             open: true,
                             enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
                             autoMerged,
-                            dbData:    latest.data || {},
-                            localData: local,
+                            dbData:      latest.data || {},
+                            dbUpdatedAt: latest.updated_at,
+                            localData:   local,
                         };
                         return; // 等 user 在 modal 決定後再繼續
                     }
@@ -2576,7 +2578,7 @@ createApp({
         };
 
         const resolveConflictDialog = async () => {
-            const { enriched, autoMerged, dbData, localData } = conflictDialog.value;
+            const { enriched, autoMerged, dbData, dbUpdatedAt, localData } = conflictDialog.value;
             const final = JSON.parse(JSON.stringify(autoMerged));
 
             for (const c of enriched) {
@@ -2602,15 +2604,41 @@ createApp({
                   else if (c.type === 'hideTargeted') { final.hideTargeted = localData.hideTargeted; }
             }
 
-            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, localData: null };
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
             tokenSaving.value = true;
-            try { await _commitSave(final); }
+            try {
+                // 重新確認伺服器是否在對話框開啟期間再次被修改
+                const { data: nowLatest, error: recheckErr } = await getDocumentByToken(activeToken.value);
+                if (recheckErr || !nowLatest) throw new Error('無法取得文件資訊');
+
+                let toCommit = final;
+                if (nowLatest.updated_at !== dbUpdatedAt) {
+                    // 對話框開啟期間有新的儲存，以 final 做為 local 再跑一次合併
+                    const { merged: reMerged, conflicts: reConflicts } = mergePayloads(
+                        dbData, nowLatest.data || {}, final
+                    );
+                    if (reConflicts.length > 0) {
+                        // 仍有衝突，重新開啟對話框
+                        conflictDialog.value = {
+                            open: true,
+                            enriched: _enrichConflicts(reConflicts, nowLatest.data || {}, final),
+                            autoMerged: reMerged,
+                            dbData:      nowLatest.data || {},
+                            dbUpdatedAt: nowLatest.updated_at,
+                            localData:   final,
+                        };
+                        return;
+                    }
+                    toCommit = reMerged;
+                }
+                await _commitSave(toCommit);
+            }
             catch (e) { console.error(e); alert('儲存失敗，請稍後再試。'); }
             finally { tokenSaving.value = false; }
         };
 
         const cancelConflictDialog = () => {
-            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, localData: null };
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
         };
 
         const _onRealtimeUpdate = ({ data: remoteData, updatedAt }) => {
@@ -2656,8 +2684,9 @@ createApp({
                         open: true,
                         enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
                         autoMerged: merged,
-                        dbData: latest.data || {},
-                        localData: local,
+                        dbData:      latest.data || {},
+                        dbUpdatedAt: latest.updated_at,
+                        localData:   local,
                     };
                 }
             } catch (e) {

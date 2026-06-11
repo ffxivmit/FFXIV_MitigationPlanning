@@ -298,8 +298,24 @@ createApp({
         const tokenSaving  = ref(false);
         const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
-        const historyPanel = ref({ open: false, list: [], loading: false });
-        const isReadOnly = computed(() => tokenMode.value === 'read');
+        const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
+        const previewMode = ref(null); // null | { label, snapshot, entry }
+        const isReadOnly = computed(() => tokenMode.value === 'read' || previewMode.value !== null);
+        // 預覽模式：有差異的格子，key = "mitMapKey:rowIdx"
+        const previewDiffCells = computed(() => {
+            if (!previewMode.value) return new Set();
+            const snapMits = previewMode.value.snapshot.mits || {};
+            const currMits = mitMap.value;
+            const allKeys = new Set([...Object.keys(snapMits), ...Object.keys(currMits)]);
+            const diff = new Set();
+            for (const key of allKeys) {
+                const snapSet = new Set(snapMits[key] || []);
+                const currSet = new Set(currMits[key] || []);
+                for (const idx of snapSet) { if (!currSet.has(idx)) diff.add(`${key}:${idx}`); }
+                for (const idx of currSet) { if (!snapSet.has(idx)) diff.add(`${key}:${idx}`); }
+            }
+            return diff;
+        });
         const currentUser = ref(null);
         const authLoading = ref(true);
         const tokenDocOwnerId = ref('');
@@ -2648,16 +2664,12 @@ createApp({
         // ── 修改履歷 ─────────────────────────────────────────────
         const formatHistoryTime = (ts) => {
             const d = new Date(ts);
-            const now = new Date();
-            const isToday = d.toDateString() === now.toDateString();
-            if (isToday) {
-                return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            }
-            return d.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
         };
 
         const openHistoryPanel = async () => {
-            historyPanel.value = { open: true, list: [], loading: true };
+            historyPanel.value = { open: true, list: [], loading: true, previewId: null };
             const { data, error } = await getDocumentHistory(activeToken.value);
             console.log('[history] fetch result:', { data, error });
             historyPanel.value.loading = false;
@@ -2680,6 +2692,31 @@ createApp({
             } finally {
                 tokenSaving.value = false;
             }
+        };
+
+        const enterHistoryPreview = (entry) => {
+            const snapshot = JSON.parse(JSON.stringify(buildPayload()));
+            _applySharedData(entry.data);
+            historyPanel.value.open = false;
+            previewMode.value = { label: formatHistoryTime(entry.created_at), snapshot, entry };
+        };
+
+        const exitHistoryPreview = () => {
+            if (!previewMode.value) return;
+            _applySharedData(previewMode.value.snapshot);
+            previewMode.value = null;
+        };
+
+        const restoreFromPreview = async () => {
+            if (!previewMode.value) return;
+            const entryData = previewMode.value.entry.data;
+            const label = previewMode.value.label;
+            if (!confirm(`確定要還原至 ${label} 的版本？\n目前版本將被覆蓋。`)) return;
+            previewMode.value = null;
+            tokenSaving.value = true;
+            try { await _commitSave(entryData); }
+            catch (e) { console.error(e); alert('還原失敗，請稍後再試。'); }
+            finally { tokenSaving.value = false; }
         };
 
         const _onRealtimeUpdate = ({ data: remoteData, updatedAt }) => {
@@ -3096,6 +3133,7 @@ createApp({
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
             realtimeNotif,
             historyPanel, openHistoryPanel, closeHistoryPanel, restoreFromHistory, formatHistoryTime,
+            previewMode, previewDiffCells, mitKeyForSkill, enterHistoryPreview, exitHistoryPreview, restoreFromPreview,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,
             addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
             raidParams, raidParamsDialog, raidParamsDraft,

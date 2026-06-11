@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-<div id="app" v-cloak class="p-3 lg:p-4">
+<div id="app" v-cloak class="p-3 lg:p-4" :class="previewMode ? 'pt-12' : ''">
 
     <!-- ── 工具列 ── -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-2 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -511,7 +511,7 @@
                             <!-- 技能勾選格 -->
                             <td v-for="skill in activeSkills" :key="skill.instanceId"
                                 :style="`background-color:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.05);'}`"
-                                class="p-1 text-center skill-cell relative"
+                                :class="['p-1 text-center skill-cell relative', previewMode && previewDiffCells.has(mitKeyForSkill(skill.instanceId) + ':' + row._internalIdx) ? 'preview-diff-cell' : '']"
                                 @contextmenu="openNoteEditor($event, skill.instanceId, row._internalIdx, skill, row)">
                                 <div v-if="skill._isAetherIndicator"
                                      class="flex items-center justify-center gap-0.5 py-0.5"
@@ -1011,23 +1011,58 @@
                 </div>
                 <!-- List -->
                 <div v-else class="divide-y divide-slate-100 overflow-y-auto max-h-[60vh]">
-                    <div v-for="(entry, idx) in historyPanel.list" :key="entry.id"
-                         class="flex items-center justify-between px-5 py-3 hover:bg-slate-50 gap-4">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold text-slate-700">{{ formatHistoryTime(entry.created_at) }}</span>
-                                <span v-if="idx === 0"
-                                      class="text-[10px] px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded font-semibold">目前版本</span>
+                    <div v-for="(entry, idx) in historyPanel.list" :key="entry.id">
+                        <!-- Row (clickable to toggle preview) -->
+                        <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50 gap-4 cursor-pointer select-none"
+                             @click="historyPanel.previewId = historyPanel.previewId === entry.id ? null : entry.id">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-slate-700">{{ formatHistoryTime(entry.created_at) }}</span>
+                                    <span v-if="idx === 0"
+                                          class="text-[10px] px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded font-semibold">目前版本</span>
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">{{ entry.display_name }}</div>
                             </div>
-                            <div class="text-xs text-slate-400 mt-0.5">{{ entry.display_name }}</div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <svg class="w-3.5 h-3.5 text-slate-300 transition-transform duration-150"
+                                     :class="historyPanel.previewId === entry.id ? 'rotate-180' : ''"
+                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                                <template v-if="idx !== 0">
+                                    <button @click.stop="enterHistoryPreview(entry)"
+                                            class="text-xs px-2.5 py-1.5 bg-slate-50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 text-slate-500 border border-slate-200 rounded-lg font-semibold transition">
+                                        預覽
+                                    </button>
+                                    <button @click.stop="restoreFromHistory(entry)"
+                                            :disabled="tokenSaving"
+                                            class="text-xs px-2.5 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-600 border border-slate-200 rounded-lg font-semibold transition disabled:opacity-50">
+                                        還原
+                                    </button>
+                                </template>
+                                <div v-else class="w-[108px]"></div>
+                            </div>
                         </div>
-                        <button v-if="idx !== 0"
-                                @click="restoreFromHistory(entry)"
-                                :disabled="tokenSaving"
-                                class="shrink-0 text-xs px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-600 border border-slate-200 rounded-lg font-semibold transition disabled:opacity-50">
-                            還原
-                        </button>
-                        <div v-else class="shrink-0 w-[56px]"></div>
+                        <!-- Inline preview -->
+                        <div v-if="historyPanel.previewId === entry.id"
+                             class="px-5 pt-2 pb-4 bg-slate-50 border-b border-slate-100 text-xs space-y-1.5">
+                            <div class="flex gap-2 text-slate-600">
+                                <span class="text-slate-400 shrink-0 w-14">副本</span>
+                                <span class="font-medium">{{ dutyIndex.duties.find(d => d.key === entry.data.duty)?.name || entry.data.duty || '—' }}</span>
+                            </div>
+                            <div class="flex gap-2 text-slate-600">
+                                <span class="text-slate-400 shrink-0 w-14">隊伍</span>
+                                <span>{{ (entry.data.party || []).join(' · ') || '—' }}</span>
+                            </div>
+                            <div class="flex gap-2 text-slate-600">
+                                <span class="text-slate-400 shrink-0 w-14">技能施放</span>
+                                <span>{{ Object.values(entry.data.mits || {}).reduce((s, a) => s + a.length, 0) }} 筆</span>
+                            </div>
+                            <div class="flex gap-2 text-slate-600">
+                                <span class="text-slate-400 shrink-0 w-14">備註</span>
+                                <span>{{ Object.keys(entry.data.notes || {}).length }} 筆</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <!-- Footer hint -->
@@ -1035,6 +1070,38 @@
                      class="px-5 py-3 border-t border-slate-100 text-xs text-slate-400 text-center shrink-0">
                     最多保留 30 筆，超過時自動刪除最舊紀錄
                 </div>
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- ── 履歷預覽 Banner ── -->
+    <Teleport to="body">
+        <div v-if="previewMode"
+             class="fixed top-0 inset-x-0 z-[600] shadow-lg flex items-center justify-between gap-4 px-4 py-2.5"
+             :class="darkMode ? 'bg-amber-950/90 border-b border-amber-700/30' : 'bg-amber-400'">
+            <div class="flex items-center gap-2 min-w-0">
+                <svg class="w-4 h-4 shrink-0" :class="darkMode ? 'text-amber-400' : 'text-amber-800'"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/>
+                </svg>
+                <span class="text-sm font-bold truncate" :class="darkMode ? 'text-amber-200' : 'text-amber-900'">
+                    預覽模式：{{ previewMode.label }}
+                </span>
+                <span class="text-xs hidden sm:inline" :class="darkMode ? 'text-amber-500' : 'text-amber-700'">
+                    （目前為唯讀，不影響現有版本，差異部分以紅框顯示）
+                </span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button @click="restoreFromPreview" :disabled="tokenSaving"
+                        class="text-xs px-3 py-1.5 rounded-lg font-semibold transition disabled:opacity-50"
+                        :class="darkMode ? 'bg-amber-600 text-white hover:bg-amber-500' : 'bg-amber-800 text-white hover:bg-amber-900'">
+                    還原此版本
+                </button>
+                <button @click="exitHistoryPreview"
+                        class="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
+                        :class="darkMode ? 'bg-amber-900 text-amber-300 hover:bg-amber-800' : 'bg-amber-200 text-amber-800 hover:bg-amber-300'">
+                    退出預覽
+                </button>
             </div>
         </div>
     </Teleport>

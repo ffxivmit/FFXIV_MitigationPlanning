@@ -258,9 +258,28 @@ function mergePayloads(base, dbData, local) {
         }
     }
 
-    // ── notes / skillStateMap ─────────────────────────────────
-    // 這兩個欄位不做三向合併，直接保留 local（避免 merge 路徑清空資料）
-    merged.notes         = local.notes         || {};
+    // ── notes ─────────────────────────────────────────────────
+    // 三向合併：key 為 "p{idx}-{skillInstId}-{rowIdx}"
+    // 同一 key 兩人都修改 → 保留 local（備註為個人操作，不開衝突提示）
+    {
+        const bn = base.notes || {};
+        const dn = dbData.notes || {};
+        const ln = local.notes || {};
+        const allNoteKeys = new Set([...Object.keys(bn), ...Object.keys(dn), ...Object.keys(ln)]);
+        const mergedNotes = {};
+        for (const key of allNoteKeys) {
+            const bv = bn[key], dv = dn[key], lv = ln[key];
+            const lChg = lv !== bv;
+            if (lChg) {
+                if (lv !== undefined && lv !== '') mergedNotes[key] = lv;
+            } else {
+                if (dv !== undefined && dv !== '') mergedNotes[key] = dv;
+            }
+        }
+        merged.notes = mergedNotes;
+    }
+
+    // ── skillStateMap ─────────────────────────────────────────
     merged.skillStateMap = local.skillStateMap || {};
 
     return { merged, conflicts };

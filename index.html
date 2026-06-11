@@ -410,7 +410,8 @@
                     <template v-for="(row, _di) in virtualRows" :key="'r-' + row._internalIdx">
                         <!-- Data row -->
                         <tr :data-row-idx="row._internalIdx"
-                            :class="['border-b border-slate-100 transition group', row._isCustom ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50']"
+                            :class="['border-b border-slate-100 transition group',
+                                     previewMode && previewDiffRows.has(row._internalIdx) ? 'preview-diff-row' : row._isCustom ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50']"
                             @mousemove="onRowMouseMove(row, row._sortedIdx, $event)"
                             @mouseleave="onRowMouseLeave()">
 

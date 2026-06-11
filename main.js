@@ -301,7 +301,7 @@ createApp({
         const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
         const previewMode = ref(null); // null | { label, snapshot, entry }
         const isReadOnly = computed(() => tokenMode.value === 'read' || previewMode.value !== null);
-        // 預覽模式：有差異的格子，key = "mitMapKey:rowIdx"
+        // 預覽模式：有差異的格子，key = "mitMapKey:rowIdx"；派生出有差異的列索引 Set
         const previewDiffCells = computed(() => {
             if (!previewMode.value) return new Set();
             const snapMits = previewMode.value.snapshot.mits || {};
@@ -315,6 +315,13 @@ createApp({
                 for (const idx of currSet) { if (!snapSet.has(idx)) diff.add(`${key}:${idx}`); }
             }
             return diff;
+        });
+        const previewDiffRows = computed(() => {
+            const rows = new Set();
+            for (const key of previewDiffCells.value) {
+                rows.add(Number(key.slice(key.lastIndexOf(':') + 1)));
+            }
+            return rows;
         });
         const currentUser = ref(null);
         const authLoading = ref(true);
@@ -3133,7 +3140,7 @@ createApp({
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
             realtimeNotif,
             historyPanel, openHistoryPanel, closeHistoryPanel, restoreFromHistory, formatHistoryTime,
-            previewMode, previewDiffCells, mitKeyForSkill, enterHistoryPreview, exitHistoryPreview, restoreFromPreview,
+            previewMode, previewDiffRows, previewDiffCells, mitKeyForSkill, enterHistoryPreview, exitHistoryPreview, restoreFromPreview,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,
             addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
             raidParams, raidParamsDialog, raidParamsDraft,

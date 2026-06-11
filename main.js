@@ -2531,7 +2531,8 @@ createApp({
                 tokenBaseData.value = JSON.parse(JSON.stringify(dataToSave));
             }
             // fire-and-forget：寫入修改履歷（失敗不影響主流程）
-            addDocumentHistory(activeToken.value, dataToSave, currentUser.value?.id ?? null);
+            addDocumentHistory(activeToken.value, dataToSave, currentUser.value?.id ?? null)
+                .then(({ error: hErr }) => { if (hErr) console.warn('[history] write failed:', hErr); });
             realtimeNotif.value = null;
             // 廣播給其他編輯者／唯讀者
             if (_realtimeChannel && saved) {
@@ -2658,6 +2659,7 @@ createApp({
         const openHistoryPanel = async () => {
             historyPanel.value = { open: true, list: [], loading: true };
             const { data, error } = await getDocumentHistory(activeToken.value);
+            console.log('[history] fetch result:', { data, error });
             historyPanel.value.loading = false;
             if (!error && data) historyPanel.value.list = data;
         };

@@ -58,14 +58,14 @@ language plpgsql security definer as $$
 declare
     v_doc_id uuid;
 begin
-    select id into v_doc_id from documents where edit_token = p_edit_token;
+    select d.id into v_doc_id from documents d where d.edit_token = p_edit_token;
     if v_doc_id is null then return; end if;
 
     return query
     select
         h.id,
         h.created_at,
-        coalesce(p.display_name, '匿名') as display_name,
+        coalesce(p.discord_username, '匿名')::text as display_name,
         h.data
     from document_history h
     left join profiles p on p.id = h.created_by

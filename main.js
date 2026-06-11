@@ -1,4 +1,4 @@
-import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark } from './src/supabase.js';
+import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark, addDocumentHistory, getDocumentHistory } from './src/supabase.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -298,6 +298,7 @@ createApp({
         const tokenSaving  = ref(false);
         const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
+        const historyPanel = ref({ open: false, list: [], loading: false });
         const isReadOnly = computed(() => tokenMode.value === 'read');
         const currentUser = ref(null);
         const authLoading = ref(true);
@@ -2529,6 +2530,8 @@ createApp({
                 tokenLoadedAt.value = saved.updated_at;
                 tokenBaseData.value = JSON.parse(JSON.stringify(dataToSave));
             }
+            // fire-and-forget：寫入修改履歷（失敗不影響主流程）
+            addDocumentHistory(activeToken.value, dataToSave, currentUser.value?.id ?? null);
             realtimeNotif.value = null;
             // 廣播給其他編輯者／唯讀者
             if (_realtimeChannel && saved) {
@@ -2639,6 +2642,42 @@ createApp({
 
         const cancelConflictDialog = () => {
             conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
+        };
+
+        // ── 修改履歷 ─────────────────────────────────────────────
+        const formatHistoryTime = (ts) => {
+            const d = new Date(ts);
+            const now = new Date();
+            const isToday = d.toDateString() === now.toDateString();
+            if (isToday) {
+                return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            }
+            return d.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+        };
+
+        const openHistoryPanel = async () => {
+            historyPanel.value = { open: true, list: [], loading: true };
+            const { data, error } = await getDocumentHistory(activeToken.value);
+            historyPanel.value.loading = false;
+            if (!error && data) historyPanel.value.list = data;
+        };
+
+        const closeHistoryPanel = () => {
+            historyPanel.value.open = false;
+        };
+
+        const restoreFromHistory = async (entry) => {
+            if (!confirm(`確定要還原至 ${formatHistoryTime(entry.created_at)} 的版本？\n目前未儲存的變更將會遺失。`)) return;
+            historyPanel.value.open = false;
+            tokenSaving.value = true;
+            try {
+                await _commitSave(entry.data);
+            } catch (e) {
+                console.error(e);
+                alert('還原失敗，請稍後再試。');
+            } finally {
+                tokenSaving.value = false;
+            }
         };
 
         const _onRealtimeUpdate = ({ data: remoteData, updatedAt }) => {
@@ -3054,6 +3093,7 @@ createApp({
             tokenMode, tokenDocName, tokenSaving, isReadOnly, saveByEditToken, pullLatest,
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
             realtimeNotif,
+            historyPanel, openHistoryPanel, closeHistoryPanel, restoreFromHistory, formatHistoryTime,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,
             addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
             raidParams, raidParamsDialog, raidParamsDraft,

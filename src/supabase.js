@@ -110,6 +110,20 @@ export const checkBookmark = (userId, documentId) =>
         .eq('document_id', documentId)
         .maybeSingle();
 
+// ── 修改履歷 ──────────────────────────────────────────────────
+
+// 儲存後呼叫，新增一筆履歷（fire-and-forget 即可）
+export const addDocumentHistory = (editToken, data, userId) =>
+    sb.rpc('add_document_history', {
+        p_edit_token: editToken,
+        p_data:       data,
+        ...(userId != null && { p_user_id: userId }),
+    });
+
+// 取得履歷清單（僅 edit token 持有者可呼叫）
+export const getDocumentHistory = (editToken) =>
+    sb.rpc('get_document_history', { p_edit_token: editToken });
+
 // ── Realtime Broadcast ────────────────────────────────────────
 
 // 訂閱文件頻道，當其他編輯者儲存後會收到 doc_updated 事件

@@ -1452,7 +1452,8 @@ createApp({
 
         // 逐列追蹤學者（SCH）乙太流（Aetherflow）的存量變化
         // 掃描整個時間軸，每次施放「補充乙太」技能 +N，施放「消耗乙太」技能 -N，上限 3
-        // 結果為 { pIdx: [每列的乙太存量] } 的映射，供 isSkillAetherDepleted 查詢
+        // 結果為 { pIdx: { before, after } } 的映射：before[internalIdx] 為施放前存量，after 為施放後存量
+        // 必須依時間排序迭代，否則自訂列（附加在 allRowsFlat 末尾）會繼承錯誤的存量值
         const aetherStacksByMember = computed(() => {
             const result = {};
             const dutyPrefix = selectedDutyKey.value + '-';
@@ -1461,6 +1462,10 @@ createApp({
                 const jobEntry = jobDb.value[jobKey];
                 if (!jobEntry || !jobEntry.skills) return;
                 const flat = allRowsFlat.value;
+                // 依時間排序，確保自訂列插入後存量計算順序正確
+                const sortedEntries = flat
+                    .map((row, internalIdx) => ({ row, internalIdx }))
+                    .sort((a, b) => timeToSeconds(a.row.hitTime) - timeToSeconds(b.row.hitTime));
                 // 預先建好 Set，避免在每個 row 裡重複做字串拼接 + Map 查找 + Array.includes
                 const aetherSkills = jobEntry.skills
                     .filter(s => s.aetherProvide || s.aetherCost)
@@ -1469,38 +1474,42 @@ createApp({
                         castSet: new Set(mitMap.value[`${dutyPrefix}p${pIdx}-${s.id}`] || []),
                     }));
                 let stacks = 0;
-                const byRow = [];
-                for (let ri = 0; ri < flat.length; ri++) {
+                const after = new Array(flat.length).fill(0);
+                const before = new Array(flat.length).fill(0);
+                for (const { row, internalIdx } of sortedEntries) {
                     // 乙太超流與轉化無法在戰鬥開始前使用，負數時間的列固定為 0，且不更新存量狀態
-                    if (timeToSeconds(flat[ri].hitTime) < 0) {
-                        byRow.push(0);
+                    if (timeToSeconds(row.hitTime) < 0) {
+                        before[internalIdx] = 0;
+                        after[internalIdx] = 0;
                         continue;
                     }
+                    before[internalIdx] = stacks;
                     for (const { skill, castSet } of aetherSkills) {
-                        if (!castSet.has(ri)) continue;
+                        if (!castSet.has(internalIdx)) continue;
                         if (skill.aetherProvide) stacks = Math.min(3, stacks + skill.aetherProvide);
                         if (skill.aetherCost)    stacks = Math.max(0, stacks - skill.aetherCost);
                     }
-                    byRow.push(stacks);
+                    after[internalIdx] = stacks;
                 }
-                result[pIdx] = byRow;
+                result[pIdx] = { after, before };
             });
             return result;
         });
 
         const getAetherStacksAt = (pIdx, internalIdx) =>
-            aetherStacksByMember.value[pIdx]?.[internalIdx] ?? 0;
+            aetherStacksByMember.value[pIdx]?.after[internalIdx] ?? 0;
 
         const isSkillAetherDepleted = (skill, internalIdx) => {
             if (!skill.aetherCost) return false;
             if (rowTimes.value[internalIdx] < 0) return true; // 戰鬥開始前沒有乙太
             const pIdx = skill.memberIndex - 1;
-            return (aetherStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 0) === 0;
+            return (aetherStacksByMember.value[pIdx]?.before[internalIdx] ?? 0) === 0;
         };
 
         // 逐列追蹤賢者（SGE）蛇膽（Addersgall）的存量變化
         // 初始存量 3，每 20 秒自動回復 1（上限 3）
         // 使用「根素」+1，使用消耗蛇膽的技能 -1
+        // 必須依時間排序迭代，否則自訂列（附加在 allRowsFlat 末尾）會繼承錯誤的存量值
         const addersgallStacksByMember = computed(() => {
             const result = {};
             const dutyPrefix = selectedDutyKey.value + '-';
@@ -1509,6 +1518,10 @@ createApp({
                 const jobEntry = jobDb.value[jobKey];
                 if (!jobEntry || !jobEntry.skills) return;
                 const flat = allRowsFlat.value;
+                // 依時間排序，確保自訂列插入後存量計算順序正確
+                const sortedEntries = flat
+                    .map((row, internalIdx) => ({ row, internalIdx }))
+                    .sort((a, b) => timeToSeconds(a.row.hitTime) - timeToSeconds(b.row.hitTime));
                 // 預先建好 Set，避免在每個 row 裡重複做字串拼接 + Map 查找 + Array.includes
                 const addersgallSkills = jobEntry.skills
                     .filter(s => s.addersgallProvide || s.addersgallCost)
@@ -1518,34 +1531,36 @@ createApp({
                     }));
                 let stacks = 3;
                 let lastTickCount = 0;
-                const byRow = [];
-                for (let ri = 0; ri < flat.length; ri++) {
-                    const rowTime = timeToSeconds(flat[ri].hitTime);
+                const after = new Array(flat.length).fill(3);
+                const before = new Array(flat.length).fill(3);
+                for (const { row, internalIdx } of sortedEntries) {
+                    const rowTime = timeToSeconds(row.hitTime);
                     const tickCount = Math.max(0, Math.floor(rowTime / 20));
                     const newTicks = tickCount - lastTickCount;
                     if (newTicks > 0) {
                         stacks = Math.min(3, stacks + newTicks);
                         lastTickCount = tickCount;
                     }
+                    before[internalIdx] = stacks;
                     for (const { skill, castSet } of addersgallSkills) {
-                        if (!castSet.has(ri)) continue;
+                        if (!castSet.has(internalIdx)) continue;
                         if (skill.addersgallProvide) stacks = Math.min(3, stacks + skill.addersgallProvide);
                         if (skill.addersgallCost)    stacks = Math.max(0, stacks - skill.addersgallCost);
                     }
-                    byRow.push(stacks);
+                    after[internalIdx] = stacks;
                 }
-                result[pIdx] = byRow;
+                result[pIdx] = { after, before };
             });
             return result;
         });
 
         const getAddersgallStacksAt = (pIdx, internalIdx) =>
-            addersgallStacksByMember.value[pIdx]?.[internalIdx] ?? 3;
+            addersgallStacksByMember.value[pIdx]?.after[internalIdx] ?? 3;
 
         const isSkillAddersgallDepleted = (skill, internalIdx) => {
             if (!skill.addersgallCost) return false;
             const pIdx = skill.memberIndex - 1;
-            return (addersgallStacksByMember.value[pIdx]?.[internalIdx - 1] ?? 3) === 0;
+            return (addersgallStacksByMember.value[pIdx]?.before[internalIdx] ?? 3) === 0;
         };
 
         // ── Data loading ──────────────────────────────────────

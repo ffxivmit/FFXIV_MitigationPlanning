@@ -378,7 +378,7 @@
         "name": "武僧",
         "icon": "src/Job_icons/03_DPS/Job/Monk.png",
         "skills": [
-            { "id": "mnk_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/05_MNK/Role_Actions/Feint.png" },
+            { "id": "mnk_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/05_MNK/Role_Actions/Feint.png" },
             { "id": "mnk_mantra", "name": "真言", "tags": [""], "title": "15秒內，自身與周圍隊員所受的HP恢復效果提高10%", "effects": [{ "type": "heal_out_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/05_MNK/Mantra.png" },
             { "id": "mnk_roe", "name": "金剛極意", "tags": ["減傷"], "title": "一定時間內，自身受到的傷害減輕20%，持續時間：10秒\n追加效果：持續時間內受到傷害，則為自身附加金剛決意狀態\n金剛決意效果：持續恢復自身的HP，恢復力：100，持續時間：15秒\n追加效果：金剛周天預備，持續時間：30秒", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/05_MNK/Riddle_of_Earth.png", "personal": true }
         ]
@@ -387,7 +387,7 @@
         "name": "武士",
         "icon": "src/Job_icons/03_DPS/Job/Samurai.png",
         "skills": [
-            { "id": "sam_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/06_SAM/Role_Actions/Feint.png" },
+            { "id": "sam_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/06_SAM/Role_Actions/Feint.png" },
             { 
                 "id": "sam_tgt", "name": "天眼通", "tags": ["減傷"], 
                 "title": "4秒內，受到的第一次攻擊傷害減輕10%\n追加效果：成功減輕傷害後獲得10點劍氣，同時為自身附加通天眼狀態，持續時間：9秒\n通天眼效果：令自身受到的傷害減輕10%，同時持續恢復自身的HP，恢復力：200", 
@@ -416,14 +416,14 @@
         "name": "龍騎士",
         "icon": "src/Job_icons/03_DPS/Job/Dragoon.png",
         "skills": [
-            { "id": "drg_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/07_DRG/Role_Actions/Feint.png" }
+            { "id": "drg_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/07_DRG/Role_Actions/Feint.png" }
         ]
     },
     "RPR": {
         "name": "奪魂者",
         "icon": "src/Job_icons/03_DPS/Job/Reaper.png",
         "skills": [
-            { "id": "rpr_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/08_RPR/Role_Actions/Feint.png" },
+            { "id": "rpr_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/08_RPR/Role_Actions/Feint.png" },
             { 
                 "id": "rpr_arc", "name": "神秘紋", "tags": ["護盾"], 
                 "title": "為自身附加能夠抵消一定傷害量的防護罩守護紋\n該防護罩能夠抵消相當於自身最大HP10%的傷害量，持續時間：5秒\n防護罩因吸收到足夠的傷害而消失時，為自身及周圍15米以內的隊員附加活性紋狀態\n活性紋效果：持續恢復目標的HP，恢復力：50，持續時間：15秒", 
@@ -442,7 +442,7 @@
         "name": "忍者",
         "icon": "src/Job_icons/03_DPS/Job/Ninja.png",
         "skills": [
-            { "id": "nin_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/09_NIN/Role_Actions/Feint.png" },
+            { "id": "nin_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/09_NIN/Role_Actions/Feint.png" },
             { "id": "nin_shad", "name": "殘影", "tags": ["護盾"], "title": "抵消相當於自身最大HP20%的傷害\n持續時間：20秒", "effects": [{ "type": "shield_maxhp", "val": 0.20 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/09_NIN/Shade_Shift.png", "personal": true }
         ]
     },
@@ -450,7 +450,7 @@
         "name": "毒蛇劍士",
         "icon": "src/Job_icons/03_DPS/Job/Viper.png",
         "skills": [
-            { "id": "vpr_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/10_VPR/Role_Actions/Feint.png" }
+            { "id": "vpr_feint", "name": "牽制", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低10%，魔法攻擊造成的傷害降低5%", "effects": [{ "type": "mit_physical", "val": 0.10 }, { "type": "mit_magic", "val": 0.05 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/10_VPR/Role_Actions/Feint.png" }
         ]
     },
     "BRD": {
@@ -491,7 +491,7 @@
         "name": "黑魔道士",
         "icon": "src/Job_icons/03_DPS/Job/BlackMage.png",
         "skills": [
-            { "id": "blm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png" },
+            { "id": "blm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png" },
             { "id": "blm_manaw", "name": "魔法護盾", "tags": ["護盾"], "title": "為自身張開一個防護罩，在一定時間內能抵消相當於最大HP30%的傷害量\n抵消的傷害量超過上限時防護罩自動消失，持續時間：20秒", "effects": [{ "type": "shield_maxhp", "val": 0.30 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/14_BLM/Manaward.png", "personal": true }
         ]
     },
@@ -499,7 +499,7 @@
         "name": "召喚士",
         "icon": "src/Job_icons/03_DPS/Job/Summoner.png",
         "skills": [
-            { "id": "smn_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png" },
+            { "id": "smn_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png" },
             { "id": "smn_radi", "name": "守護之光", "tags": ["護盾"], "title": "對召喚該卡邦庫爾的召喚士附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於目標最大HP20%的傷害量\n持續時間：30秒，累積次數：2\n發動條件：卡邦庫爾處於同行狀態", "effects": [{ "type": "shield_maxhp", "val": 0.20 }], "duration": 30, "cooldown": 60, "charges": 2, "icon": "src/Skill_icons/15_SMN/Radiant_Aegis.png", "personal": true }
         ]
     },
@@ -507,7 +507,7 @@
         "name": "赤魔道士",
         "icon": "src/Job_icons/03_DPS/Job/RedMage.png",
         "skills": [
-            { "id": "rdm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png" },
+            { "id": "rdm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png" },
             { 
                 "id": "rdm_kera", "name": "抗死", "tags": ["減傷"], 
                 "title": "15秒內，令自身和周圍隊員所受到的魔法傷害減輕10%，並且所受的HP恢復效果提高5%", 
@@ -525,7 +525,7 @@
         "name": "繪靈法師",
         "icon": "src/Job_icons/03_DPS/Job/Pictomancer.png",
         "skills": [
-            { "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" },
+            { "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" },
             { "id": "pct_tpc", "name": "坦培拉塗層", "tags": ["護盾"], "title": "為自身附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於最大HP20%的傷害量，持續時間：10秒\n防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短60秒", "effects": [{ "type": "shield_maxhp", "val": 0.20 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/17_PCT/Tempera_Coat.png", "personal": true, "multiState": true, "stateCooldowns": [120, 60], "upgradeSkillId": "pct_tpg" },
             { 
                 "id": "pct_tpg", "name": "油性坦培拉塗層", "tags": ["護盾"], 

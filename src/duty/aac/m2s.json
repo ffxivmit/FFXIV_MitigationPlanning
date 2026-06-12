@@ -5,23 +5,11 @@
         {"phase": "OP", "castingTime": "00:03", "hitTime": "00:03", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "OP", "castingTime": "00:11", "hitTime": "00:11", "skill": "甜蜜應援", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
         {"phase": "OP", "castingTime": "00:12", "hitTime": "00:12", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "OP", "castingTime": "00:18", "hitTime": "00:18", "isRandom": true,
-            "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發",
-            "variants": [
-                { "desc":"八人散開", "skill": "毒液雨", "damage": [], "type": "" },
-                { "desc":"兩人分攤", "skill": "毒液滴落", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "OP", "castingTime": "00:18", "hitTime": "00:18", "isRandom": true, "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發", "variants": [{"desc": "八人散開", "skill": "毒液雨", "damage": [], "type": ""}, {"desc": "兩人分攤", "skill": "毒液滴落", "damage": [], "type": ""}]},
         {"phase": "OP", "castingTime": "00:20", "hitTime": "00:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "OP", "castingTime": "00:29", "hitTime": "00:29", "skill": "甜心旋風 or 甜心烈風", "damage": [], "type": ""},
         {"phase": "OP", "castingTime": "00:34", "hitTime": "00:34", "skill": "毒液雨 or 毒液滴落", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "OP", "castingTime": "00:40", "hitTime": "00:40", "isRandom": true,
-            "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發",
-            "variants": [
-                { "desc":"八人散開", "skill": "毒液雨", "damage": [], "type": "" },
-                { "desc":"兩人分攤", "skill": "毒液滴落", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "OP", "castingTime": "00:40", "hitTime": "00:40", "isRandom": true, "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發", "variants": [{"desc": "八人散開", "skill": "毒液雨", "damage": [], "type": ""}, {"desc": "兩人分攤", "skill": "毒液滴落", "damage": [], "type": ""}]},
         {"phase": "OP", "castingTime": "00:48", "hitTime": "00:48", "skill": "甜心旋風 or 甜心烈風", "damage": [], "type": ""},
         {"phase": "OP", "castingTime": "00:53", "hitTime": "00:53", "skill": "毒液雨 or 毒液滴落", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
         {"phase": "OP", "castingTime": "01:01", "hitTime": "01:01", "skill": "殺人針 or 殺人斬", "damage": [{"label": "死刑", "amount": 400000, "type": "物理"}], "type": "物理"},
@@ -29,12 +17,7 @@
         {"phase": "OP", "castingTime": "01:05", "hitTime": "01:05", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "OP", "castingTime": "01:08", "hitTime": "01:08", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P1", "castingTime": "01:19", "hitTime": "01:19", "skill": "蜂蜂演唱會【首演】", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "P1", "castingTime": "01:27", "hitTime": "01:27", "isRandom": true,
-            "variants": [
-                {"skill": "環環心連心", "damage": [], "type": "" },
-                {"skill": "圓圓心連心", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P1", "castingTime": "01:27", "hitTime": "01:27", "isRandom": true, "variants": [{"skill": "環環心連心", "damage": [], "type": ""}, {"skill": "圓圓心連心", "damage": [], "type": ""}]},
         {"phase": "P1", "castingTime": "01:28", "hitTime": "01:28", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P1", "castingTime": "01:31", "hitTime": "01:31", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P1", "castingTime": "01:35", "hitTime": "01:35", "skill": "斬擊", "damage": [], "type": ""},
@@ -59,14 +42,9 @@
         {"phase": "P1", "castingTime": "02:31", "hitTime": "02:31", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P1", "castingTime": "02:34", "hitTime": "02:34", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P1", "castingTime": "02:37", "hitTime": "02:37", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "P1", "castingTime": "02:38", "hitTime": "02:38", "desc":"分攤傷害" ,"skill": "心病", "damage": [{"label": "傷害", "amount": 42000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P1", "castingTime": "02:38", "hitTime": "02:38", "desc": "分攤傷害", "skill": "心病", "damage": [{"label": "傷害", "amount": 42000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P1", "castingTime": "02:40", "hitTime": "02:40", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "P1", "castingTime": "02:49", "hitTime": "02:49", "isRandom": true,
-            "variants": [
-                {"skill": "環環心連心", "damage": [], "type": "" },
-                {"skill": "圓圓心連心", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P1", "castingTime": "02:49", "hitTime": "02:49", "isRandom": true, "variants": [{"skill": "環環心連心", "damage": [], "type": ""}, {"skill": "圓圓心連心", "damage": [], "type": ""}]},
         {"phase": "P1", "castingTime": "02:50", "hitTime": "02:50", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P1", "castingTime": "02:53", "hitTime": "02:53", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P1", "castingTime": "02:56", "hitTime": "02:56", "skill": "斬擊", "damage": [], "type": ""},
@@ -95,14 +73,7 @@
         {"phase": "P2", "castingTime": "04:03", "hitTime": "04:03", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:14", "hitTime": "04:14", "skill": "蜂蜂演唱會【再演】", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P3", "castingTime": "04:15", "hitTime": "04:15", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {
-            "phase": "P3", "castingTime": "04:22", "hitTime": "04:22", "isRandom": true,
-            "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發",
-            "variants": [
-                { "desc":"八人散開", "skill": "愛之雨", "damage": [], "type": "" },
-                { "desc":"兩人分攤", "skill": "愛之滴", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P3", "castingTime": "04:22", "hitTime": "04:22", "isRandom": true, "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發", "variants": [{"desc": "八人散開", "skill": "愛之雨", "damage": [], "type": ""}, {"desc": "兩人分攤", "skill": "愛之滴", "damage": [], "type": ""}]},
         {"phase": "P3", "castingTime": "04:24", "hitTime": "04:24", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:27", "hitTime": "04:27", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:32", "hitTime": "04:32", "skill": "溫柔地愛我(分攤)", "damage": [], "type": ""},
@@ -112,12 +83,12 @@
         {"phase": "P3", "castingTime": "04:38", "hitTime": "04:38", "skill": "心醉魂迷", "damage": [], "type": ""},
         {"phase": "P3", "castingTime": "04:40", "hitTime": "04:40", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:40", "hitTime": "04:40", "skill": "心醉魂迷", "damage": [], "type": ""},
-        {"phase": "P3", "castingTime": "04:40", "hitTime": "04:40", "desc":"分攤傷害", "skill": "心病", "damage": [{"label": "傷害", "amount": 42000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "04:40", "hitTime": "04:40", "desc": "分攤傷害", "skill": "心病", "damage": [{"label": "傷害", "amount": 42000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P3", "castingTime": "04:42", "hitTime": "04:42", "skill": "心醉魂迷", "damage": [], "type": ""},
         {"phase": "P3", "castingTime": "04:43", "hitTime": "04:43", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:44", "hitTime": "04:44", "skill": "心醉魂迷", "damage": [], "type": ""},
         {"phase": "P3", "castingTime": "04:46", "hitTime": "04:46", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "P3", "castingTime": "04:46", "hitTime": "04:46", "desc":"點名傷害", "skill": "心傷", "damage": [{"label": "傷害", "amount": 92000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "P3", "castingTime": "04:46", "hitTime": "04:46", "desc": "點名傷害", "skill": "心傷", "damage": [{"label": "傷害", "amount": 92000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P3", "castingTime": "04:47", "hitTime": "04:47", "skill": "炸裂", "damage": [{"label": "傷害", "amount": 12000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P3", "castingTime": "04:49", "hitTime": "04:49", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P3", "castingTime": "04:57", "hitTime": "04:57", "skill": "甜心旋風 or 甜心烈風", "damage": [], "type": ""},
@@ -129,13 +100,7 @@
         {"phase": "P4", "castingTime": "05:13", "hitTime": "05:13", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P4", "castingTime": "05:17", "hitTime": "05:17", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P4", "castingTime": "05:20", "hitTime": "05:20", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "P4", "castingTime": "05:29", "hitTime": "05:29", "isRandom": true,
-            "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發",
-            "variants": [
-                { "desc":"八人散開", "skill": "毒液雨", "damage": [], "type": "" },
-                { "desc":"兩人分攤", "skill": "毒液滴落", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P4", "castingTime": "05:29", "hitTime": "05:29", "isRandom": true, "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發", "variants": [{"desc": "八人散開", "skill": "毒液雨", "damage": [], "type": ""}, {"desc": "兩人分攤", "skill": "毒液滴落", "damage": [], "type": ""}]},
         {"phase": "P4", "castingTime": "05:34", "hitTime": "05:34", "skill": "警示費洛蒙", "damage": [], "type": ""},
         {"phase": "P4", "castingTime": "05:43", "hitTime": "05:43", "skill": "毒針", "damage": [{"label": "傷害", "amount": 70000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P4", "castingTime": "05:43", "hitTime": "05:43", "skill": "盲目的愛", "damage": [], "type": ""},
@@ -157,30 +122,14 @@
         {"phase": "P4", "castingTime": "06:39", "hitTime": "06:39", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P4", "castingTime": "06:42", "hitTime": "06:42", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "P5", "castingTime": "06:53", "hitTime": "06:53", "skill": "蜂蜂演唱會【三演】", "damage": [{"label": "傷害", "amount": 140000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "P5", "castingTime": "07:00", "hitTime": "07:00", "isRandom": true,
-            "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發",
-            "variants": [
-                { "desc":"八人散開", "skill": "愛之雨", "damage": [], "type": "" },
-                { "desc":"兩人分攤", "skill": "愛之滴", "damage": [], "type": "" }
-            ]
-        },
-        {"phase": "P5", "castingTime": "07:07", "hitTime": "07:07", "isRandom": true,
-            "variants": [
-            {"skill": "環環心連心", "damage": [], "type": "" },
-            {"skill": "圓圓心連心", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P5", "castingTime": "07:00", "hitTime": "07:00", "isRandom": true, "commonDesc": "預唱讀條，甜心旋風/甜心烈風結束後約5秒後觸發", "variants": [{"desc": "八人散開", "skill": "愛之雨", "damage": [], "type": ""}, {"desc": "兩人分攤", "skill": "愛之滴", "damage": [], "type": ""}]},
+        {"phase": "P5", "castingTime": "07:07", "hitTime": "07:07", "isRandom": true, "variants": [{"skill": "環環心連心", "damage": [], "type": ""}, {"skill": "圓圓心連心", "damage": [], "type": ""}]},
         {"phase": "P5", "castingTime": "07:08", "hitTime": "07:08", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P5", "castingTime": "07:11", "hitTime": "07:11", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P5", "castingTime": "07:15", "hitTime": "07:15", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P5", "castingTime": "07:19", "hitTime": "07:19", "skill": "爆炸", "damage": [{"label": "傷害", "amount": 100000, "type": "魔法"}], "type": "魔法"},
         {"phase": "P5", "castingTime": "07:23", "hitTime": "07:23", "skill": "炸裂", "damage": [{"label": "傷害", "amount": 12000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "P5", "castingTime": "07:27", "hitTime": "07:27", "isRandom": true,
-            "variants": [
-            {"skill": "環環心連心", "damage": [], "type": "" },
-            {"skill": "圓圓心連心", "damage": [], "type": "" }
-            ]
-        },
+        {"phase": "P5", "castingTime": "07:27", "hitTime": "07:27", "isRandom": true, "variants": [{"skill": "環環心連心", "damage": [], "type": ""}, {"skill": "圓圓心連心", "damage": [], "type": ""}]},
         {"phase": "P5", "castingTime": "07:28", "hitTime": "07:28", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P5", "castingTime": "07:31", "hitTime": "07:31", "skill": "斬擊", "damage": [], "type": ""},
         {"phase": "P5", "castingTime": "07:34", "hitTime": "07:34", "skill": "斬擊", "damage": [], "type": ""},
@@ -223,7 +172,7 @@
         {"phase": "時間切", "castingTime": "09:47", "hitTime": "09:47", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切", "castingTime": "09:51", "hitTime": "09:51", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
         {"phase": "時間切", "castingTime": "09:54", "hitTime": "09:54", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 67000, "type": "物理"}], "type": "物理"},
-        {"phase": "時間切", "castingTime": "10:06", "hitTime": "10:06", "skill": "シアー・ハート・アタック", "damage": [], "type": ""},
+        {"phase": "時間切", "castingTime": "10:06", "hitTime": "10:06", "skill": "驟然心痛", "damage": [], "type": ""},
         {"phase": "時間切", "castingTime": "10:09", "hitTime": "10:09", "skill": "蜂蜂落幕曲", "damage": [{"label": "即死", "amount": 9999999, "type": "即死"}], "type": "即死"}
     ]
 }

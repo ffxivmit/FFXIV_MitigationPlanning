@@ -1,7 +1,7 @@
 {
     "name": "至天之座 M7S",
     "timeline": [
-      {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "戦闘開始！", "damage": [], "type": ""},
+      {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "戰鬥開始！", "damage": [], "type": ""},
       {"phase": "開幕", "castingTime": "00:01", "hitTime": "00:01", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 77000, "type": "物理"}], "type": "物理"},
       {"phase": "開幕", "castingTime": "00:04", "hitTime": "00:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 77000, "type": "物理"}], "type": "物理"},
       {"phase": "開幕", "castingTime": "00:11", "hitTime": "00:11", "skill": "スマッシュインパクト", "damage": [{"label": "傷害", "amount": 48000, "type": "物理"}], "type": "物理"},

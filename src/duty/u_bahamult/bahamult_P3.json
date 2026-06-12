@@ -115,16 +115,16 @@
         {"phase": "連撃の三重奏", "castingTime": "11:41", "hitTime": "04:51", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 6200, "type": "物理"}], "type": "物理"},
         {"phase": "連撃の三重奏", "castingTime": "11:43", "hitTime": "04:53", "skill": "フレアブレス", "damage": [{"label": "傷害", "amount": 16000, "type": "魔法"}], "type": "魔法"},
         {"phase": "連撃の三重奏", "castingTime": "11:44", "hitTime": "04:54", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 6200, "type": "物理"}], "type": "物理"},
-        {"phase": "群竜の八重奏", "castingTime": "11:51", "hitTime": "05:01", "skill": "群竜の八重奏", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:03", "hitTime": "05:13", "skill": "ルナダイブ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:10", "hitTime": "05:20", "skill": "カータライズ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:14", "hitTime": "05:24", "skill": "カータライズ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:16", "hitTime": "05:26", "skill": "カータライズ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:20", "hitTime": "05:30", "skill": "メガフレアダイブ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:28", "hitTime": "05:38", "skill": "メガフレア(頭割り)", "damage": [{"label": "傷害", "amount": 15000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "群竜の八重奏", "castingTime": "12:29", "hitTime": "05:39", "skill": "ツイスターダイブ", "damage": [], "type": ""},
-        {"phase": "群竜の八重奏", "castingTime": "12:30", "hitTime": "05:40", "skill": "メガフレア(塔)", "damage": [{"label": "傷害", "amount": 6000, "type": "魔法"}], "type": "魔法"},
-        {"phase": "群竜の八重奏", "castingTime": "12:46", "hitTime": "05:56", "skill": "トリニティへ", "damage": [], "type": ""}
+        {"phase": "群龍の八重奏", "castingTime": "11:51", "hitTime": "05:01", "skill": "群龍の八重奏", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:03", "hitTime": "05:13", "skill": "ルナダイブ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:10", "hitTime": "05:20", "skill": "カータライズ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:14", "hitTime": "05:24", "skill": "カータライズ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:16", "hitTime": "05:26", "skill": "カータライズ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:20", "hitTime": "05:30", "skill": "メガフレアダイブ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:28", "hitTime": "05:38", "skill": "メガフレア(頭割り)", "damage": [{"label": "傷害", "amount": 15000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "群龍の八重奏", "castingTime": "12:29", "hitTime": "05:39", "skill": "ツイスターダイブ", "damage": [], "type": ""},
+        {"phase": "群龍の八重奏", "castingTime": "12:30", "hitTime": "05:40", "skill": "メガフレア(塔)", "damage": [{"label": "傷害", "amount": 6000, "type": "魔法"}], "type": "魔法"},
+        {"phase": "群龍の八重奏", "castingTime": "12:46", "hitTime": "05:56", "skill": "トリニティへ", "damage": [], "type": ""}
     ]
 
 }

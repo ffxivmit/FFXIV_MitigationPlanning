@@ -1,7 +1,7 @@
 {
     "name": "絕巴哈姆特(P1)",
     "timeline": [
-        {"phase": "HP100%~75%", "castingTime": "00:00", "hitTime": "00:00", "skill": "戦闘開始！", "damage": [], "type": ""},
+        {"phase": "HP100%~75%", "castingTime": "00:00", "hitTime": "00:00", "skill": "戰鬥開始！", "damage": [], "type": ""},
         {"phase": "HP100%~75%", "castingTime": "00:01", "hitTime": "00:01", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 5800, "type": "物理"}], "type": "物理"},
         {"phase": "HP100%~75%", "castingTime": "00:04", "hitTime": "00:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 5800, "type": "物理"}], "type": "物理"},
         {"phase": "HP100%~75%", "castingTime": "00:06", "hitTime": "00:06", "skill": "プラメット", "damage": [{"label": "傷害", "amount": 9600, "type": "物理"}], "type": "物理"},

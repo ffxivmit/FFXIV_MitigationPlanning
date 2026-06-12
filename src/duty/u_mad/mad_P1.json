@@ -1,7 +1,7 @@
 {
     "name": "絕妖星亂舞(P1)",
     "timeline": [
-        {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "戦闘開始！", "damage": [], "type": ""},
+        {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "戰鬥開始！", "damage": [], "type": ""},
         {"phase": "開幕", "castingTime": "00:03", "hitTime": "00:03", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 115000, "type": "物理"}], "type": "物理"},
         {"phase": "開幕", "castingTime": "00:06", "hitTime": "00:06", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 115000, "type": "物理"}], "type": "物理"},
         {"phase": "開幕", "castingTime": "00:09", "hitTime": "00:09", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 115000, "type": "物理"}], "type": "物理"},

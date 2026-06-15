@@ -556,7 +556,7 @@
             { 
                 "id": "mch_tact", "name": "策動", "tags": ["減傷"], 
                 "title": "15秒內，令自身和周圍隊員所受到的傷害減輕15%", 
-                "effects": [{ "type": "mit_all", "val": 0.10 }], 
+                "effects": [{ "type": "mit_all", "val": 0.15 }], 
                 "duration": 15, "cooldown": 90, 
                 "icon": "src/Skill_icons/12_MCH/Tactician.png", 
                 "levelRestrictions": {

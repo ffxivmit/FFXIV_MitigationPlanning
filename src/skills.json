@@ -491,7 +491,18 @@
         "name": "黑魔道士",
         "icon": "src/Job_icons/03_DPS/Job/BlackMage.png",
         "skills": [
-            { "id": "blm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png" },
+            { 
+                "id": "blm_addle", "name": "昏亂", "tags": ["減傷"], 
+                "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", 
+                "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], 
+                "duration": 15, "cooldown": 90, 
+                "icon": "src/Skill_icons/14_BLM/Role_Actions/Addle.png", 
+                "levelRestrictions": {
+                    "70": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "80": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "90": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 }
+                } 
+            },
             { "id": "blm_manaw", "name": "魔法護盾", "tags": ["護盾"], "title": "為自身張開一個防護罩，在一定時間內能抵消相當於最大HP30%的傷害量\n抵消的傷害量超過上限時防護罩自動消失，持續時間：20秒", "effects": [{ "type": "shield_maxhp", "val": 0.30 }], "duration": 20, "cooldown": 120, "icon": "src/Skill_icons/14_BLM/Manaward.png", "personal": true }
         ]
     },
@@ -499,7 +510,18 @@
         "name": "召喚士",
         "icon": "src/Job_icons/03_DPS/Job/Summoner.png",
         "skills": [
-            { "id": "smn_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png" },
+            { 
+                "id": "smn_addle", "name": "昏亂", "tags": ["減傷"], 
+                "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", 
+                "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], 
+                "duration": 15, "cooldown": 90, 
+                "icon": "src/Skill_icons/15_SMN/Role_Actions/Addle.png",
+                "levelRestrictions": {
+                    "70": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "80": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "90": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 }
+                }  
+            },
             { "id": "smn_radi", "name": "守護之光", "tags": ["護盾"], "title": "對召喚該卡邦庫爾的召喚士附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於目標最大HP20%的傷害量\n持續時間：30秒，累積次數：2\n發動條件：卡邦庫爾處於同行狀態", "effects": [{ "type": "shield_maxhp", "val": 0.20 }], "duration": 30, "cooldown": 60, "charges": 2, "icon": "src/Skill_icons/15_SMN/Radiant_Aegis.png", "personal": true }
         ]
     },
@@ -507,7 +529,18 @@
         "name": "赤魔道士",
         "icon": "src/Job_icons/03_DPS/Job/RedMage.png",
         "skills": [
-            { "id": "rdm_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png" },
+            { 
+                "id": "rdm_addle", "name": "昏亂", "tags": ["減傷"], 
+                "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", 
+                "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], 
+                "duration": 15, "cooldown": 90, 
+                "icon": "src/Skill_icons/16_RDM/Role_Actions/Addle.png",
+                "levelRestrictions": {
+                    "70": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "80": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "90": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 }
+                } 
+            },
             { 
                 "id": "rdm_kera", "name": "抗死", "tags": ["減傷"], 
                 "title": "15秒內，令自身和周圍隊員所受到的魔法傷害減輕10%，並且所受的HP恢復效果提高5%", 
@@ -525,7 +558,18 @@
         "name": "繪靈法師",
         "icon": "src/Job_icons/03_DPS/Job/Pictomancer.png",
         "skills": [
-            { "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], "duration": 15, "cooldown": 90, "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png" },
+            { 
+                "id": "pct_addle", "name": "昏亂", "tags": ["減傷"], 
+                "title": "15秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", 
+                "effects": [{ "type": "mit_physical", "val": 0.05 }, { "type": "mit_magic", "val": 0.10 }], 
+                "duration": 15, "cooldown": 90, 
+                "icon": "src/Skill_icons/17_PCT/Role_Actions/Addle.png", 
+                "levelRestrictions": {
+                    "70": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "80": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 },
+                    "90": { "title": "10秒內，令目標物理攻擊造成的傷害降低5%，魔法攻擊造成的傷害降低10%", "duration": 10 }
+                } 
+            },
             { "id": "pct_tpc", "name": "坦培拉塗層", "tags": ["護盾"], "title": "為自身附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於最大HP20%的傷害量，持續時間：10秒\n防護罩因吸收到足夠的傷害而消失時，坦培拉塗層的冷卻時間縮短60秒", "effects": [{ "type": "shield_maxhp", "val": 0.20 }], "duration": 10, "cooldown": 120, "icon": "src/Skill_icons/17_PCT/Tempera_Coat.png", "personal": true, "multiState": true, "stateCooldowns": [120, 60], "upgradeSkillId": "pct_tpg" },
             { 
                 "id": "pct_tpg", "name": "油性坦培拉塗層", "tags": ["護盾"], 

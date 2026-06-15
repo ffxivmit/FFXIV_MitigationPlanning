@@ -328,7 +328,7 @@
                 }
             },
             { "id": "gnb_aura", "name": "極光", "tags": ["HOT"], "title": "令目標HP持續恢復，恢復力：300\n持續時間：18秒，累積次數：2", "effects": [], "duration": 18, "cooldown": 60, "icon": "src/Skill_icons/04_GNB/Aurora.png", "personal": true },
-            { "id": "gnb_cmf", "name": "偽裝", "tags": ["減傷"], "title": "20秒內，自身的招架發動率提高50%，所受的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Camouflage.png" },
+            { "id": "gnb_cmf", "name": "偽裝", "tags": ["減傷"], "title": "20秒內，自身的招架發動率提高50%，所受的傷害減輕10%", "effects": [{ "type": "mit_all", "val": 0.10 }], "duration": 20, "cooldown": 90, "icon": "src/Skill_icons/04_GNB/Camouflage.png", "personal": true },
             {
                 "id": "gnb_ramp", "name": "鐵壁", "tags": ["減傷"],
                 "title": "20秒內，將自身所受的傷害減輕20%，自身所受的HP恢復效果提高15%",

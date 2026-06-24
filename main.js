@@ -387,10 +387,30 @@ createApp({
             const jobKey = HEALER_JOB_MAP[getJobPrefix(skill)];
             return jobKey ? (raidParams.value.healerMnd[jobKey] || 3250) : null;
         };
-        const getMaxHpForSkill = (skill) =>
-            TANK_JOB_PREFIXES.has(getJobPrefix(skill))
+        const getMaxHpMult = (memberIndex, castTime) => {
+            let mult = 1.0;
+            for (const skill of activeSkills.value) {
+                if (!skill.effects?.length) continue;
+                if (skill.personal === true && skill.memberIndex !== memberIndex) continue;
+                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+                const isActive = castTimes.some(ct => castTime >= ct && castTime <= ct + skill.duration);
+                if (!isActive) continue;
+                for (const eff of skill.effects) {
+                    if (eff.type === 'maxhp_boost' && eff.val != null) {
+                        mult *= (1 + eff.val);
+                    }
+                }
+            }
+            return mult;
+        };
+
+        const getMaxHpForSkill = (skill, castTime = null) => {
+            const base = TANK_JOB_PREFIXES.has(getJobPrefix(skill))
                 ? raidParams.value.tankHp
                 : raidParams.value.teamMinHp;
+            if (castTime === null) return base;
+            return Math.floor(base * getMaxHpMult(skill.memberIndex, castTime));
+        };
 
         const calcShieldDisplay = (skill) => {
             if (!skill?.effects?.length && !skill?.neutralSectShield) return [];
@@ -452,13 +472,13 @@ createApp({
         };
 
         // healOutMult 只影響 shield_potency 類型，shield_maxhp 類型不受治療量加成影響
-        const calcShieldValue = (skill, healOutMult = 1.0) => {
+        const calcShieldValue = (skill, healOutMult = 1.0 ,castTime = null) => {
             if (!skill?.effects?.length) return 0;
             let total = 0;
             const healerMnd = getHealerMnd(skill);
             for (const eff of skill.effects) {
                 if (eff.type === 'shield_maxhp') {
-                    total += Math.floor(getMaxHpForSkill(skill) * eff.val);
+                    total += Math.floor(getMaxHpForSkill(skill, castTime) * eff.val);
                 } else if (eff.type === 'shield_potency' && !eff.useTankStats && healerMnd) {
                     const shieldRatio = eff.shieldRatio || 1.0;
                     const healAmount = Math.floor(eff.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
@@ -1979,7 +1999,7 @@ createApp({
                     if (dur <= 0) continue; // TPC 被同秒 TPG 立即消耗，跳過
                     const endTime = ct + dur;
                     const healOutMult = getHealOutMult(skill.memberIndex, ct);
-                    let shieldVal = calcShieldValue(skill, healOutMult);
+                    let shieldVal = calcShieldValue(skill, healOutMult, ct);
                     if (shieldVal <= 0) continue;
                     if (critMult !== null) {
                         const recWindowStart = recCastTimes.find(rt => ct >= rt && ct <= rt + recDuration);

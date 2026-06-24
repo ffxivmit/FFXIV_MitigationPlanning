@@ -40,6 +40,7 @@
                     }
                 }
             },
+            { "id": "pld_Bw", "name": "壁壘", "tags": ["減傷"], "title": "10秒內，受到攻擊必定發動格擋", "effects": [{ "type": "mit_all", "val": 0.20 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/01_PLD/Bulwark.png", "personal": true},
             {
                 "id": "pld_invt", "name": "干預", "tags": ["減傷", "HOT"],
                 "title": "指定一名隊員，令其受到的傷害減輕10%，持續時間：8秒\n追加效果：自身處於鐵壁、極致防禦狀態時，效果提高10%\n追加效果：前4秒令目標受到的傷害額外減輕10%\n追加效果：令目標HP持續恢復，恢復力：250，持續時間：12秒",
@@ -139,7 +140,7 @@
                 }
             },
             { "id": "war_eqb", "name": "泰然自若", "tags": ["HOT"], "title": "恢復自身HP，恢復力：1200\n追加效果：持續恢復自身的HP，恢復力：200", "effects": [], "duration": 15, "cooldown": 60, "icon": "src/Skill_icons/02_WAR/Equilibrium.png", "personal": true },
-            { "id": "war_tob", "name": "戰慄", "title": "10秒內，自身的最大HP提高20%，\n同時自身所受的HP恢復效果提高20%\n發動時恢復最大HP的20%", "effects": [], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Thrill_of_Battle.png", "personal": true },
+            { "id": "war_tob", "name": "戰慄", "title": "10秒內，自身的最大HP提高20%，\n同時自身所受的HP恢復效果提高20%\n發動時恢復最大HP的20%", "effects": [{ "type": "maxhp_boost", "val": 0.20 }], "duration": 10, "cooldown": 90, "icon": "src/Skill_icons/02_WAR/Thrill_of_Battle.png", "personal": true },
             {
                 "id": "war_nf", "name": "原初的勇猛", "tags": ["減傷"],
                 "title": "8秒內，自身受到的傷害減輕10%\n追加效果:前4秒額外再減輕10%\n追加效果:自身發動的戰技命中時恢復HP\n與原初的血氣共用冷卻時間",

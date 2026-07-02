@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-<div id="app" v-cloak class="p-3 lg:p-4" :class="previewMode ? 'pt-12' : ''">
+<div id="app" v-cloak class="p-3 lg:p-4 pb-2" :class="previewMode ? 'pt-12' : ''">
 
     <!-- ── 工具列 ── -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-2 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -21,7 +21,7 @@
 
         <!-- 自訂副本下拉 -->
         <div class="relative shrink-0">
-            <button @click="openDutyDropdown"
+            <button @click="openDutyDropdown" data-tut="duty-select"
                     class="text-sm px-2 py-1 border border-slate-200 rounded-lg bg-slate-50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-400 flex items-center gap-1.5 min-w-[120px] max-w-[200px]"
                     :class="selectedDutyKey ? 'text-slate-700' : 'text-slate-400'">
                 <span class="flex-1 text-left truncate">{{ selectedDutyName }}</span>
@@ -69,7 +69,7 @@
                     {{ cat.name }}
                 </button>
             </div>
-            <div class="flex flex-wrap gap-0.5">
+            <div class="flex flex-wrap gap-0.5" data-tut="job-icons">
                 <button v-for="jobs in categoryDb[currentCat]?.links" :key="jobs.id"
                         @click="addToParty(jobs.id)" :disabled="party.length >= 8"
                         class="rounded hover:scale-110 transition-transform disabled:opacity-30 disabled:cursor-not-allowed">
@@ -77,7 +77,7 @@
                 </button>
             </div>
             <div class="w-px h-4 bg-slate-200 shrink-0"></div>
-            <div class="flex items-center gap-1 flex-wrap">
+            <div class="flex items-center gap-1 flex-wrap" data-tut="party-area">
                 <span class="text-[10px] text-slate-400 font-medium shrink-0">{{ party.length }}/8</span>
                 <div v-for="(jobKey, pIdx) in party" :key="pIdx"
                      draggable="true"
@@ -116,7 +116,7 @@
                         class="text-[11px] px-2.5 py-1 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg transition font-semibold shrink-0">
                     {{ tokenSaving ? '儲存中…' : '儲存修改' }}
                 </button>
-                <button @click="openHistoryPanel" :disabled="tokenSaving" title="查看修改履歷"
+                <button @click="openHistoryPanel" :disabled="tokenSaving" title="查看修改履歷" data-tut="history-btn"
                         class="text-[11px] px-2 py-1 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-500 border border-slate-200 rounded-lg transition font-semibold shrink-0">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/>
@@ -157,12 +157,17 @@
 
         <!-- 工具 -->
         <div class="flex items-center gap-1.5 shrink-0 ml-auto">
-            <!-- 使用說明 -->
-            <button @click="openHelp"
-                    class="flex items-center justify-center w-8 h-8 text-sm font-black text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg transition shrink-0"
-                    title="使用說明">?</button>
+            <!-- 公告 -->
+            <button @click="openAnnouncement"
+                    class="flex items-center justify-center w-8 h-8 text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-lg transition shrink-0"
+                    title="公告">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+            </button>
             <!-- 側邊欄開關 -->
-            <button @click="sidebarOpen = !sidebarOpen"
+            <button @click="sidebarOpen = !sidebarOpen" data-tut="sidebar-toggle"
                     :class="['flex items-center gap-1.5 text-xs px-2.5 h-8 rounded-lg border transition font-semibold shrink-0',
                              sidebarOpen ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200']">
                 <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -301,7 +306,7 @@
     </div>
 
     <!-- ── 主表格 ── -->
-    <div v-if="selectedDutyKey" class="bg-white rounded-xl shadow-lg" style="overflow: clip;">
+    <div v-if="selectedDutyKey" class="bg-white rounded-xl shadow-lg" style="overflow: clip;" data-tut="skill-table">
         <div class="table-container" ref="tableContainerRef" @scroll.passive="onTableScroll">
             <table class="w-full mit-table" :class="{'compact-mode': compactMode}">
                 <thead>
@@ -326,7 +331,7 @@
                                 <svg class="w-2 h-2 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                 {{ memberNoteCount(member.pIdx) }}
                             </button>
-                            <div class="relative inline-block"
+                            <div class="relative inline-block" data-tut="job-header-icon"
                                  :class="member.hasPersonalSkills ? 'cursor-pointer' : ''"
                                  @click.stop="member.hasPersonalSkills && togglePersonalSkills(member.pIdx)"
                                  :title="member.hasPersonalSkills ? (member.showPersonal ? '收合個人技能' : '展開個人技能') : ''">
@@ -346,7 +351,7 @@
                             </div>
                         </th>
                         <th class="sticky-right p-1.5 text-center" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-                            <button v-if="selectedDutyKey" @click="openNotesCard($event, -1)"
+                            <button v-if="selectedDutyKey" @click="openNotesCard($event, -1)" data-tut="notes-btn"
                                     :class="['inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition font-semibold whitespace-nowrap',
                                              notesCard.open
                                                 ? 'bg-amber-500 text-white border-amber-500'
@@ -368,6 +373,7 @@
                         <th v-show="!compactMode" class="p-3 text-right text-sm font-bold text-slate-500 sticky-col col-orig">原始傷害</th>
                         <th v-for="skill in activeSkills" :key="skill.instanceId"
                             :style="`background:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.06);'}`"
+                            :data-tut="skill.instanceId === 'p0-pld_div' ? 'skill-icon-demo' : null"
                             class="p-1 text-center min-w-[85px] compact-skill-th relative group/skill">
                             <div v-if="skill._isAetherIndicator" class="flex flex-col items-center gap-1 pb-1">
                                 <img src="src/Skill_icons/19_SCH/Aether.png" class="w-14 h-10 object-contain">
@@ -1298,128 +1304,166 @@
         </div>
     </Teleport>
 
-    <!-- ── 使用說明 Wizard Modal ── -->
+    <!-- ── 公告 Modal ── -->
     <Teleport to="body">
-        <div v-if="helpOpen"
+        <div v-if="announcementOpen"
              class="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4"
-             @click.self="closeHelp">
+             @click.self="closeAnnouncement">
             <div class="bg-white rounded-2xl shadow-2xl flex flex-col h-[90vh] w-[max(50vw,640px)]">
 
                 <!-- Header -->
                 <div class="px-5 py-4 border-b border-slate-200 shrink-0 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl font-black text-slate-800">{{ helpStep === 0 ? '公告' : '使用說明' }}</span>
-                        <span class="text-xs text-slate-400 font-medium">{{ helpStep === 0 ? '' : `${helpStep} / ${HELP_TOTAL - 1}` }}</span>
-                    </div>
-                    <button @click="closeHelp" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
-                </div>
-
-                <!-- 步驟指示條（公告頁不顯示） -->
-                <div v-if="helpStep > 0" class="flex gap-1.5 px-5 pt-3 shrink-0">
-                    <div v-for="i in HELP_TOTAL - 1" :key="i"
-                         :class="['h-1 flex-1 rounded-full transition-colors',
-                                  i <= helpStep ? 'bg-indigo-500' : 'bg-slate-200']"></div>
+                    <span class="text-xl font-black text-slate-800">公告</span>
+                    <button @click="closeAnnouncement" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
                 </div>
 
                 <!-- Body -->
                 <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-
-                    <!-- Step 0：公告 -->
-                    <template v-if="helpStep === 0">
-                        <div v-for="ann in sortedAnnouncements" :key="ann.id"
-                             class="border border-slate-200 rounded-xl p-4 space-y-2">
-                            <!-- Title + badge -->
-                            <div class="flex items-start justify-between gap-2">
-                                <h3 class="font-bold text-slate-800 text-base leading-snug">{{ ann.title }}</h3>
+                    <div v-for="ann in sortedAnnouncements" :key="ann.id"
+                         class="border border-slate-200 rounded-xl p-4 space-y-2">
+                        <!-- Title + badge -->
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-bold text-slate-800 text-base leading-snug">{{ ann.title }}</h3>
+                            <span class="flex items-center gap-1 shrink-0">
+                                <span v-if="ann.id === latestAnnouncementId"
+                                      class="text-xs rounded-full px-2 py-0.5 font-semibold border bg-rose-100 text-rose-600 border-rose-200">New</span>
                                 <span :class="[
-                                    'text-xs rounded-full px-2 py-0.5 font-semibold shrink-0 border',
+                                    'text-xs rounded-full px-2 py-0.5 font-semibold border',
                                     ann.status === '置頂'  ? 'bg-amber-100 text-amber-600 border-amber-200' :
                                     ann.status === '進行中' ? 'bg-green-100 text-green-700 border-green-200' :
                                                               'bg-slate-100 text-slate-400 border-slate-200'
                                 ]">{{ ann.status }}</span>
-                            </div>
-                            <!-- Body -->
-                            <p class="text-sm text-slate-500 leading-relaxed whitespace-pre-wrap">{{ ann.body }}</p>
-                            <!-- Footer: link + date -->
-                            <div class="flex items-center justify-between pt-1">
-                                <a v-if="ann.link" :href="ann.link.url" target="_blank"
-                                   class="px-3 py-1.5 text-sm font-semibold bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition">
-                                    {{ ann.link.text }}
-                                </a>
-                                <span v-else></span>
-                                <span v-if="ann.date" class="text-xs text-slate-400">{{ ann.date }}</span>
-                            </div>
+                            </span>
                         </div>
-                    </template>
-
-                    <!-- Step 1：使用說明1 -->
-                    <template v-if="helpStep === 1">
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            1. 點選左上角的【選擇副本】開始你想要規劃的副本。
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            2. 點選職能組成，最多8名成員，職業可重複，拖曳右側職能圖示可排序，點擊則刪除。
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            3. 部分職業可點選職業圖示展開個人技能列表，</br>可搭配個人排軸外，展開後的技能也會納入在預計傷害，方便判斷死刑等單體傷害
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            4. 右上選單點開後可登入Discord帳號，登入後可新建自己的範本，並複製共同編輯或唯讀連結分享給隊友。
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            5. 可隱藏機制等無傷害招式、AA及死刑等對坦傷害，<br>預設為精簡模式，關閉精簡模式則會顯示BOSS階段及初始傷害值
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            6. 可分享配點參數給其他人套用(未登入可)
-                        </p>
-                        <img src="src/help/easy_sop.png" alt=""
-                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
-                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
-                    </template>
-
-                    <!-- Step 2：加入職業 -->
-                    <template v-if="helpStep === 2">
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            7. 新建的範本若有修改，在上方工具列可儲存修改
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            8. 他人分享的連結可以加入到自己的書籤內隨時開啟。
-                        </p>
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            9. 書籤會有icon標記，方便用於區別
-                        </p>
-                        <img src="src/help/bookmark.png" alt=""
-                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
-                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
-                    </template>
-
-                    <template v-if="helpStep === 3">
-                        <p class="text-base text-slate-600 leading-relaxed">
-                            10. 懸浮於技能圖示中會有技能說明，>各個技能會有不同標籤方便區別用途<br>選單中的參數設定會影響護盾計算值。
-                        </p>
-                        <img src="src/help/skill.png" alt=""
-                             class="w-full rounded-xl border border-slate-100 object-contain max-h-72 mt-1 cursor-zoom-in"
-                             @error="$event.target.remove()" @click="lightboxSrc = $event.target.src">
-                    </template>
-
+                        <!-- Body -->
+                        <p class="text-sm text-slate-500 leading-relaxed whitespace-pre-wrap">{{ ann.body }}</p>
+                        <!-- Footer: link + date -->
+                        <div class="flex items-center justify-between pt-1">
+                            <a v-if="ann.link" :href="ann.link.url" target="_blank"
+                               class="px-3 py-1.5 text-sm font-semibold bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition">
+                                {{ ann.link.text }}
+                            </a>
+                            <span v-else></span>
+                            <span v-if="ann.date" class="text-xs text-slate-400">{{ ann.date }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer -->
-                <div class="px-5 py-3.5 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0 bg-slate-50 rounded-b-2xl">
-                    <button @click="helpPrev" :disabled="helpStep === 0"
-                            class="px-4 py-2 text-sm text-slate-500 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 transition disabled:opacity-30">
-                        上一步
-                    </button>
-                    <button v-if="helpStep < HELP_TOTAL - 1" @click="helpNext"
+                <div class="px-5 py-3.5 border-t border-slate-200 flex items-center justify-end shrink-0 bg-slate-50 rounded-b-2xl">
+                    <button @click="closeAnnouncement"
                             class="px-5 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
-                        下一步
-                    </button>
-                    <button v-else @click="closeHelp"
-                            class="px-5 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
-                        完成
+                        關閉
                     </button>
                 </div>
 
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- ── 使用教學浮動按鈕 ── -->
+    <button v-if="!tutorialOpen" @click="openTutorial"
+            class="fixed bottom-3 right-4 z-[140] flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-xs"
+            title="使用教學">
+        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        使用教學
+    </button>
+
+    <!-- ── 使用教學 Spotlight 導覽 ── -->
+    <Teleport to="body">
+        <div v-if="tutorialOpen" class="fixed inset-0 z-[600]">
+            <!-- 遮罩：有目標時挖空目標區域，否則整片變暗 -->
+            <template v-if="tutorialMaskStyle">
+                <div class="fixed bg-black/60 transition-all duration-200"
+                     :style="{ left: 0, top: 0, right: 0, height: tutorialMaskStyle.top + 'px' }"></div>
+                <div class="fixed bg-black/60 transition-all duration-200"
+                     :style="{ left: 0, top: (tutorialMaskStyle.top + tutorialMaskStyle.height) + 'px', right: 0, bottom: 0 }"></div>
+                <div class="fixed bg-black/60 transition-all duration-200"
+                     :style="{ left: 0, top: tutorialMaskStyle.top + 'px', width: tutorialMaskStyle.left + 'px', height: tutorialMaskStyle.height + 'px' }"></div>
+                <div class="fixed bg-black/60 transition-all duration-200"
+                     :style="{ left: (tutorialMaskStyle.left + tutorialMaskStyle.width) + 'px', top: tutorialMaskStyle.top + 'px', right: 0, height: tutorialMaskStyle.height + 'px' }"></div>
+                <div class="fixed rounded-lg pointer-events-none transition-all duration-200"
+                     :style="{ left: tutorialMaskStyle.left + 'px', top: tutorialMaskStyle.top + 'px', width: tutorialMaskStyle.width + 'px', height: tutorialMaskStyle.height + 'px', boxShadow: '0 0 0 3px #6366f1, 0 0 24px 4px rgba(99,102,241,0.55)' }"></div>
+            </template>
+            <div v-else class="fixed inset-0 bg-black/60"></div>
+
+            <!-- 「插入自訂時間點」步驟專用：純展示用的「+ 插入」按鈕（非真實按鈕，不會回應點擊） -->
+            <div v-if="tutorialMockInsertPos"
+                 class="fixed z-[605] pointer-events-none"
+                 :style="{ left: tutorialMockInsertPos.x + 'px', top: tutorialMockInsertPos.y + 'px', transform: 'translate(-50%,-50%)' }">
+                <div class="px-2.5 py-0.5 text-xs font-bold text-slate-500 bg-white border border-indigo-400 rounded-md shadow-md leading-5 select-none">
+                    + 插入
+                </div>
+            </div>
+
+            <!-- 提示卡片：靠近目標定位 -->
+            <div v-if="tutorialTooltipPos"
+                 class="fixed z-[610] bg-white rounded-xl shadow-2xl p-4"
+                 :style="tutorialTooltipPos">
+                <div class="flex items-start justify-between gap-2 mb-1.5">
+                    <h3 class="font-bold text-slate-800 text-base leading-snug">{{ currentTutorialStep.title }}</h3>
+                    <button @click="closeTutorial" class="text-slate-400 hover:text-slate-600 text-xl leading-none shrink-0">×</button>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ currentTutorialStep.text }}</p>
+                <!-- 「技能提示與標籤」步驟專用：實際技能資訊預覽，嵌在卡片內、不額外浮卡避免互相遮擋 -->
+                <div v-if="tutorialMockSkillTooltip" class="mt-3 pt-3 border-t border-slate-100">
+                    <div class="flex items-baseline justify-between gap-2 mb-1">
+                        <span class="font-bold text-slate-800 text-sm">{{ tutorialMockSkillTooltip.skill.name }}</span>
+                        <span class="flex gap-2 text-xs text-slate-400 shrink-0">
+                            <span v-if="tutorialMockSkillTooltip.skill.duration">持續 {{ tutorialMockSkillTooltip.skill.duration }}s</span>
+                            <span v-if="tutorialMockSkillTooltip.skill.cooldown">CD {{ tutorialMockSkillTooltip.skill.cooldown }}s</span>
+                        </span>
+                    </div>
+                    <div v-if="tutorialMockSkillTooltip.skill.title" class="text-xs text-slate-500 whitespace-pre-wrap mb-1.5">{{ tutorialMockSkillTooltip.skill.title }}</div>
+                    <div v-if="tutorialMockSkillTooltip.skill.tags && tutorialMockSkillTooltip.skill.tags.length" class="flex flex-wrap gap-1 mb-1.5">
+                        <span v-if="tutorialMockSkillTooltip.skill.tags.includes('減傷')" class="text-[11px] font-bold text-green-600 bg-green-50 border border-green-200 px-1.5 rounded leading-none py-0.5">減傷</span>
+                        <span v-if="tutorialMockSkillTooltip.skill.tags.includes('無敵')" class="text-[11px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 rounded leading-none py-0.5">無敵</span>
+                        <span v-if="tutorialMockSkillTooltip.skill.tags.includes('HOT')" class="text-[11px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 rounded leading-none py-0.5">HOT</span>
+                        <span v-if="tutorialMockSkillTooltip.skill.tags.includes('護盾')" class="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 rounded leading-none py-0.5">護盾</span>
+                    </div>
+                    <div v-if="calcShieldDisplay(tutorialMockSkillTooltip.skill).length" class="space-y-0.5">
+                        <div v-for="sh in calcShieldDisplay(tutorialMockSkillTooltip.skill)" :key="sh.label" class="flex items-baseline justify-between gap-2 text-xs">
+                            <span class="text-slate-500">{{ sh.label }}</span>
+                            <span class="font-mono font-bold text-indigo-600">{{ sh.value.toLocaleString() }} HP</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-3 mt-4">
+                    <span class="text-xs text-slate-400 font-medium">{{ tutorialStep + 1 }} / {{ TUTORIAL_STEPS.length }}</span>
+                    <div class="flex gap-2">
+                        <button v-if="tutorialStep > 0" @click="tutorialPrev"
+                                class="px-3 py-1.5 text-xs text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-100 transition">上一步</button>
+                        <button @click="tutorialNext"
+                                class="px-3.5 py-1.5 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
+                            {{ tutorialStep === TUTORIAL_STEPS.length - 1 ? '完成' : '下一步' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提示卡片：無目標時置中顯示 -->
+            <div v-else class="fixed inset-0 z-[610] flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl shadow-2xl p-5 w-80">
+                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                        <h3 class="font-bold text-slate-800 text-base leading-snug">{{ currentTutorialStep.title }}</h3>
+                        <button @click="closeTutorial" class="text-slate-400 hover:text-slate-600 text-xl leading-none shrink-0">×</button>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">{{ currentTutorialStep.text }}</p>
+                    <div class="flex items-center justify-between gap-3 mt-4">
+                        <span class="text-xs text-slate-400 font-medium">{{ tutorialStep + 1 }} / {{ TUTORIAL_STEPS.length }}</span>
+                        <div class="flex gap-2">
+                            <button v-if="tutorialStep > 0" @click="tutorialPrev"
+                                    class="px-3 py-1.5 text-xs text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-100 transition">上一步</button>
+                            <button @click="tutorialNext"
+                                    class="px-3.5 py-1.5 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition font-semibold">
+                                {{ tutorialStep === TUTORIAL_STEPS.length - 1 ? '完成' : '下一步' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </Teleport>
@@ -1436,14 +1480,14 @@
 
     <!-- ── 分享 Toast ── -->
     <div v-if="shareToastVisible"
-         class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl z-[9999] flex items-center gap-2 pointer-events-none">
+         class="fixed bottom-11 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl z-[9999] flex items-center gap-2 pointer-events-none">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         連結已複製到剪貼簿！
     </div>
 
 </div>
 
-<footer class="mt-4 border-t border-slate-200 py-2 text-center text-xs text-slate-400 leading-relaxed">
+<footer class="fixed bottom-0 inset-x-0 z-30 bg-slate-100 border-t border-slate-200 py-1 text-center text-[10px] text-slate-400 leading-tight">
     <p>FINAL FANTASY XIV © SQUARE ENIX CO., LTD. All Rights Reserved.</p>
     <p>本站時間軸資料來源為 <a href="https://x.com/lastagous" target="_blank" rel="noopener noreferrer" class="hover:text-slate-600 transition-colors">@lastagous</a>（本站為粉絲自製工具，無任何商業營利行為。）</p>
 </footer>

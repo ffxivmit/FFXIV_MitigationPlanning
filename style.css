@@ -17,7 +17,7 @@ tr.note-scroll-highlight td {
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 134px);
     border-radius: 8px;
     background: white;
 }
@@ -241,6 +241,9 @@ body.dark .bg-white\/95 { background-color: #20262c !important; }
 /* ── Slate 背景層 ── */
 body.dark .bg-slate-50  { background-color: #171b1f !important; }
 body.dark .bg-slate-100 { background-color: #20262c !important; }
+
+/* footer 維持跟頁面背景同色，只靠上緣分隔線區隔 */
+body.dark footer.bg-slate-100 { background-color: #101214 !important; }
 body.dark .bg-slate-200 { background-color: #272e36 !important; }
 
 /* ── 文字顏色（暖白調） ── */

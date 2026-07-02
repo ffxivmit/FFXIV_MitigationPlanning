@@ -1673,6 +1673,8 @@ createApp({
             } finally {
                 authLoading.value = false;
             }
+            window.addEventListener('resize', onTutorialReposition);
+            window.addEventListener('scroll', onTutorialReposition, true);
             nextTick(() => {
                 if (tableContainerRef.value) {
                     tableContainerHeight.value = tableContainerRef.value.clientHeight || 700;
@@ -2854,10 +2856,10 @@ createApp({
         // 監聽所有需要持久化的狀態，任何變更都即時寫入 localStorage
         let _saveTimer = null;
         watch([selectedDutyKey, party, mitMap, selectedVariants, customRowsByDuty, notesMap], () => {
-            if (isViewingSharedPlan.value) return;
+            if (isViewingSharedPlan.value || tutorialDemoActive.value) return;
             clearTimeout(_saveTimer);
             _saveTimer = setTimeout(() => {
-                if (isViewingSharedPlan.value) return;
+                if (isViewingSharedPlan.value || tutorialDemoActive.value) return;
                 localStorage.setItem('ffxiv_planner_data', JSON.stringify({
                     selectedDutyKey: selectedDutyKey.value,
                     party: party.value,
@@ -2968,14 +2970,10 @@ createApp({
             '使用者'
         );
 
-        // ── 使用說明 Wizard ────────────────────────────────────
-        const helpOpen = ref(false);
-        const helpStep = ref(0);
-        const HELP_TOTAL = 4;
-        const openHelp  = () => { helpStep.value = 0; helpOpen.value = true; };
-        const closeHelp = () => { helpOpen.value = false; };
-        const helpNext  = () => { if (helpStep.value < HELP_TOTAL - 1) helpStep.value++; };
-        const helpPrev  = () => { if (helpStep.value > 0) helpStep.value--; };
+        // ── 公告 Modal ────────────────────────────────────────
+        const announcementOpen = ref(false);
+        const openAnnouncement  = () => { announcementOpen.value = true; };
+        const closeAnnouncement = () => { announcementOpen.value = false; };
         const announcements = ref([]);
         const sortedAnnouncements = computed(() => {
             const statusOrder = { '置頂': 0, '進行中': 1, '已完成': 2 };
@@ -2986,7 +2984,148 @@ createApp({
                 return new Date(b.date.replace(/\//g, '-')) - new Date(a.date.replace(/\//g, '-'));
             });
         });
+        const latestAnnouncementId = computed(() => {
+            if (!announcements.value.length) return null;
+            return announcements.value.reduce((latest, ann) =>
+                new Date(ann.date.replace(/\//g, '-')) > new Date(latest.date.replace(/\//g, '-')) ? ann : latest
+            ).id;
+        });
         const lightboxSrc = ref(null);
+
+        // ── 使用教學（Spotlight 導覽）──────────────────────────
+        const TUTORIAL_STEPS = [
+            { title: '選擇副本', text: '點選左上角的副本選單，挑選你想要規劃減傷的副本與階層。', target: '[data-tut="duty-select"]' },
+            { title: '加入職業', text: '副本選定後，這裡會列出可加入的職業圖示，點擊即可加入隊伍（最多 8 人，職業可重複）。部分職業點擊圖示可展開個人技能，一併排入時間軸並計入預計傷害。', target: '[data-tut="job-icons"]' },
+            { title: '隊伍編成', text: '已加入的成員會顯示在這裡：拖曳圖示可調整順序，點擊圖示可將其移除。', target: '[data-tut="party-area"]' },
+            { title: '規劃減傷技能', text: '副本時間軸會依技能施放的判定時間排列成表格，點擊技能格即可標記施放時間。', target: '[data-tut="skill-table"]' },
+            { title: '展開個人技能', text: '點擊上方的職業圖示，可以展開／收合個人減傷技能，一併排入時間軸並計入預計傷害，方便判斷死刑等單體傷害是否扛得住。', target: '[data-tut="job-header-icon"]', expandPersonalDemo: true },
+            { title: '技能提示與標籤', text: '把游標懸浮在技能圖示上，會顯示技能說明、持續時間／冷卻，以及減傷、護盾、HOT 等標籤；若技能會產生護盾，還會直接依目前的參數設定算出護盾數值。', target: '[data-tut="skill-icon-demo"]', simulateSkillHover: true },
+            { title: '技能備註', text: '在任一技能格上按右鍵，可以新增文字備註（例如提醒隊友注意事項）。所有備註會整理在這個按鈕內，點擊時間可快速跳轉至該列。', target: '[data-tut="notes-btn"]' },
+            { title: '插入自訂時間點', text: '把游標移到表格中任兩列之間的空隙，會浮現「+ 插入」按鈕，點擊即可新增一列自訂招式與時間，方便標記時間軸沒有列出的事件。', target: null, simulateInsertHover: true },
+            { title: '顯示與功能選單', text: '點開右上角選單，可切換精簡模式、暗色主題、隱藏無傷害或死刑招式，也能登入 Discord 儲存範本、產生分享連結、匯出匯入設定。', target: '[data-tut="sidebar-toggle"]' },
+            { title: '瀏覽修改履歷', text: '在共同編輯模式下，工具列會出現「履歷」按鈕，可查看最近 30 筆修改紀錄、預覽與目前版本的差異，並還原至任一歷史版本。', target: '[data-tut="history-btn"]' },
+        ];
+        const TUTORIAL_PAD = 8;
+        // 教學範本：確保不管使用者當下有沒有選副本/職業，導覽時都能看到完整畫面。
+        // 只是暫時套用在畫面上，關閉教學時會還原成使用者原本的選擇，不會覆蓋、也不會寫入 localStorage。
+        const TUTORIAL_DEMO = { dutyKey: 'm1s', party: ['PLD', 'WHM', 'SAM', 'BRD'] };
+        const tutorialOpen = ref(false);
+        const tutorialStep = ref(0);
+        const tutorialRect = ref(null);
+        const tutorialDemoActive = ref(false);
+        let _tutorialSnapshot = null;
+        const currentTutorialStep = computed(() => TUTORIAL_STEPS[tutorialStep.value]);
+        const tutorialMockInsertPos = ref(null);
+        const tutorialMockSkillTooltip = ref(null);
+        // 展示「游標懸浮在時間軸列與列之間」的畫面：框住相鄰兩列，並畫一顆純展示用的「+ 插入」按鈕，
+        // 完全不動用真實的 hoverInsert 狀態，避免和真正的滑鼠事件互相搶奪、造成按鈕消失。
+        const showInsertRowDemo = () => {
+            const rows = document.querySelectorAll('[data-tut="skill-table"] tr[data-row-idx]');
+            if (rows.length < 2) { tutorialRect.value = null; tutorialMockInsertPos.value = null; return; }
+            const idx = Math.min(2, rows.length - 2);
+            const trA = rows[idx];
+            const trB = rows[idx + 1];
+            trA.scrollIntoView({ block: 'center', behavior: 'instant' });
+            const rectA = trA.getBoundingClientRect();
+            const rectB = trB.getBoundingClientRect();
+            const nameColA = trA.querySelector('.col-name');
+            const rightEdge = nameColA ? nameColA.getBoundingClientRect().right : rectA.right;
+            const container = trA.closest('.table-container');
+            const xPos = (container ? container.getBoundingClientRect().left : rectA.left) + 40;
+            tutorialMockInsertPos.value = { x: xPos, y: rectA.bottom };
+            tutorialRect.value = {
+                top: rectA.top,
+                left: rectA.left,
+                width: rightEdge - rectA.left,
+                height: rectB.bottom - rectA.top,
+            };
+        };
+        // 展示「懸浮技能圖示看說明」：技能資訊直接嵌入導覽卡片內，不額外浮一張獨立提示卡，
+        // 避免和導覽卡片搶同一塊畫面、互相遮擋。
+        const showSkillTooltipDemo = async () => {
+            const el = document.querySelector('[data-tut="skill-icon-demo"]');
+            if (!el) { tutorialRect.value = null; tutorialMockSkillTooltip.value = null; return; }
+            el.scrollIntoView({ block: 'center', behavior: 'instant' });
+            await nextTick();
+            const r = el.getBoundingClientRect();
+            tutorialRect.value = { top: r.top, left: r.left, width: r.width, height: r.height };
+            const raw = jobDb.value?.PLD?.skills?.find(s => s.id === 'pld_div');
+            tutorialMockSkillTooltip.value = raw ? { skill: getEffectiveSkill(raw, currentLevelCap.value) } : null;
+        };
+        const measureTutorialTarget = async () => {
+            await nextTick();
+            const step = TUTORIAL_STEPS[tutorialStep.value];
+            tutorialMockInsertPos.value = null;
+            tutorialMockSkillTooltip.value = null;
+            if (step?.simulateInsertHover) { showInsertRowDemo(); return; }
+            if (step?.expandPersonalDemo && !expandedPersonalMembers.value.includes(0)) {
+                expandedPersonalMembers.value = [...expandedPersonalMembers.value, 0];
+                await nextTick();
+            }
+            if (step?.simulateSkillHover) { await showSkillTooltipDemo(); return; }
+            const el = step?.target ? document.querySelector(step.target) : null;
+            if (!el) { tutorialRect.value = null; return; }
+            el.scrollIntoView({ block: 'center', behavior: 'instant' });
+            await nextTick();
+            const r = el.getBoundingClientRect();
+            tutorialRect.value = { top: r.top, left: r.left, width: r.width, height: r.height };
+        };
+        const openTutorial = () => {
+            tutorialStep.value = 0;
+            _tutorialSnapshot = {
+                dutyKey: selectedDutyKey.value,
+                party: [...party.value],
+                expandedPersonal: [...expandedPersonalMembers.value],
+            };
+            tutorialDemoActive.value = true;
+            selectedDutyKey.value = TUTORIAL_DEMO.dutyKey;
+            party.value = [...TUTORIAL_DEMO.party];
+            tutorialOpen.value = true;
+            measureTutorialTarget();
+        };
+        const closeTutorial = () => {
+            tutorialOpen.value = false;
+            tutorialRect.value = null;
+            tutorialMockInsertPos.value = null;
+            tutorialMockSkillTooltip.value = null;
+            if (_tutorialSnapshot) {
+                selectedDutyKey.value = _tutorialSnapshot.dutyKey;
+                party.value = _tutorialSnapshot.party;
+                expandedPersonalMembers.value = _tutorialSnapshot.expandedPersonal;
+                _tutorialSnapshot = null;
+            }
+            tutorialDemoActive.value = false;
+        };
+        const tutorialNext = () => {
+            if (tutorialStep.value < TUTORIAL_STEPS.length - 1) { tutorialStep.value++; measureTutorialTarget(); }
+            else closeTutorial();
+        };
+        const tutorialPrev = () => { if (tutorialStep.value > 0) { tutorialStep.value--; measureTutorialTarget(); } };
+        const onTutorialReposition = () => { if (tutorialOpen.value) measureTutorialTarget(); };
+        const tutorialMaskStyle = computed(() => {
+            const r = tutorialRect.value;
+            if (!r) return null;
+            return {
+                top: Math.max(r.top - TUTORIAL_PAD, 0),
+                left: Math.max(r.left - TUTORIAL_PAD, 0),
+                width: r.width + TUTORIAL_PAD * 2,
+                height: r.height + TUTORIAL_PAD * 2,
+            };
+        });
+        const tutorialTooltipPos = computed(() => {
+            const r = tutorialRect.value;
+            if (!r) return null;
+            const W = 320, estH = 220, margin = 16;
+            const vw = window.innerWidth, vh = window.innerHeight;
+            let top = r.top + r.height + TUTORIAL_PAD + margin;
+            if (top + estH > vh - margin) {
+                const above = r.top - TUTORIAL_PAD - margin - estH;
+                top = above > margin ? above : margin;
+            }
+            let left = r.left + r.width / 2 - W / 2;
+            left = Math.min(Math.max(left, margin), Math.max(vw - W - margin, margin));
+            return { top: top + 'px', left: left + 'px', width: W + 'px' };
+        });
 
         // ── 側邊欄 / 我的範本 ─────────────────────────────────
         const sidebarOpen = ref(false);
@@ -3200,7 +3339,10 @@ createApp({
             raidParams, raidParamsDialog, raidParamsDraft,
             openRaidParamsDialog, closeRaidParamsDialog, saveRaidParams, resetRaidParamsDraftToDefault,
             calcShieldDisplay,
-            helpOpen, helpStep, HELP_TOTAL, openHelp, closeHelp, helpNext, helpPrev, sortedAnnouncements, lightboxSrc,
+            announcementOpen, openAnnouncement, closeAnnouncement, sortedAnnouncements, latestAnnouncementId, lightboxSrc,
+            tutorialOpen, tutorialStep, currentTutorialStep, TUTORIAL_STEPS,
+            openTutorial, closeTutorial, tutorialNext, tutorialPrev,
+            tutorialMaskStyle, tutorialTooltipPos, tutorialMockInsertPos, tutorialMockSkillTooltip,
             notesMap, noteEditor, noteTextareaRef, notesCard, hasNote, getNote, openNoteEditor, openNoteEditorFromList, saveNote, sortedNotes,
             memberNoteCount, memberNoteCounts, notesCardEntries, openNotesCard, notesCardDragStart, scrollToRow,
             deleteNote, deleteNoteFromList,

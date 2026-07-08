@@ -1695,6 +1695,27 @@ createApp({
 
         const removeFromParty = (index) => {
             if (isReadOnly.value) return;
+            const n = party.value.length;
+            const oldToNew = Array.from({ length: n }, (_, i) => i);
+            oldToNew[index] = -1; // 被刪除的隊員，其資料應丟棄
+            for (let i = index + 1; i < n; i++) oldToNew[i] = i - 1;
+            const remapKeys = (map) => {
+                const out = {};
+                for (const [key, val] of Object.entries(map)) {
+                    const m = key.match(/-p(\d+)-/);
+                    if (!m) {
+                        out[key] = val;
+                        continue;
+                    }
+                    const ni = oldToNew[parseInt(m[1])];
+                    if (ni === -1) continue;
+                    out[key.replace(/-p(\d+)-/, `-p${ni}-`)] = val;
+                }
+                return out;
+            };
+            mitMap.value = remapKeys(mitMap.value);
+            skillStateMap.value = remapKeys(skillStateMap.value);
+            notesMap.value = remapKeys(notesMap.value);
             party.value.splice(index, 1);
         };
 

@@ -504,7 +504,7 @@ createApp({
                 if (!isNeutralSectActive(skill.memberIndex, ct)) continue;
                 if (rowTime < ct || rowTime > ct + nss.duration) continue;
                 const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-nss-${ci}`);
-                if (depletionIdx != null && internalIdx > depletionIdx) continue;
+                if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) continue;
                 return true;
             }
             return false;
@@ -1119,7 +1119,7 @@ createApp({
                     if (rowTime < existingTime || rowTime > existingActiveEnd) return false;
                     if (isPureShieldSkill(skill)) {
                         const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-${existingCi}`);
-                        if (depletionIdx != null && internalIdx > depletionIdx) return false;
+                        if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) return false;
                     }
                 }
             }
@@ -1149,7 +1149,7 @@ createApp({
                 if (!inWindow) return false;
                 if (pureShield) {
                     const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    if (depletionIdx != null && internalIdx > depletionIdx) return false;
+                    if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) return false;
                 }
                 return true;
             });
@@ -1231,7 +1231,7 @@ createApp({
                     if (diff >= effectiveDuration && diff < effectiveCd) return true;
                     // 護盾耗盡後，在 CD 結束前也顯示為冷卻中
                     const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    return depletionIdx != null && internalIdx > depletionIdx && diff < effectiveCd;
+                    return depletionIdx != null && rowTime > rowTimes.value[depletionIdx] && diff < effectiveCd;
                 });
             }
 
@@ -1240,7 +1240,7 @@ createApp({
                 if (diff > skill.duration && diff < skill.cooldown) return true;
                 if (isPureShieldSkill(skill)) {
                     const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    return depletionIdx != null && internalIdx > depletionIdx && diff >= 0 && diff < skill.cooldown;
+                    return depletionIdx != null && rowTime > rowTimes.value[depletionIdx] && diff >= 0 && diff < skill.cooldown;
                 }
                 return false;
             });
@@ -1358,7 +1358,7 @@ createApp({
                         const rowTime = timeToSeconds(flat[internalIdx]?.hitTime);
                         if (!removeForwardConflicts(skill, castRows, rowTime, flat)) return;
                         castRows.push(internalIdx);
-                        castRows.sort((a, b) => a - b);
+                        castRows.sort((a, b) => timeToSeconds(flat[a]?.hitTime) - timeToSeconds(flat[b]?.hitTime));
                         newMap[key] = castRows;
                     } else {
                         // 已施放 → 取消，連帶取消窗口內的 TPG 與條件式技能
@@ -1385,7 +1385,7 @@ createApp({
                         if (!isSkillConditionMet(skill, internalIdx)) return;
                         if (isSkillOnCooldown(skillInstanceId, internalIdx, skill)) return;
                         castRows.push(internalIdx);
-                        castRows.sort((a, b) => a - b);
+                        castRows.sort((a, b) => timeToSeconds(flat[a]?.hitTime) - timeToSeconds(flat[b]?.hitTime));
                         newMap[key] = castRows;
                     } else {
                         castRows.splice(idx, 1);
@@ -1456,7 +1456,7 @@ createApp({
                 }
 
                 castRows.push(internalIdx);
-                castRows.sort((a, b) => a - b);
+                castRows.sort((a, b) => timeToSeconds(flat[a]?.hitTime) - timeToSeconds(flat[b]?.hitTime));
             }
 
             const newMap = { ...mitMap.value };

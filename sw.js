@@ -14,7 +14,8 @@ self.addEventListener('activate', e => {
     );
 });
 
-// network-first：HTML / JS / CSS 永遠先從網路取，失敗才用快取（離線備援）
+// network-first：同源的 GET 請求（HTML / JS / CSS / JSON 資料檔等）永遠先從網路取，失敗才用快取（離線備援）
+// 不用副檔名白名單，避免漏掉 .json 資料檔（技能、副本時間軸等）導致改了資料卻抓到舊快取
 self.addEventListener('fetch', e => {
     const { request } = e;
     if (request.method !== 'GET') return;
@@ -22,16 +23,8 @@ self.addEventListener('fetch', e => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
 
-    const path = url.pathname;
-    if (
-        path === '/' || path.endsWith('/') ||
-        path.endsWith('.html') ||
-        path.endsWith('.js') ||
-        path.endsWith('.css')
-    ) {
-        e.respondWith(
-            fetch(request, { cache: 'no-cache' })
-                .catch(() => caches.match(request))
-        );
-    }
+    e.respondWith(
+        fetch(request, { cache: 'no-cache' })
+            .catch(() => caches.match(request))
+    );
 });

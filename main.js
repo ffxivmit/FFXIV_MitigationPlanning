@@ -1803,10 +1803,26 @@ createApp({
                 const effectiveSkills = jobEntry.skills
                     .map(s => getEffectiveSkill(s, levelCap))
                     .filter(Boolean);
-                const hasNonPersonalSkills = effectiveSkills.some(s => !s.personal);
-                const hasPersonalSkills = hasNonPersonalSkills && effectiveSkills.some(s => s.personal);
-                const showPersonal = !hasNonPersonalSkills || expandedPersonalMembers.value.includes(pIdx);
-                const filteredSkills = effectiveSkills.filter(s => !s.personal || showPersonal);
+                const hasPersonalSkills = effectiveSkills.length > 3 || effectiveSkills.some(s => s.personal);
+                const showPersonal = !hasPersonalSkills || expandedPersonalMembers.value.includes(pIdx);
+
+                const allocatedSkills = effectiveSkills.filter(s => {
+                    const instanceId = `p${pIdx}-${s.id}`;
+                    const key = mitKeyForSkill(instanceId);
+                    const castRows = mitMap.value[key];
+                    return castRows && castRows.length > 0;
+                });
+
+                let filteredSkills;
+                if (showPersonal) {
+                    filteredSkills = effectiveSkills;
+                } else {
+                    if (allocatedSkills.length > 0) {
+                        filteredSkills = allocatedSkills;
+                    } else {
+                        filteredSkills = effectiveSkills.slice(0, 3);
+                    }
+                }
                 const mappedSkills = filteredSkills.map((s, sIdx) => ({
                     ...s,
                     instanceId: `p${pIdx}-${s.id}`,

@@ -376,6 +376,142 @@ createApp({
         const raidParamsDialog = ref({ open: false });
         const raidParamsDraft = ref(JSON.parse(JSON.stringify(DEFAULT_RAID_PARAMS)));
 
+        // ── 顯示設定（技能收合顯示設定組）─────────────────────
+        // 自訂設定組：{ id, name, skills: { [skillId]: bool } }
+        // 「預設」設定組（id = 'default'）不存在於陣列中，行為固定為原始邏輯（收合時只顯示非 personal 技能）
+        const skillDisplayProfiles = ref([]);
+        const activeSkillDisplayProfileId = ref('default');
+        const skillDisplayDialog = ref({ open: false, mode: 'list', editingId: null, draftName: '', draftSkills: {} });
+
+        const activeSkillDisplayProfile = computed(() =>
+            skillDisplayProfiles.value.find(p => p.id === activeSkillDisplayProfileId.value) || null);
+
+        // 判斷技能在「收合狀態」下是否顯示；未在設定組中記錄的技能（例如日後新增的技能）回退到預設行為
+        const isSkillVisibleWhenCollapsed = (skill) => {
+            const prof = activeSkillDisplayProfile.value;
+            if (!prof) return !skill.personal;
+            const v = prof.skills?.[skill.id];
+            return v === undefined ? !skill.personal : !!v;
+        };
+
+        const persistSkillDisplayProfiles = () => {
+            localStorage.setItem('ffxiv_skill_display', JSON.stringify({
+                active: activeSkillDisplayProfileId.value,
+                profiles: skillDisplayProfiles.value,
+            }));
+        };
+
+        const openSkillDisplayDialog = () => {
+            skillDisplayDialog.value = { open: true, mode: 'list', editingId: null, draftName: '', draftSkills: {} };
+        };
+        const closeSkillDisplayDialog = () => {
+            skillDisplayDialog.value.open = false;
+        };
+
+        const _buildDraftSkills = (profile) => {
+            const draft = {};
+            for (const job of Object.values(jobDb.value)) {
+                for (const s of (job.skills || [])) {
+                    draft[s.id] = profile ? (profile.skills?.[s.id] ?? !s.personal) : !s.personal;
+                }
+            }
+            return draft;
+        };
+
+        const startAddSkillDisplayProfile = () => {
+            skillDisplayDialog.value = {
+                open: true, mode: 'edit', editingId: null,
+                draftName: '', draftSkills: _buildDraftSkills(null),
+            };
+        };
+
+        const startEditSkillDisplayProfile = (profile) => {
+            skillDisplayDialog.value = {
+                open: true, mode: 'edit', editingId: profile.id,
+                draftName: profile.name, draftSkills: _buildDraftSkills(profile),
+            };
+        };
+
+        const cancelSkillDisplayEdit = () => {
+            skillDisplayDialog.value = { open: true, mode: 'list', editingId: null, draftName: '', draftSkills: {} };
+        };
+
+        const saveSkillDisplayProfile = () => {
+            const d = skillDisplayDialog.value;
+            const name = (d.draftName || '').trim() || '未命名設定組';
+            const skills = { ...d.draftSkills };
+            if (d.editingId) {
+                skillDisplayProfiles.value = skillDisplayProfiles.value.map(p =>
+                    p.id === d.editingId ? { ...p, name, skills } : p);
+            } else {
+                const id = `sdp${Date.now()}`;
+                skillDisplayProfiles.value = [...skillDisplayProfiles.value, { id, name, skills }];
+                activeSkillDisplayProfileId.value = id;
+            }
+            persistSkillDisplayProfiles();
+            skillDisplayDialog.value = { open: true, mode: 'list', editingId: null, draftName: '', draftSkills: {} };
+        };
+
+        const deleteSkillDisplayProfile = (profile) => {
+            if (!confirm(`確定要刪除設定組「${profile.name}」？`)) return;
+            skillDisplayProfiles.value = skillDisplayProfiles.value.filter(p => p.id !== profile.id);
+            if (activeSkillDisplayProfileId.value === profile.id) {
+                activeSkillDisplayProfileId.value = 'default';
+            }
+            persistSkillDisplayProfiles();
+        };
+
+        const selectSkillDisplayProfile = (id) => {
+            activeSkillDisplayProfileId.value = id;
+            persistSkillDisplayProfiles();
+        };
+
+        // 設定組拖曳排序（比照隊伍成員拖曳：dragover 時即時交換，click 與 drag 互斥）
+        const draggedProfileIdx = ref(null);
+        let _profileDidDrag = false;
+        const profileDragStart = (idx) => {
+            draggedProfileIdx.value = idx;
+            _profileDidDrag = false;
+        };
+        const profileDragOver = (idx) => {
+            if (draggedProfileIdx.value === null || draggedProfileIdx.value === idx) return;
+            _profileDidDrag = true;
+            const arr = [...skillDisplayProfiles.value];
+            const [moved] = arr.splice(draggedProfileIdx.value, 1);
+            arr.splice(idx, 0, moved);
+            skillDisplayProfiles.value = arr;
+            draggedProfileIdx.value = idx;
+        };
+        const profileDragEnd = () => {
+            draggedProfileIdx.value = null;
+            if (_profileDidDrag) persistSkillDisplayProfiles();
+            _profileDidDrag = false;
+        };
+        const handleProfileClick = (id) => {
+            if (_profileDidDrag) return;
+            selectSkillDisplayProfile(id);
+        };
+
+        // 編輯畫面用：依 jobs.json 的分類順序列出各職業與其全部技能（不套用等級限制，顯示原始技能名）
+        const skillDisplayJobGroups = computed(() => {
+            const groups = [];
+            for (const cat of Object.values(categoryDb.value)) {
+                const jobs = (cat.links || []).map(link => {
+                    const jobEntry = jobDb.value[link.id];
+                    if (!jobEntry?.skills?.length) return null;
+                    return { key: link.id, name: jobEntry.name, icon: jobEntry.icon, skills: jobEntry.skills };
+                }).filter(Boolean);
+                if (jobs.length) groups.push({ name: cat.name, jobs });
+            }
+            return groups;
+        });
+
+        const setSkillDisplayDraftForJob = (jobKey, val) => {
+            const draft = { ...skillDisplayDialog.value.draftSkills };
+            for (const s of (jobDb.value[jobKey]?.skills || [])) draft[s.id] = val;
+            skillDisplayDialog.value.draftSkills = draft;
+        };
+
         const HEALER_JOB_MAP    = { whm: 'WHM', sch: 'SCH', ast: 'AST', sge: 'SGE' };
         const TANK_JOB_PREFIXES = new Set(['pld', 'war', 'drk', 'gnb']);
         const HEALER_MIND_SCALING = 0.81 / 100;
@@ -1645,6 +1781,21 @@ createApp({
                     allRaidParams.value = JSON.parse(savedRaidParams);
                 }
 
+                const savedSkillDisplay = localStorage.getItem('ffxiv_skill_display');
+                if (savedSkillDisplay) {
+                    try {
+                        const parsed = JSON.parse(savedSkillDisplay);
+                        skillDisplayProfiles.value = Array.isArray(parsed.profiles) ? parsed.profiles : [];
+                        activeSkillDisplayProfileId.value = parsed.active || 'default';
+                        if (activeSkillDisplayProfileId.value !== 'default'
+                            && !skillDisplayProfiles.value.some(p => p.id === activeSkillDisplayProfileId.value)) {
+                            activeSkillDisplayProfileId.value = 'default';
+                        }
+                    } catch (e) {
+                        console.warn('顯示設定讀取失敗，使用預設值', e);
+                    }
+                }
+
                 if (!await loadFromShareParam()) {
                     readUrlParams();
                     const saved = localStorage.getItem('ffxiv_planner_data');
@@ -1803,10 +1954,15 @@ createApp({
                 const effectiveSkills = jobEntry.skills
                     .map(s => getEffectiveSkill(s, levelCap))
                     .filter(Boolean);
-                const hasNonPersonalSkills = effectiveSkills.some(s => !s.personal);
-                const hasPersonalSkills = hasNonPersonalSkills && effectiveSkills.some(s => s.personal);
-                const showPersonal = !hasNonPersonalSkills || expandedPersonalMembers.value.includes(pIdx);
-                const filteredSkills = effectiveSkills.filter(s => !s.personal || showPersonal);
+                // 依當前顯示設定組決定收合時可見的技能。
+                // 預設組維持原始行為：沒有任何非個人技能的職業一律展開；
+                // 自訂組允許全部不選：收合後只顯示職業圖示（佔位欄），展開才顯示全部技能。
+                const usingCustomProfile = !!activeSkillDisplayProfile.value;
+                const hasCollapsedVisibleSkills = effectiveSkills.some(isSkillVisibleWhenCollapsed);
+                const forceExpand = !usingCustomProfile && !hasCollapsedVisibleSkills;
+                const hasPersonalSkills = !forceExpand && effectiveSkills.some(s => !isSkillVisibleWhenCollapsed(s));
+                const showPersonal = forceExpand || expandedPersonalMembers.value.includes(pIdx);
+                const filteredSkills = effectiveSkills.filter(s => showPersonal || isSkillVisibleWhenCollapsed(s));
                 const mappedSkills = filteredSkills.map((s, sIdx) => ({
                     ...s,
                     instanceId: `p${pIdx}-${s.id}`,
@@ -1842,6 +1998,19 @@ createApp({
                         memberBg,
                         memberBorder,
                         isFirstInGroup: false,
+                        effects: [],
+                    });
+                }
+                // 收合後沒有任何可見技能時，補一個空白佔位欄，讓職業圖示表頭仍可正常顯示與展開
+                if (!mappedSkills.length) {
+                    mappedSkills.push({
+                        id: '_collapsed',
+                        instanceId: `p${pIdx}-_collapsed`,
+                        name: '',
+                        _isCollapsedPlaceholder: true,
+                        memberBg,
+                        memberBorder,
+                        isFirstInGroup: true,
                         effects: [],
                     });
                 }
@@ -2197,7 +2366,7 @@ createApp({
             notesMap.value[getNoteKey(skillInstanceId, rowIdx)] || '';
 
         const openNoteEditor = (event, skillInstanceId, rowIdx, skill, row) => {
-            if (skill._isAetherIndicator || skill._isAddersgallIndicator) return;
+            if (skill._isAetherIndicator || skill._isAddersgallIndicator || skill._isCollapsedPlaceholder) return;
             event.preventDefault();
             if (isReadOnly.value) return;
             const key = getNoteKey(skillInstanceId, rowIdx);
@@ -3359,6 +3528,11 @@ createApp({
             addBookmarkAction, removeBookmarkAction, removeBookmarkFromSidebar, openBookmark,
             raidParams, raidParamsDialog, raidParamsDraft,
             openRaidParamsDialog, closeRaidParamsDialog, saveRaidParams, resetRaidParamsDraftToDefault,
+            skillDisplayProfiles, activeSkillDisplayProfileId, skillDisplayDialog, skillDisplayJobGroups,
+            openSkillDisplayDialog, closeSkillDisplayDialog, selectSkillDisplayProfile,
+            draggedProfileIdx, profileDragStart, profileDragOver, profileDragEnd, handleProfileClick,
+            startAddSkillDisplayProfile, startEditSkillDisplayProfile, cancelSkillDisplayEdit,
+            saveSkillDisplayProfile, deleteSkillDisplayProfile, setSkillDisplayDraftForJob,
             calcShieldDisplay,
             announcementOpen, openAnnouncement, closeAnnouncement, sortedAnnouncements, latestAnnouncementId, lightboxSrc,
             tutorialOpen, tutorialStep, currentTutorialStep, TUTORIAL_STEPS,

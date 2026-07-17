@@ -604,7 +604,7 @@
                                     <button v-else class="skill-btn" @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊施放"></button>
                                 </div>
                                 <!-- 備註小點 -->
-                                <div v-if="!skill._isAetherIndicator && !skill._isAddersgallIndicator && hasNote(skill.instanceId, row._internalIdx)"
+                                <div v-if="!skill._isAetherIndicator && !skill._isAddersgallIndicator && !skill._isCollapsedPlaceholder && hasNote(skill.instanceId, row._internalIdx)"
                                      class="absolute top-0 right-0 w-2 h-2 rounded-bl-sm pointer-events-none"
                                      style="background:#f59e0b;"
                                      :title="getNote(skill.instanceId, row._internalIdx)"></div>
@@ -855,23 +855,52 @@
                                 <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
                             </div>
                         </label>
-                        <!-- 技能收合顯示設定組 -->
-                        <div class="pt-2 border-t border-slate-100 space-y-2">
-                            <div class="text-sm text-slate-700 font-medium">技能收合顯示</div>
-                            <div class="text-[11px] text-slate-400 leading-snug">設定職業圖示收合後，配置欄會顯示哪些技能</div>
-                            <select :value="activeSkillDisplayProfileId"
-                                    @change="selectSkillDisplayProfile($event.target.value)"
-                                    class="w-full text-sm border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
-                                <option value="default">預設</option>
-                                <option v-for="p in skillDisplayProfiles" :key="p.id" :value="p.id">{{ p.name }}</option>
-                            </select>
-                            <button @click="openSkillDisplayDialog"
-                                    class="w-full flex items-center justify-center gap-1.5 text-sm py-2 px-3 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 hover:text-indigo-700 border border-slate-200 rounded-lg transition font-semibold">
-                                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                                </svg>
-                                管理設定組
-                            </button>
+                        <!-- 技能收合顯示設定組（需登入 Discord，設定綁定帳號；未登入時整塊不顯示） -->
+                        <div v-if="currentUser" class="pt-2 border-t border-slate-100 space-y-2">
+                            <!-- 雲端設定讀取中：顯示骨架，避免在真正設定回來前誤觸開關 -->
+                            <div v-if="!skillDisplaySettingsLoaded" class="w-full h-5 bg-slate-100 animate-pulse rounded"></div>
+                            <template v-else>
+                                <label class="flex items-center justify-between gap-3 cursor-pointer">
+                                    <span class="text-sm text-slate-700 font-medium inline-flex items-center gap-1.5">
+                                        自訂技能收合顯示
+                                        <span class="w-4 h-4 rounded-full bg-slate-400 hover:bg-slate-500 text-white text-[10px] flex items-center justify-center font-black shadow-sm transition-colors cursor-help select-none"
+                                              title="設定職業圖示收合後，配置欄會顯示哪些技能">?</span>
+                                    </span>
+                                    <div class="relative shrink-0">
+                                        <input type="checkbox" :checked="skillDisplayEnabled" @change="toggleSkillDisplayEnabled" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                        <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                                    </div>
+                                </label>
+                                <template v-if="skillDisplayEnabled">
+                                    <template v-if="skillDisplayProfiles.length">
+                                        <div class="flex items-center gap-2">
+                                            <select :value="activeSkillDisplayProfileId || ''"
+                                                    @change="selectSkillDisplayProfile($event.target.value)"
+                                                    class="flex-1 min-w-0 text-sm border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+                                                <option value="" disabled>請選擇設定組</option>
+                                                <option v-for="p in skillDisplayProfiles" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                            <button @click="openSkillDisplayDialog" title="管理設定組"
+                                                    class="shrink-0 w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 hover:text-indigo-700 border border-slate-200 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="text-[11px] text-slate-400 leading-snug">尚未建立任何設定組，收合時暫時沿用系統預設顯示。</div>
+                                        <button @click="startAddSkillDisplayProfile"
+                                                class="w-full flex items-center justify-center gap-1.5 text-sm py-2 px-3 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 hover:text-indigo-700 border border-slate-200 rounded-lg transition font-semibold">
+                                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                            </svg>
+                                            新增設定組
+                                        </button>
+                                    </template>
+                                </template>
+                            </template>
                         </div>
                     </div>
 
@@ -1040,7 +1069,7 @@
         <div v-if="skillDisplayDialog.open"
              class="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4"
              @click.self="closeSkillDisplayDialog">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col">
 
                 <!-- Header -->
                 <div class="px-5 py-4 border-b border-slate-200 shrink-0">
@@ -1052,26 +1081,17 @@
                             {{ skillDisplayDialog.mode === 'list' ? '顯示設定' : (skillDisplayDialog.editingId ? '編輯設定組' : '新增設定組') }}
                         </span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">
+                    <p class="text-sm text-slate-400 mt-1 whitespace-pre-line">
                         {{ skillDisplayDialog.mode === 'list'
-                            ? '設定職業圖示收合後，配置欄會顯示哪些技能。收合時未顯示的技能不會計入預計傷害。'
-                            : '勾選的技能在收合狀態下仍會顯示於配置欄；展開時一律顯示全部技能。全部不勾選時，收合後只會顯示職業圖示。' }}
+                            ? '可根據個人使用習慣，挑選哪些技能在收合時仍會顯示。\n收合時，未顯示的技能不會計入預計傷害，方便用於計算個人減傷及特定情境。'
+                            : '勾選的技能在收合狀態下仍會顯示於配置欄；\n展開時一律顯示全部技能。全部不勾選時，收合後只會顯示職業圖示。' }}
                     </p>
                 </div>
 
                 <!-- Body：設定組清單 -->
                 <div v-if="skillDisplayDialog.mode === 'list'" class="p-4 space-y-2 overflow-y-auto">
-                    <!-- 預設設定組 -->
-                    <div @click="selectSkillDisplayProfile('default')"
-                         :class="['flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors',
-                                  activeSkillDisplayProfileId === 'default' ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100']">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <div :class="['w-3.5 h-3.5 rounded-full border-2 shrink-0 transition-colors',
-                                          activeSkillDisplayProfileId === 'default' ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 bg-white']"></div>
-                            <span class="text-sm font-semibold text-slate-700">預設</span>
-                            <span class="text-[10px] px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded font-semibold shrink-0">不可編輯</span>
-                        </div>
-                        <span v-if="activeSkillDisplayProfileId === 'default'" class="text-[10px] px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded font-semibold shrink-0">使用中</span>
+                    <div v-if="!skillDisplayProfiles.length" class="text-center text-sm text-slate-400 py-6">
+                        尚未建立任何設定組，點下方「新增設定組」開始設定。
                     </div>
                     <!-- 自訂設定組（可拖曳排序） -->
                     <div v-for="(p, pIdx) in skillDisplayProfiles" :key="p.id"
@@ -1118,21 +1138,30 @@
                     </div>
                     <div class="px-5 pb-4 space-y-4 overflow-y-auto">
                         <div v-for="group in skillDisplayJobGroups" :key="group.name" class="space-y-2">
-                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest pt-2">{{ group.name }}</div>
+                            <div :class="darkMode ? 'text-white' : 'text-black'" class="flex items-center gap-1.5 text-[16px] font-black uppercase tracking-widest pt-2">
+                                <img v-if="group.roleIcon" :src="group.roleIcon" class="w-8 h-8 object-contain shrink-0">
+                                {{ group.name }}
+                            </div>
                             <div v-for="job in group.jobs" :key="job.key" class="border border-slate-200 rounded-lg overflow-hidden">
-                                <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 border-b border-slate-100">
+                                <div @click="toggleSkillDisplayJobExpanded(job.key)"
+                                     class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 border-b border-slate-100 cursor-pointer select-none">
                                     <div class="flex items-center gap-2 min-w-0">
+                                        <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform" :class="{ '-rotate-90': !skillDisplayDialog.expandedJobs[job.key] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="6 9 12 15 18 9"/>
+                                        </svg>
                                         <img :src="job.icon" class="w-5 h-5 object-contain shrink-0">
                                         <span class="text-sm font-bold text-slate-700 truncate">{{ job.name }}</span>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
-                                        <button @click="setSkillDisplayDraftForJob(job.key, true)"
+                                        <button @click.stop="setSkillDisplayDraftForJobToDefault(job.key)"
+                                                class="text-[10px] px-2 py-1 bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 rounded font-semibold transition">預設</button>
+                                        <button @click.stop="setSkillDisplayDraftForJob(job.key, true)"
                                                 class="text-[10px] px-2 py-1 bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 border border-slate-200 rounded font-semibold transition">全選</button>
-                                        <button @click="setSkillDisplayDraftForJob(job.key, false)"
+                                        <button @click.stop="setSkillDisplayDraftForJob(job.key, false)"
                                                 class="text-[10px] px-2 py-1 bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 rounded font-semibold transition">全不選</button>
                                     </div>
                                 </div>
-                                <div class="p-2 grid grid-cols-2 gap-1">
+                                <div v-show="skillDisplayDialog.expandedJobs[job.key]" class="p-2 grid grid-cols-2 gap-1">
                                     <label v-for="s in job.skills" :key="s.id"
                                            class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer min-w-0">
                                         <input type="checkbox" v-model="skillDisplayDialog.draftSkills[s.id]"
@@ -1164,13 +1193,13 @@
                     <template v-else>
                         <div></div>
                         <div class="flex gap-2">
-                            <button @click="cancelSkillDisplayEdit"
-                                    class="px-4 py-2 text-sm text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                                取消
-                            </button>
                             <button @click="saveSkillDisplayProfile"
                                     class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition font-semibold">
                                 儲存
+                            </button>
+                            <button @click="cancelSkillDisplayEdit"
+                                    class="px-4 py-2 text-sm text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                                取消
                             </button>
                         </div>
                     </template>

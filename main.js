@@ -1184,7 +1184,8 @@ createApp({
         };
 
         // 找出在 TPC 施放窗口內的 TPG 施放時間（秒）
-        // 同秒數時改用列索引（internalIdx）比較：TPG 的列索引必須大於 TPC 的列索引才算在窗口內
+        // 同秒數時改用列索引（internalIdx）比較：TPG 的列索引必須不早於 TPC 的列索引才算在窗口內
+        // （兩者點在同一列時視為同時施放，TPG 立即解除 TPC 的護盾）
         const findTpgTimeSecs = (tpcSkill, tpcCastTimeSecs) => {
             if (!tpcSkill.upgradeSkillId) return null;
             const upgInst = activeSkillByKey.value.get(`${tpcSkill.upgradeSkillId}|${tpcSkill.memberIndex}`);
@@ -1195,8 +1196,8 @@ createApp({
                 const tpgTime = rowTimes.value[tpgRowIdx];
                 if (tpgTime < tpcCastTimeSecs) continue;
                 if (tpgTime > tpcCastTimeSecs + tpcSkill.duration) continue;
-                // 同秒時 TPG 必須在 TPC 的後面幾列
-                if (tpgTime === tpcCastTimeSecs && (tpcRowIdx === null || tpgRowIdx <= tpcRowIdx)) continue;
+                // 同秒時 TPG 的列索引不得早於 TPC，避免誤判成 TPC 施放之前的 TPG
+                if (tpgTime === tpcCastTimeSecs && (tpcRowIdx === null || tpgRowIdx < tpcRowIdx)) continue;
                 return tpgTime;
             }
             return null;

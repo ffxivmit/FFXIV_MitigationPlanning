@@ -124,6 +124,26 @@ export const addDocumentHistory = (editToken, data, userId) =>
 export const getDocumentHistory = (editToken) =>
     sb.rpc('get_document_history', { p_edit_token: editToken });
 
+// ── 技能收合顯示設定（Discord 帳號綁定）─────────────────────────
+
+// 取得目前使用者的技能收合顯示設定（尚未建立過則回傳 null）
+export const fetchSkillDisplaySettings = () =>
+    sb.from('user_skill_display')
+        .select('enabled, active_profile_id, skill_profiles')
+        .maybeSingle();
+
+// 覆寫（新增或更新）目前使用者的技能收合顯示設定
+export const saveSkillDisplaySettings = (userId, enabled, activeProfileId, skillProfiles) =>
+    sb.from('user_skill_display')
+        .upsert({
+            user_id: userId,
+            enabled,
+            active_profile_id: activeProfileId,
+            skill_profiles: skillProfiles,
+        })
+        .select()
+        .single();
+
 // ── Realtime Broadcast ────────────────────────────────────────
 
 // 訂閱文件頻道，當其他編輯者儲存後會收到 doc_updated 事件

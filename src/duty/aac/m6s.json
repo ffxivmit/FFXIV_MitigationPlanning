@@ -2,7 +2,7 @@
     "name": "至天之座 M6S",
     "timeline": [
       {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "戰鬥開始！", "damage": [], "type": ""},
-      {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "AA", "damage": [], "type": "魔法"},
+      {"phase": "開幕", "castingTime": "00:00", "hitTime": "00:00", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 74000, "type": "魔法"}], "type": "魔法"},
       {"phase": "開幕", "castingTime": "00:04", "hitTime": "00:04", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 74000, "type": "魔法"}], "type": "魔法"},
       {"phase": "開幕", "castingTime": "00:07", "hitTime": "00:07", "skill": "AA", "damage": [{"label": "普通攻擊", "amount": 74000, "type": "魔法"}], "type": "魔法"},
       {"phase": "開幕", "castingTime": "00:12", "hitTime": "00:12", "skill": "慕斯驟雨", "damage": [{"label": "傷害", "amount": 150000, "type": "魔法"}], "type": "魔法"},

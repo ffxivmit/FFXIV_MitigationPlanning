@@ -824,6 +824,25 @@
                     <div class="px-4 py-3 space-y-3 dark border-slate-200">
                         <div class="text-xs font-black text-slate-400 uppercase tracking-widest">顯示設定</div>
                         <label class="flex items-center justify-between gap-3 cursor-pointer">
+                            <span class="text-sm text-slate-700 font-medium inline-flex items-center gap-1.5">精簡模式
+                                <span class="w-4 h-4 rounded-full bg-slate-400 hover:bg-slate-500 text-white text-[10px] flex items-center justify-center font-black shadow-sm transition-colors cursor-help select-none"
+                                              title="不顯示階段、原始傷害數值">?</span>
+                            </span>
+                            <div class="relative shrink-0">
+                                <input type="checkbox" v-model="compactMode" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between gap-3 cursor-pointer">
+                            <span class="text-sm text-slate-700 font-medium">暗色主題</span>
+                            <div class="relative shrink-0">
+                                <input type="checkbox" :checked="darkMode" @change="toggleDarkMode" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between gap-3 cursor-pointer">
                             <span class="text-sm text-slate-700 font-medium">隱藏無傷害招式</span>
                             <div class="relative shrink-0">
                                 <input type="checkbox" v-model="hideNonDmg" class="sr-only peer">
@@ -839,22 +858,7 @@
                                 <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
                             </div>
                         </label>
-                        <label class="flex items-center justify-between gap-3 cursor-pointer">
-                            <span class="text-sm text-slate-700 font-medium">精簡模式</span>
-                            <div class="relative shrink-0">
-                                <input type="checkbox" v-model="compactMode" class="sr-only peer">
-                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
-                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                            </div>
-                        </label>
-                        <label class="flex items-center justify-between gap-3 cursor-pointer">
-                            <span class="text-sm text-slate-700 font-medium">暗色主題</span>
-                            <div class="relative shrink-0">
-                                <input type="checkbox" :checked="darkMode" @change="toggleDarkMode" class="sr-only peer">
-                                <div class="w-9 h-5 bg-slate-200 peer-checked:bg-slate-700 rounded-full transition-colors"></div>
-                                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                            </div>
-                        </label>
+                        
                         <!-- 技能收合顯示設定組（需登入 Discord，設定綁定帳號；未登入時整塊不顯示） -->
                         <div v-if="currentUser" class="pt-2 border-t border-slate-100 space-y-2">
                             <!-- 雲端設定讀取中：顯示骨架，避免在真正設定回來前誤觸開關 -->

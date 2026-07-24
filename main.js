@@ -1,4 +1,4 @@
-import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark, addDocumentHistory, getDocumentHistory, fetchSkillDisplaySettings, saveSkillDisplaySettings } from './src/supabase.js';
+import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark, addDocumentHistory, getDocumentHistory, fetchSkillDisplaySettings, saveSkillDisplaySettings, saveSkillOrder } from './src/supabase.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -385,6 +385,86 @@ createApp({
         const skillDisplayProfiles = ref([]);
         const activeSkillDisplayProfileId = ref(null);
         const skillDisplayDialog = ref({ open: false, mode: 'list', editingId: null, draftName: '', draftSkills: {}, expandedJobs: {} });
+
+        // ── 技能顯示順序（拖曳自訂，per-job，本機儲存）──────────
+        // { [jobKey]: string[] }，陣列為該職業技能的完整自訂順序（含未顯示的個人技能）
+        // 找不到對應紀錄、或紀錄中缺少的技能 id，一律 fallback 回 skills.json 原始順序
+        const customSkillOrder = ref({});
+
+        // 本機一律快取一份（訪客與尚未讀取雲端設定時的 fallback）；
+        // 登入且雲端設定已讀取完成後，額外同步一份到 Discord 帳號，換裝置登入即可套用
+        const persistSkillOrder = () => {
+            try { localStorage.setItem('ffxiv_skill_order', JSON.stringify(customSkillOrder.value)); } catch (e) {}
+            if (currentUser.value && skillDisplaySettingsLoaded.value) {
+                saveSkillOrder(currentUser.value.id, customSkillOrder.value)
+                    .then(({ error }) => { if (error) console.warn('[skill-order] 雲端儲存失敗:', error); });
+            }
+        };
+
+        // 依自訂順序排序技能：已記錄的 id 依紀錄順序排前面，其餘（如新增技能）保持原始相對順序排在後面
+        const _applyCustomSkillOrder = (skills, jobKey) => {
+            const order = customSkillOrder.value[jobKey];
+            if (!order || !order.length) return skills;
+            const rank = new Map(order.map((id, i) => [id, i]));
+            return [...skills].sort((a, b) => {
+                const ra = rank.has(a.id) ? rank.get(a.id) : Infinity;
+                const rb = rank.has(b.id) ? rank.get(b.id) : Infinity;
+                if (ra !== rb) return ra - rb;
+                return 0; // 兩者皆不在紀錄中：交給 stable sort 保留原始相對順序
+            });
+        };
+
+        // 把「可見子序列內的拖曳結果」還原成「完整順序陣列」，保留未顯示技能原本的相對位置
+        const _reorderWithinSubsequence = (fullIds, visibleIds, fromIdx, toIdx) => {
+            const movingId = visibleIds[fromIdx];
+            if (movingId === undefined || fromIdx === toIdx) return fullIds;
+            const withoutMoving = fullIds.filter(id => id !== movingId);
+            const visibleWithoutMoving = visibleIds.filter(id => id !== movingId);
+            const targetIdx = Math.max(0, Math.min(toIdx, visibleWithoutMoving.length));
+            const anchorId = visibleWithoutMoving[targetIdx];
+            if (anchorId === undefined) return [...withoutMoving, movingId];
+            const anchorFullIdx = withoutMoving.indexOf(anchorId);
+            const result = [...withoutMoving];
+            result.splice(anchorFullIdx, 0, movingId);
+            return result;
+        };
+
+        const draggedSkillPos = ref(null); // { pIdx, sIdx }
+
+        const skillDragStart = (pIdx, sIdx, e) => {
+            if (isReadOnly.value || pIdx === undefined || sIdx === undefined) return;
+            draggedSkillPos.value = { pIdx, sIdx };
+            if (e?.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        };
+
+        const skillDragOverItem = (pIdx, sIdx) => {
+            const from = draggedSkillPos.value;
+            if (!from || pIdx === undefined || sIdx === undefined) return;
+            if (from.pIdx !== pIdx || from.sIdx === sIdx) return;
+            const jobKey = party.value[pIdx];
+            const jobEntry = jobDb.value[jobKey];
+            const member = activeSkillsByMember.value[pIdx];
+            if (!jobKey || !jobEntry || !member) return;
+            const fullIds = jobEntry.skills.map(s => s.id);
+            const visibleIds = member.skills.filter(s => s.id && !s._isAetherIndicator && !s._isAddersgallIndicator && !s._isCollapsedPlaceholder).map(s => s.id);
+            const baseOrder = customSkillOrder.value[jobKey] || [];
+            const merged = [...baseOrder.filter(id => fullIds.includes(id)), ...fullIds.filter(id => !baseOrder.includes(id))];
+            const newOrder = _reorderWithinSubsequence(merged, visibleIds, from.sIdx, sIdx);
+            customSkillOrder.value = { ...customSkillOrder.value, [jobKey]: newOrder };
+            draggedSkillPos.value = { pIdx, sIdx };
+            persistSkillOrder();
+        };
+
+        const skillDragEnd = () => {
+            draggedSkillPos.value = null;
+        };
+
+        const resetSkillOrder = () => {
+            if (!Object.keys(customSkillOrder.value).length) return;
+            if (!confirm('確定要重置所有職業的技能顯示順序嗎？')) return;
+            customSkillOrder.value = {};
+            persistSkillOrder();
+        };
 
         const activeSkillDisplayProfile = computed(() =>
             skillDisplayEnabled.value
@@ -1160,6 +1240,13 @@ createApp({
             return damages.length > 0 && damages.every(d => TARGETED_LABELS.has(d.label));
         };
 
+        // 即死機制的傷害數字只是象徵性的巨大值，標示減傷率沒有意義
+        const isInstantDeathDamage = (row, internalIdx) => {
+            if (row._isCustom) return false;
+            const damages = getEffectiveVariant(row, internalIdx).damage || [];
+            return damages.length > 0 && damages.every(d => d.type === '即死');
+        };
+
         const getDamageTypeIconByType = (type) => DAMAGE_TYPE_ICONS[type] ?? null;
 
         const getDamageTypeIcon = (row, internalIdx) =>
@@ -1830,6 +1917,11 @@ createApp({
                     allRaidParams.value = JSON.parse(savedRaidParams);
                 }
 
+                const savedSkillOrder = localStorage.getItem('ffxiv_skill_order');
+                if (savedSkillOrder) {
+                    try { customSkillOrder.value = JSON.parse(savedSkillOrder); } catch (e) {}
+                }
+
                 if (!await loadFromShareParam()) {
                     readUrlParams();
                     const saved = localStorage.getItem('ffxiv_planner_data');
@@ -1985,9 +2077,9 @@ createApp({
                     badge:    `var(--m${pSlot}-badge)`,
                 };
                 const levelCap = currentLevelCap.value;
-                const effectiveSkills = jobEntry.skills
+                const effectiveSkills = _applyCustomSkillOrder(jobEntry.skills
                     .map(s => getEffectiveSkill(s, levelCap))
-                    .filter(Boolean);
+                    .filter(Boolean), jobKey);
                 // 依當前顯示設定組決定收合時可見的技能。
                 // 預設組維持原始行為：沒有任何非個人技能的職業一律展開；
                 // 自訂組允許全部不選：收合後只顯示職業圖示（佔位欄），展開才顯示全部技能。
@@ -2008,6 +2100,8 @@ createApp({
                     memberCovBg,
                     memberCovBdr,
                     isFirstInGroup: sIdx === 0,
+                    _pIdx: pIdx,
+                    _sIdx: sIdx,
                 }));
                 if (jobKey === 'SCH' && showPersonal) {
                     mappedSkills.push({
@@ -2308,6 +2402,33 @@ createApp({
             const base = damageByRow.value[internalIdx] ?? 0;
             const absorbed = shieldCoverageByRow.value.absorption[internalIdx] ?? 0;
             return Math.max(0, base - absorbed);
+        };
+
+        // 未套用任何減傷技能前的原始傷害（僅加總命中傷害，不套用 mit_* 效果）
+        const rawDamageByRow = computed(() => {
+            if (!selectedDutyKey.value) return [];
+            const flat = allRowsFlat.value;
+            const result = new Array(flat.length).fill(0);
+            for (let internalIdx = 0; internalIdx < flat.length; internalIdx++) {
+                const row = flat[internalIdx];
+                if (row._isCustom) continue;
+                const damages = getEffectiveVariant(row, internalIdx).damage;
+                if (!damages || !damages.length) continue;
+                let total = 0;
+                for (const hit of damages) total += hit.amount;
+                result[internalIdx] = Math.floor(total);
+            }
+            return result;
+        });
+
+        // 預計傷害欄懸浮卡片用：原始傷害 × 減傷率 − 護盾 = 預計傷害
+        const getDamageBreakdown = (row, internalIdx) => {
+            const raw = rawDamageByRow.value[internalIdx] ?? 0;
+            const mitigated = damageByRow.value[internalIdx] ?? 0;
+            const absorbed = shieldCoverageByRow.value.absorption[internalIdx] ?? 0;
+            const final = calculateDamage(row, internalIdx);
+            const mitMultiplier = raw > 0 ? mitigated / raw : 1;
+            return { raw, mitigated, absorbed, final, mitRate: 1 - mitMultiplier, mitMultiplier };
         };
 
         // ── Variant switching ─────────────────────────────────
@@ -3524,6 +3645,14 @@ createApp({
                         activeSkillDisplayProfileId.value = null;
                     }
                     skillDisplaySettingsLoaded.value = true;
+                    if (sd?.skill_order && Object.keys(sd.skill_order).length) {
+                        // 雲端已有紀錄：套用雲端排序（換裝置登入的情境）
+                        customSkillOrder.value = sd.skill_order;
+                        try { localStorage.setItem('ffxiv_skill_order', JSON.stringify(sd.skill_order)); } catch (e) {}
+                    } else if (Object.keys(customSkillOrder.value).length) {
+                        // 雲端尚無紀錄，但本機（訪客期間）已經拖曵過：首次登入時同步上雲，避免遺失
+                        persistSkillOrder();
+                    }
                 }
             } else {
                 myDocuments.value = [];
@@ -3543,7 +3672,7 @@ createApp({
             selectedDutyKey, party, mitMap,
             hideNonDmg, hideTargeted, compactMode, currentCat,
             currentTimeline, activeSkills, activeSkillsByMember,
-            addToParty, removeFromParty, calculateDamage,
+            addToParty, removeFromParty, calculateDamage, getDamageBreakdown, isInstantDeathDamage,
             draggedPartyIdx, partyDragStart, partyDragOverItem, partyDragEnd, handlePartyClick,
             exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
             isViewingSharedPlan, saveSharedPlanToLocal,
@@ -3591,6 +3720,7 @@ createApp({
             startAddSkillDisplayProfile, startEditSkillDisplayProfile, cancelSkillDisplayEdit, toggleSkillDisplayJobExpanded,
             saveSkillDisplayProfile, deleteSkillDisplayProfile, setSkillDisplayDraftForJob, setSkillDisplayDraftForJobToDefault,
             calcShieldDisplay,
+            customSkillOrder, skillDragStart, skillDragOverItem, skillDragEnd, resetSkillOrder,
             announcementOpen, openAnnouncement, closeAnnouncement, sortedAnnouncements, latestAnnouncementId, lightboxSrc,
             tutorialOpen, tutorialStep, currentTutorialStep, TUTORIAL_STEPS,
             openTutorial, closeTutorial, tutorialNext, tutorialPrev,

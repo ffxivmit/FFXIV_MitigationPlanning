@@ -844,6 +844,19 @@
                 }
             },
             { "id": "sch_adl", "name": "鼓舞激勵之策", "tags": ["護盾"], "title": "恢復目標的HP，恢復力：300\n追加效果：為目標附加能夠抵禦一定傷害的防護罩鼓舞\n鼓舞效果：抵消相當於治療量180%的傷害，持續時間：30秒\n無法與賢者的部分護盾效果共存\n追加效果（暴擊時）：為目標附加能夠抵禦一定傷害的防護罩激勵\n激勵效果：抵消相當於治療量180%的傷害\n持續時間：30秒", "effects": [{ "type": "heal_potency", "val": 300 }, { "type": "shield_potency", "val": 300, "shieldRatio": 1.8 }], "duration": 30, "cooldown": 2.5, "icon": "src/Skill_icons/19_SCH/Adloquium.png", "personal": true, "recitationCritMult": 2.8 },
+            { "id": "sch_ptt", "name": "生命活性法", "tags": [], "title": "恢復目標的HP,恢復力：600\n追加效果：獲得10點異想乙太\n發動條件：乙太超流", "effects": [{ "type": "heal_potency", "val": 600 }], "duration": 1, "cooldown": 1, "icon": "src/Skill_icons/19_SCH/Lustrate.png", "personal": true, "aetherCost": 1 },
+            { 
+                "id": "sch_", "name": "生命回生法", "tags": [], 
+                "title": "令自身或其他一名隊員最大HP提高10%\n所受的HP恢復效果提高10%\n發動時恢復最大HP的10%,持續時間：10秒", 
+                "effects": [{ "type": "maxhp_boost", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.10 }], 
+                "duration": 10, "cooldown": 60, 
+                "icon": "src/Skill_icons/19_SCH/Protraction.png", 
+                "personal": true,
+                "levelRestrictions": {
+                    "70": { "unavailable": true },
+                    "80": { "unavailable": true }
+                }   
+            },
             { 
                 "id": "sch_con", "name": "意氣軒昂之策", "tags": ["護盾"], 
                 "title": "恢復自身及周圍隊員的HP，恢復力：200\n追加效果：附加能夠抵禦一定傷害的防護罩\n該防護罩能夠抵消相當於治療量180%的傷害，持續時間：30秒\n無法與賢者的部分護盾效果共存", 
@@ -923,8 +936,8 @@
                 }   
                 
             },
-            { "id": "sch_dis", "name": "轉化", "title": "回收小仙女，同時為自身附加最大等階的乙太超流狀態\n並且自身發動治療魔法的治療量提高20%", "effects": [{ "type": "heal_out_magic", "val": 0.20 }], "duration": 30, "cooldown": 180, "icon": "src/Skill_icons/19_SCH/Dissipation.png", "personal": true, "blockedBySkillId": ["sch_ser", "sch_sum"], "aetherProvide": 3, "combatOnly": true },
             { "id": "sch_ed",  "name": "吸取能量", "title": "對目標發動無屬性魔法攻擊\n追加效果：恢復傷害量一定比例的HP\n追加效果：獲得10點異想乙太", "effects": [{ "type": "heal_out_magic", "val": 0.20 }], "duration": 1, "cooldown": 1, "icon": "src/Skill_icons/19_SCH/Energy_Drain.png", "personal": true, "aetherCost": 1 },
+            { "id": "sch_dis", "name": "轉化", "title": "回收小仙女，同時為自身附加最大等階的乙太超流狀態\n並且自身發動治療魔法的治療量提高20%", "effects": [{ "type": "heal_out_magic", "val": 0.20 }], "duration": 30, "cooldown": 180, "icon": "src/Skill_icons/19_SCH/Dissipation.png", "personal": true, "blockedBySkillId": ["sch_ser", "sch_sum"], "aetherProvide": 3, "combatOnly": true },
             { "id": "sch_af",  "name": "乙太超流", "title": "恢復自身最大MP的20%\n追加三階的乙太超流", "effects": [], "duration": 1, "cooldown": 60, "icon": "src/Skill_icons/19_SCH/Aetherflow.png", "personal": true, "aetherProvide": 3, "combatOnly": true }
         ]
     },

@@ -129,7 +129,7 @@ export const getDocumentHistory = (editToken) =>
 // 取得目前使用者的技能收合顯示設定（尚未建立過則回傳 null）
 export const fetchSkillDisplaySettings = () =>
     sb.from('user_skill_display')
-        .select('enabled, active_profile_id, skill_profiles')
+        .select('enabled, active_profile_id, skill_profiles, skill_order')
         .maybeSingle();
 
 // 覆寫（新增或更新）目前使用者的技能收合顯示設定
@@ -141,6 +141,13 @@ export const saveSkillDisplaySettings = (userId, enabled, activeProfileId, skill
             active_profile_id: activeProfileId,
             skill_profiles: skillProfiles,
         })
+        .select()
+        .single();
+
+// 覆寫（新增或更新）目前使用者的技能顯示順序（{ [jobKey]: string[] }）
+export const saveSkillOrder = (userId, skillOrder) =>
+    sb.from('user_skill_display')
+        .upsert({ user_id: userId, skill_order: skillOrder })
         .select()
         .single();
 

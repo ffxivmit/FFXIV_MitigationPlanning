@@ -374,7 +374,11 @@
                         <th v-for="skill in activeSkills" :key="skill.instanceId"
                             :style="`background:${skill.memberBg}; ${skill.isFirstInGroup ? 'border-left:2px solid '+skill.memberBorder+';' : 'border-left:1px solid rgba(0,0,0,0.06);'}`"
                             :data-tut="skill.instanceId === 'p0-pld_div' ? 'skill-icon-demo' : null"
-                            class="p-1 text-center min-w-[85px] compact-skill-th relative group/skill">
+                            :draggable="!isReadOnly && skill._sIdx !== undefined"
+                            @dragstart="skillDragStart(skill._pIdx, skill._sIdx, $event)"
+                            @dragover.prevent="skillDragOverItem(skill._pIdx, skill._sIdx)"
+                            @dragend="skillDragEnd"
+                            :class="['p-1 text-center min-w-[85px] compact-skill-th relative group/skill', (!isReadOnly && skill._sIdx !== undefined) ? 'cursor-grab active:cursor-grabbing' : '']">
                             <div v-if="skill._isAetherIndicator" class="flex flex-col items-center gap-1 pb-1">
                                 <img src="src/Skill_icons/19_SCH/Aether.png" class="w-14 h-10 object-contain">
                                 <span class="text-xs font-bold text-sky-600 leading-tight">乙太超流</span>
@@ -389,7 +393,7 @@
                             </div>
                             <div v-else class="flex flex-col items-center gap-1 pb-1">
                                 <div class="relative inline-block">
-                                    <img :src="skill.icon"
+                                    <img :src="skill.icon" draggable="false"
                                          :class="['w-10 h-10 rounded shadow-sm border border-slate-200', (skill.title || skill.conditionSkillId || skill.blockedBySkillId || skill.charges > 1) ? 'cursor-help' : '']"
                                          @mouseenter="showSkillTooltip(skill, $event)"
                                          @mouseleave="hideSkillTooltip()">
@@ -614,15 +618,44 @@
                             <td v-if="party.length === 0"></td>
                             <!-- 預計傷害 -->
                             <td class="p-3 sticky-right">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <img v-if="hasOriginalDamage(row, row._internalIdx) && getDamageTypeIcon(row, row._internalIdx)"
+                                <div v-if="hasOriginalDamage(row, row._internalIdx)" class="relative group/dmg flex items-center justify-end gap-1.5">
+                                    <img v-if="getDamageTypeIcon(row, row._internalIdx)"
                                          :src="getDamageTypeIcon(row, row._internalIdx)"
                                          :title="row.isRandom ? row.variants[getSelectedVariantIdx(row._internalIdx)]?.type : row.type"
                                          class="w-4 h-4 object-contain shrink-0 opacity-80">
-                                    <span v-if="hasOriginalDamage(row, row._internalIdx)" class="font-bold text-blue-700 font-mono tabular-nums">
+                                    <span class="font-bold text-blue-700 font-mono tabular-nums cursor-help">
                                         {{ calculateDamage(row, row._internalIdx).toLocaleString() }}
                                     </span>
-                                    <span v-else class="text-slate-300 text-sm">-</span>
+                                    <span v-if="getDamageBreakdown(row, row._internalIdx).mitRate > 0.001 && !isInstantDeathDamage(row, row._internalIdx)"
+                                          class="text-[10px] font-bold font-mono tabular-nums rounded px-1 leading-[15px] cursor-help border"
+                                          :class="darkMode ? 'text-[#aab4c0] border-[#4b5563]' : 'text-slate-500 border-slate-300'">
+                                        -{{ Math.round(getDamageBreakdown(row, row._internalIdx).mitRate * 100) }}%
+                                    </span>
+
+                                    <!-- 懸浮計算式：原始傷害 × 減傷率 − 護盾 = 預計傷害 -->
+                                    <div class="absolute bottom-full right-0 mb-2 w-48 p-2.5 backdrop-blur-sm text-[11px] font-normal rounded-lg shadow-xl border z-50 hidden group-hover/dmg:block pointer-events-none normal-case tracking-normal"
+                                         :class="darkMode ? 'bg-[#20262c]/95 border-[#3d4854] text-[#e8e4dc]' : 'bg-white/95 border-slate-200 text-slate-700'">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <span :class="darkMode ? 'text-[#9aa4b0]' : 'text-slate-400'">原始傷害</span>
+                                            <span class="font-mono tabular-nums font-semibold">{{ getDamageBreakdown(row, row._internalIdx).raw.toLocaleString() }}</span>
+                                        </div>
+                                        <div v-if="getDamageBreakdown(row, row._internalIdx).mitRate > 0.001 && !isInstantDeathDamage(row, row._internalIdx)" class="flex items-center justify-between gap-3 mt-1">
+                                            <span :class="darkMode ? 'text-[#9aa4b0]' : 'text-slate-400'"><span class="inline-block w-3 font-bold" :class="darkMode ? 'text-[#7b8794]' : 'text-slate-300'">×</span>減傷率</span>
+                                            <span class="font-mono tabular-nums font-semibold">{{ getDamageBreakdown(row, row._internalIdx).mitMultiplier.toFixed(2) }}（-{{ Math.round(getDamageBreakdown(row, row._internalIdx).mitRate * 100) }}%）</span>
+                                        </div>
+                                        <div v-if="getDamageBreakdown(row, row._internalIdx).absorbed > 0" class="flex items-center justify-between gap-3 mt-1">
+                                            <span :class="darkMode ? 'text-[#9aa4b0]' : 'text-slate-400'"><span class="inline-block w-3 font-bold" :class="darkMode ? 'text-[#7b8794]' : 'text-slate-300'">−</span>護盾</span>
+                                            <span class="font-mono tabular-nums font-semibold">{{ getDamageBreakdown(row, row._internalIdx).absorbed.toLocaleString() }}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-3 mt-1.5 pt-1.5 border-t border-dashed"
+                                             :class="darkMode ? 'border-[#3d4854]' : 'border-slate-200'">
+                                            <span class="font-bold" :class="darkMode ? 'text-[#c7cdd4]' : 'text-slate-600'">預計傷害</span>
+                                            <span class="font-mono tabular-nums font-black" :class="darkMode ? 'text-[#7ac7ff]' : 'text-blue-700'">{{ getDamageBreakdown(row, row._internalIdx).final.toLocaleString() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="flex items-center justify-end">
+                                    <span class="text-slate-300 text-sm">-</span>
                                 </div>
                             </td>
                         </tr>
@@ -858,7 +891,17 @@
                                 <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
                             </div>
                         </label>
-                        
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-sm text-slate-700 font-medium inline-flex items-center gap-1.5">技能顯示順序
+                                <span class="w-4 h-4 rounded-full bg-slate-400 hover:bg-slate-500 text-white text-[10px] flex items-center justify-center font-black shadow-sm transition-colors cursor-help select-none"
+                                              :title="currentUser ? '直接拖曳表格上方的技能圖示即可調整順序，會自動同步到 Discord 帳號，換裝置登入即可套用' : '直接拖曳表格上方的技能圖示即可調整順序，設定僅儲存在本機瀏覽器；登入 Discord 後可同步到雲端'">?</span>
+                            </span>
+                            <button v-if="Object.keys(customSkillOrder).length" @click="resetSkillOrder"
+                                    class="shrink-0 text-xs px-2 py-1 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-500 hover:text-red-600 border border-slate-200 rounded-lg transition font-semibold">
+                                重置排序
+                            </button>
+                        </div>
+
                         <!-- 技能收合顯示設定組（需登入 Discord，設定綁定帳號；未登入時整塊不顯示） -->
                         <div v-if="currentUser" class="pt-2 border-t border-slate-100 space-y-2">
                             <!-- 雲端設定讀取中：顯示骨架，避免在真正設定回來前誤觸開關 -->

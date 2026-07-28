@@ -1506,6 +1506,7 @@
                 <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('無敵')" class="text-[12px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 rounded leading-none py-0.5">無敵</span>
                 <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('HOT')" class="text-[12px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 rounded leading-none py-0.5">HOT</span>
                 <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('護盾')" class="text-[12px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 rounded leading-none py-0.5">護盾</span>
+                <span v-if="skillTooltip.skill.tags && skillTooltip.skill.tags.includes('補量up')" class="text-[12px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 rounded leading-none py-0.5">補量up</span>
             </div>
             <!-- 護盾計算結果 -->
             <template v-if="calcShieldDisplay(skillTooltip.skill).length">
@@ -1667,6 +1668,7 @@
                         <span v-if="tutorialMockSkillTooltip.skill.tags.includes('無敵')" class="text-[11px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 rounded leading-none py-0.5">無敵</span>
                         <span v-if="tutorialMockSkillTooltip.skill.tags.includes('HOT')" class="text-[11px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 rounded leading-none py-0.5">HOT</span>
                         <span v-if="tutorialMockSkillTooltip.skill.tags.includes('護盾')" class="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 rounded leading-none py-0.5">護盾</span>
+                        <span v-if="tutorialMockSkillTooltip.skill.tags.includes('補量up')" class="text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 rounded leading-none py-0.5">補量up</span>
                     </div>
                     <div v-if="calcShieldDisplay(tutorialMockSkillTooltip.skill).length" class="space-y-0.5">
                         <div v-for="sh in calcShieldDisplay(tutorialMockSkillTooltip.skill)" :key="sh.label" class="flex items-baseline justify-between gap-2 text-xs">

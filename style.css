@@ -413,6 +413,11 @@ body.dark .text-teal-600   { color: #2dd4bf !important; }
 body.dark .bg-teal-50      { background-color: rgba(45,212,191,0.14) !important; }
 body.dark .border-teal-200 { border-color: rgba(45,212,191,0.38) !important; }
 
+/* 補量up（orange） */
+body.dark .text-orange-600   { color: #f0995a !important; }
+body.dark .bg-orange-50      { background-color: rgba(240,153,90,0.14) !important; }
+body.dark .border-orange-200 { border-color: rgba(240,153,90,0.38) !important; }
+
 /* ── 琥珀色（條件標籤 / 提示 Banner） ── */
 body.dark .bg-amber-50      { background-color: rgba(214,163,84,0.13) !important; }
 body.dark .border-amber-200 { border-color: rgba(214,163,84,0.38) !important; }

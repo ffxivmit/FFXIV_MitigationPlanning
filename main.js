@@ -746,7 +746,9 @@ createApp({
                 } else if (eff.type === 'shield_potency' && !eff.useTankStats && healerMnd) {
                     const shieldRatio = eff.shieldRatio || 1.0;
                     const healAmount = Math.floor(eff.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
-                    total += Math.floor(healAmount * shieldRatio) * (eff.stacks || 1);
+                    // 注意：stacks（血印/泛血印）不在此處合併總量，改由呼叫端拆成多層護盾各自計算，
+                    // 才能還原「破盾即以同等量補上一層」的機制，而非一次性的加總大護盾
+                    total += Math.floor(healAmount * shieldRatio);
                 }
             }
             return total;
@@ -2385,7 +2387,19 @@ createApp({
                         }
                     }
                     const exclusiveEnd = !!skill.upgradeSkillId;
-                    shields.push({ key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd });
+                    // 血印/泛血印（stacks > 1）：初始護盾是額外的一層，另外附加 stacks 階血印狀態；
+                    // 每次判定只跟「當前這一層」的剩餘值比較，傷害超過護盾剩餘值才會破盾，
+                    // 且破盾當下只吸收該層剩餘的量（超出部分直接穿透），破盾後消耗 1 階血印原地補滿供下一擊使用，
+                    // 直到 stacks 階血印全部用完或效果時間（15秒）結束為止（初始層 + stacks 層血印 = 共 1+stacks 次護盾）。
+                    // 用 layersLeft 記錄「破盾後還能再補滿幾次」，在下方吸收迴圈中原地補血、不新增陣列項目，
+                    // 也不會讓同一擊傷害連續穿透好幾層。
+                    const stackCount = skill.effects.find(e => e.type === 'shield_potency')?.stacks || 1;
+                    shields.push({
+                        key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal,
+                        depletionRowIdx: null, exclusiveEnd,
+                        layerAmount: stackCount > 1 ? shieldVal : null,
+                        layersLeft: stackCount > 1 ? stackCount : 0,
+                    });
                 }
             }
             // 中間學派護盾（吉星相位 / 陽星合相 在中間學派效果內施放時附加的護盾）
@@ -2433,6 +2447,13 @@ createApp({
                     remainingDmg -= absorbed;
                     absorption[i] += absorbed;
                     if (sh.remaining <= 0) {
+                        // 血印/泛血印：破盾當下只吸收該層剩餘的量（超出部分已在上面直接穿透到 remainingDmg），
+                        // 若還有血印可用就原地補滿供下一擊使用，不會讓同一擊繼續吃到新補的層
+                        if (sh.layersLeft > 0) {
+                            sh.layersLeft -= 1;
+                            sh.remaining = sh.layerAmount;
+                            continue;
+                        }
                         sh.depletionRowIdx = i;
                         // NSS 護盾破盾時，同成員且當下同樣生效中的其他 NSS 護盾一併消除（不疊加規則）
                         if (sh.isNSS) {

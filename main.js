@@ -1323,6 +1323,40 @@ createApp({
             return tpgTime != null ? (tpgTime - tpcCastTimeSecs) : tpcSkill.duration;
         };
 
+        // 活化（sge_Zoe）消耗紀錄：每次活化施放後，找出 30 秒內最早施放的合格治療魔法
+        // （effects 上標記 zoeHealMult 的技能都算治療魔法，根素除外）。
+        // key: `${memberIndex}-${zoeCastTime}` → consumedAt（最早合格施放時間）
+        const zoeConsumptionByMember = computed(() => {
+            const result = new Map();
+            const zoeSkillByMember = new Map();
+            for (const s of activeSkills.value) {
+                if (s.id === 'sge_Zoe') zoeSkillByMember.set(s.memberIndex, s);
+            }
+            for (const skill of activeSkills.value) {
+                if (skill.zoeHealMult == null) continue;
+                const zoeSkill = zoeSkillByMember.get(skill.memberIndex);
+                if (!zoeSkill) continue;
+                const zoeCastTimes = castTimesCache.value.get(zoeSkill.instanceId) || [];
+                const zoeDuration = zoeSkill.duration ?? 30;
+                for (const ct of (castTimesCache.value.get(skill.instanceId) || [])) {
+                    const zt = zoeCastTimes.find(z => ct >= z && ct <= z + zoeDuration);
+                    if (zt === undefined) continue;
+                    const key = `${skill.memberIndex}-${zt}`;
+                    if (!result.has(key) || ct < result.get(key)) {
+                        result.set(key, ct);
+                    }
+                }
+            }
+            return result;
+        });
+
+        // 根據活化的施放時間，計算其有效持續時間（被第一個合格的治療魔法消耗時截斷）
+        const getZoeEffectiveDuration = (zoeSkill, zoeCastTimeSecs) => {
+            const consumedAt = zoeConsumptionByMember.value.get(`${zoeSkill.memberIndex}-${zoeCastTimeSecs}`);
+            if (consumedAt == null) return zoeSkill.duration;
+            return Math.min(zoeSkill.duration, consumedAt - zoeCastTimeSecs);
+        };
+
         // 根據已排序的施放時間點，計算每次施放後充能恢復的時刻
         // 邏輯：每次恢復時間 = max(上次恢復時間, 施放時間) + 充能冷卻
         const computeChargeRestoreTimes = (sortedCastTimes, rechargeTime) => {
@@ -1413,7 +1447,9 @@ createApp({
             const rowTime = rowTimes.value[internalIdx];
             const pureShield = isPureShieldSkill(skill);
             return castTimes.some((ct, ci) => {
-                const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct) : skill.duration;
+                const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct)
+                    : skill.id === 'sge_Zoe' ? getZoeEffectiveDuration(skill, ct)
+                    : skill.duration;
                 // upgradeSkillId 技能（TPC）被 TPG 施放時立即消耗，用嚴格小於避免邊界重疊
                 const inWindow = skill.upgradeSkillId
                     ? (rowTime >= ct && rowTime < ct + dur)
@@ -1509,7 +1545,8 @@ createApp({
 
             return myCastTimes.some((ct, ci) => {
                 const diff = rowTime - ct;
-                if (diff > skill.duration && diff < skill.cooldown) return true;
+                const effDuration = skill.id === 'sge_Zoe' ? getZoeEffectiveDuration(skill, ct) : skill.duration;
+                if (diff > effDuration && diff < skill.cooldown) return true;
                 if (isPureShieldSkill(skill)) {
                     const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
                     return depletionIdx != null && rowTime > rowTimes.value[depletionIdx] && diff >= 0 && diff < skill.cooldown;
@@ -2299,6 +2336,13 @@ createApp({
                 }
             }
 
+            // 活化（sge_Zoe）是一次性消耗：套用 zoeConsumptionByMember 算出的「最早合格施放時間」
+            const zoeSkillByMember = new Map();
+            for (const s of activeSkills.value) {
+                if (s.id === 'sge_Zoe') zoeSkillByMember.set(s.memberIndex, s);
+            }
+            const zoeWindowFirstCast = zoeConsumptionByMember.value;
+
             for (const skill of activeSkills.value) {
                 if (!skill.effects?.some(e => SHIELD_EFFECT_TYPES.has(e.type))) continue;
                 const castTimes = castTimesCache.value.get(skill.instanceId) || [];
@@ -2318,7 +2362,16 @@ createApp({
                     const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct) : skill.duration;
                     if (dur <= 0) continue; // TPC 被同秒 TPG 立即消耗，跳過
                     const endTime = ct + dur;
-                    const healOutMult = getHealOutMult(skill.memberIndex, ct);
+                    let healOutMult = getHealOutMult(skill.memberIndex, ct);
+                    if (skill.zoeHealMult != null) {
+                        const zoeSkill = zoeSkillByMember.get(skill.memberIndex);
+                        const zoeCastTimes = zoeSkill ? (castTimesCache.value.get(zoeSkill.instanceId) || []) : [];
+                        const zoeDuration = zoeSkill?.duration ?? 30;
+                        const zt = zoeCastTimes.find(z => ct >= z && ct <= z + zoeDuration);
+                        if (zt !== undefined && zoeWindowFirstCast.get(`${skill.memberIndex}-${zt}`) === ct) {
+                            healOutMult *= skill.zoeHealMult;
+                        }
+                    }
                     let shieldVal = calcShieldValue(skill, healOutMult, ct);
                     if (shieldVal <= 0) continue;
                     if (critMult !== null) {

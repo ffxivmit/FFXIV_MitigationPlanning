@@ -283,6 +283,12 @@ tbody td.col-name:has(.group\/tip:hover) {
     z-index: 60;
 }
 
+/* 傷害欄：只有實際 hover 到「減傷率」計算式 tooltip 時才拉高該欄位的 z-index，
+   讓 tooltip 能蓋過表頭 sticky th（z-index 最高 50），同上方 col-name 的處理方式 */
+tbody td.sticky-right:has(.group\/dmg:hover) {
+    z-index: 60;
+}
+
 /* ──────────────────────────────────────────
     暗色主題
 ────────────────────────────────────────── */

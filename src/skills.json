@@ -1116,7 +1116,7 @@
             { 
                 "id": "sge_philo", "name": "智慧之愛", 
                 "title": "20秒內，自身發動治療魔法的治療量提高20%\n追加效果：為自身及周圍隊員附加幸福狀態\n持續時間內魔法命中後，令帶有幸福狀態的目標恢復HP", 
-                "effects": [], "duration": 1, "cooldown": 180, 
+                "effects": [], "duration": 20, "cooldown": 180, 
                 "icon": "src/Skill_icons/21_SGE/Philosophia.png", 
                 "personal": true, 
                 "levelRestrictions": {

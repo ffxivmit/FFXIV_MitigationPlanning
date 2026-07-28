@@ -276,6 +276,13 @@ thead tr.row-skills th.compact-skill-th:hover {
     z-index: 35;
 }
 
+/* 招式名稱欄：只有實際 hover 到機制說明 tooltip 時才拉高該欄位的 z-index，
+   讓 tooltip 能蓋過表頭 sticky th（z-index 最高 50）與其他列/欄；
+   一般 hover 整列/整格（沒碰到 tooltip icon）則維持原本 z-index，不會蓋過表頭 */
+tbody td.col-name:has(.group\/tip:hover) {
+    z-index: 60;
+}
+
 /* ──────────────────────────────────────────
     暗色主題
 ────────────────────────────────────────── */

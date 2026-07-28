@@ -448,7 +448,7 @@
                             </td>
 
                             <!-- 招式名稱 -->
-                            <td class="p-2 font-bold text-slate-700 text-sm sticky-col col-name hover:z-[60]" :style="row._isCustom ? customRowStyle : ''">
+                            <td class="p-2 font-bold text-slate-700 text-sm sticky-col col-name" :style="row._isCustom ? customRowStyle : ''">
                                 <!-- 自訂列：可編輯名稱 + 刪除 -->
                                 <div v-if="row._isCustom" class="flex items-center gap-1.5">
                                     <input :value="row.skill"

@@ -11,6 +11,7 @@ import {
     getMaxHpForSkill as ledgerGetMaxHpForSkill,
     isNeutralSectActive as ledgerIsNeutralSectActive,
 } from './src/mitigationLedger.js';
+import { serializePlanSnapshot, applyPlanSnapshot } from './src/planSnapshot.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -1656,31 +1657,6 @@ createApp({
         };
 
         // ── Data loading ──────────────────────────────────────
-        // 舊版資料格式 mitMap 的 key 為 "dutyKey-rowIdx-skillInstId"，值為 true
-        // 新版格式 key 為 "dutyKey-skillInstId"，值為施放列索引陣列
-        // 此函式負責自動將舊格式轉換為新格式，確保向後相容
-        const migrateLegacyMitMap = (rawMit) => {
-            const newMit = {};
-            for (const [key, val] of Object.entries(rawMit)) {
-                if (Array.isArray(val)) {
-                    newMit[key] = val;
-                } else if (val === true) {
-                    const match = key.match(/^(.+)-(\d+)-(p\d+-.+)$/);
-                    if (match) {
-                        const [, dutyKey, rowIdxStr, skillInstId] = match;
-                        const newKey = `${dutyKey}-${skillInstId}`;
-                        const rowIdx = parseInt(rowIdxStr);
-                        if (!newMit[newKey]) newMit[newKey] = [];
-                        if (!newMit[newKey].includes(rowIdx)) newMit[newKey].push(rowIdx);
-                    }
-                }
-            }
-            for (const arr of Object.values(newMit)) {
-                if (Array.isArray(arr)) arr.sort((a, b) => a - b);
-            }
-            return newMit;
-        };
-
         watch(selectedDutyKey, async (key) => {
             if (!key) return;
             loadRaidParamsForDuty(key);
@@ -1726,15 +1702,15 @@ createApp({
                     readUrlParams();
                     const saved = localStorage.getItem('ffxiv_planner_data');
                     if (saved) {
-                        const parsed = JSON.parse(saved);
-                        selectedDutyKey.value = parsed.selectedDutyKey || '';
-                        party.value = parsed.party || [];
-                        selectedVariants.value = parsed.selectedVariants || {};
-                        customRowsByDuty.value = parsed.customRowsByDuty || {};
-                        mitMap.value = migrateLegacyMitMap(parsed.mitMap || {});
-                        skillStateMap.value = parsed.skillStateMap || {};
-                        notesMap.value = parsed.notes || {};
-                        if (parsed.selectedDutyKey) loadRaidParamsForDuty(parsed.selectedDutyKey);
+                        const snap = applyPlanSnapshot(JSON.parse(saved));
+                        selectedDutyKey.value = snap.duty;
+                        party.value = snap.party;
+                        selectedVariants.value = snap.selectedVariants;
+                        customRowsByDuty.value = snap.customRowsByDuty;
+                        mitMap.value = snap.mitMap;
+                        skillStateMap.value = snap.skillStateMap;
+                        notesMap.value = snap.notesMap;
+                        if (snap.duty) loadRaidParamsForDuty(snap.duty);
                     }
                 }
                 syncStickyRow();
@@ -2260,15 +2236,14 @@ createApp({
 
         // ── Share via Cloudflare Worker + KV ─────────────────
         const _applySharedData = (data) => {
-            selectedDutyKey.value = data.duty || '';
-            party.value = data.party || [];
-            mitMap.value = migrateLegacyMitMap(data.mits || {});
-            selectedVariants.value = data.selectedVariants || {};
-            customRowsByDuty.value = data.customRowsByDuty || {};
-            skillStateMap.value = data.skillStateMap || {};
-            notesMap.value = data.notes || {};
-            if (data.hideNonDmg !== undefined) hideNonDmg.value = data.hideNonDmg;
-            if (data.hideTargeted !== undefined) hideTargeted.value = data.hideTargeted;
+            const snap = applyPlanSnapshot(data);
+            selectedDutyKey.value = snap.duty;
+            party.value = snap.party;
+            mitMap.value = snap.mitMap;
+            selectedVariants.value = snap.selectedVariants;
+            customRowsByDuty.value = snap.customRowsByDuty;
+            skillStateMap.value = snap.skillStateMap;
+            notesMap.value = snap.notesMap;
         };
 
         // 用 token 載入文件（供 loadFromShareParam 與 openBookmark 共用）
@@ -2391,15 +2366,15 @@ createApp({
 
         const saveSharedPlanToLocal = () => {
             isViewingSharedPlan.value = false;
-            localStorage.setItem('ffxiv_planner_data', JSON.stringify({
-                selectedDutyKey: selectedDutyKey.value,
+            localStorage.setItem('ffxiv_planner_data', JSON.stringify(serializePlanSnapshot({
+                duty: selectedDutyKey.value,
                 party: party.value,
                 mitMap: mitMap.value,
-                notes: notesMap.value,
+                notesMap: notesMap.value,
                 selectedVariants: selectedVariants.value,
                 customRowsByDuty: customRowsByDuty.value,
                 skillStateMap: skillStateMap.value,
-            }));
+            })));
             const params = new URLSearchParams(window.location.search);
             params.delete('s');
             const qs = params.toString();
@@ -2411,15 +2386,15 @@ createApp({
             if (shareLoading.value) return;
             shareLoading.value = true;
             try {
-                const payload = JSON.stringify({
+                const payload = JSON.stringify(serializePlanSnapshot({
                     duty: selectedDutyKey.value,
                     party: party.value,
-                    mits: mitMap.value,
+                    mitMap: mitMap.value,
+                    notesMap: notesMap.value,
                     selectedVariants: selectedVariants.value,
                     customRowsByDuty: customRowsByDuty.value,
-                    hideNonDmg: hideNonDmg.value,
-                    hideTargeted: hideTargeted.value,
-                });
+                    skillStateMap: skillStateMap.value,
+                }));
                 const res = await fetch(`${WORKER_URL}/save`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2774,15 +2749,15 @@ createApp({
             clearTimeout(_saveTimer);
             _saveTimer = setTimeout(() => {
                 if (isViewingSharedPlan.value || tutorialDemoActive.value) return;
-                localStorage.setItem('ffxiv_planner_data', JSON.stringify({
-                    selectedDutyKey: selectedDutyKey.value,
+                localStorage.setItem('ffxiv_planner_data', JSON.stringify(serializePlanSnapshot({
+                    duty: selectedDutyKey.value,
                     party: party.value,
                     mitMap: mitMap.value,
-                    notes: notesMap.value,
+                    notesMap: notesMap.value,
                     selectedVariants: selectedVariants.value,
                     customRowsByDuty: customRowsByDuty.value,
                     skillStateMap: skillStateMap.value,
-                }));
+                })));
             }, 300);
         }, { deep: true });
 
@@ -2806,13 +2781,15 @@ createApp({
         watch([party, activeSkillsByMember], syncStickyRow, { deep: false });
 
         const exportData = () => {
-            const data = JSON.stringify({
+            const data = JSON.stringify(serializePlanSnapshot({
                 duty: selectedDutyKey.value,
                 party: party.value,
-                mits: mitMap.value,
+                mitMap: mitMap.value,
+                notesMap: notesMap.value,
                 selectedVariants: selectedVariants.value,
                 customRowsByDuty: customRowsByDuty.value,
-            }, null, 2);
+                skillStateMap: skillStateMap.value,
+            }), null, 2);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -2828,13 +2805,14 @@ createApp({
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    const data = JSON.parse(event.target.result);
-                    selectedDutyKey.value = data.duty;
-                    party.value = data.party || [];
-                    mitMap.value = data.mits || {};
-                    notesMap.value = data.notes || {};
-                    selectedVariants.value = data.selectedVariants || {};
-                    customRowsByDuty.value = data.customRowsByDuty || {};
+                    const snap = applyPlanSnapshot(JSON.parse(event.target.result));
+                    selectedDutyKey.value = snap.duty;
+                    party.value = snap.party;
+                    mitMap.value = snap.mitMap;
+                    notesMap.value = snap.notesMap;
+                    selectedVariants.value = snap.selectedVariants;
+                    customRowsByDuty.value = snap.customRowsByDuty;
+                    skillStateMap.value = snap.skillStateMap;
                 } catch (err) {
                     alert("匯入格式錯誤");
                 }

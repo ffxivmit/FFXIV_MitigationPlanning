@@ -1,4 +1,16 @@
 import { signInWithDiscord, signOut, getSession, onAuthStateChange as sbAuthChange, fetchMyDocuments, createDocument, updateDocument, renameDocument, deleteDocument, getDocumentByToken, updateByEditToken, buildEditUrl, buildReadUrl, subscribeDocChannel, fetchBookmarkedDocuments, addBookmark, removeBookmark, checkBookmark, addDocumentHistory, getDocumentHistory, fetchSkillDisplaySettings, saveSkillDisplaySettings, saveSkillOrder } from './src/supabase.js';
+import {
+    createLedgerContext,
+    calculateDamage as ledgerCalculateDamage,
+    getDamageBreakdown as ledgerGetDamageBreakdown,
+    isSkillActive as ledgerIsSkillActive,
+    isSkillOnCooldown as ledgerIsSkillOnCooldown,
+    isSkillRecastable as ledgerIsSkillRecastable,
+    isPureShieldSkill,
+    getHealerMnd as ledgerGetHealerMnd,
+    getMaxHpForSkill as ledgerGetMaxHpForSkill,
+    isNeutralSectActive as ledgerIsNeutralSectActive,
+} from './src/mitigationLedger.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -640,52 +652,18 @@ createApp({
             skillDisplayDialog.value.draftSkills = draft;
         };
 
-        const HEALER_JOB_MAP    = { whm: 'WHM', sch: 'SCH', ast: 'AST', sge: 'SGE' };
-        const TANK_JOB_PREFIXES = new Set(['pld', 'war', 'drk', 'gnb']);
         const HEALER_MIND_SCALING = 0.81 / 100;
-        const SHIELD_EFFECT_TYPES = new Set(['shield_maxhp', 'shield_potency']);
-        const MIT_EFFECT_TYPES    = new Set(['mit_all', 'mit_physical', 'mit_magic', 'invincible']);
-
-        const getJobPrefix = (skill) => (skill.id || '').split('_')[0];
-        const getHealerMnd = (skill) => {
-            const jobKey = HEALER_JOB_MAP[getJobPrefix(skill)];
-            return jobKey ? (raidParams.value.healerMnd[jobKey] || 3250) : null;
-        };
-        const getMaxHpMult = (memberIndex, castTime) => {
-            let mult = 1.0;
-            for (const skill of activeSkills.value) {
-                if (!skill.effects?.length) continue;
-                if (skill.personal === true && skill.memberIndex !== memberIndex) continue;
-                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
-                const isActive = castTimes.some(ct => castTime >= ct && castTime <= ct + skill.duration);
-                if (!isActive) continue;
-                for (const eff of skill.effects) {
-                    if (eff.type === 'maxhp_boost' && eff.val != null) {
-                        mult *= (1 + eff.val);
-                    }
-                }
-            }
-            return mult;
-        };
-
-        const getMaxHpForSkill = (skill, castTime = null) => {
-            const base = TANK_JOB_PREFIXES.has(getJobPrefix(skill))
-                ? raidParams.value.tankHp
-                : raidParams.value.teamMinHp;
-            if (castTime === null) return base;
-            return Math.floor(base * getMaxHpMult(skill.memberIndex, castTime));
-        };
 
         const calcShieldDisplay = (skill) => {
             if (!skill?.effects?.length && !skill?.neutralSectShield) return [];
             const results = [];
-            const healerMnd = getHealerMnd(skill);
+            const healerMnd = ledgerGetHealerMnd(ledgerCtx.value, skill);
             const critMult = skill.recitationCritMult || null;
 
             for (const eff of (skill.effects || [])) {
                 if (eff.type === 'shield_maxhp') {
                     const pct = Math.round(eff.val * 100);
-                    const baseHp = getMaxHpForSkill(skill);
+                    const baseHp = ledgerGetMaxHpForSkill(ledgerCtx.value, skill);
                     const shieldHp = Math.floor(baseHp * eff.val);
                     results.push({ label: `護盾（HP×${pct}%）`, value: shieldHp });
                 } else if (eff.type === 'shield_potency') {
@@ -735,41 +713,18 @@ createApp({
             return results;
         };
 
-        // healOutMult 只影響 shield_potency 類型，shield_maxhp 類型不受治療量加成影響
-        const calcShieldValue = (skill, healOutMult = 1.0 ,castTime = null) => {
-            if (!skill?.effects?.length) return 0;
-            let total = 0;
-            const healerMnd = getHealerMnd(skill);
-            for (const eff of skill.effects) {
-                if (eff.type === 'shield_maxhp') {
-                    total += Math.floor(getMaxHpForSkill(skill, castTime) * eff.val);
-                } else if (eff.type === 'shield_potency' && !eff.useTankStats && healerMnd) {
-                    const shieldRatio = eff.shieldRatio || 1.0;
-                    const healAmount = Math.floor(eff.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
-                    // 注意：stacks（血印/泛血印）不在此處合併總量，改由呼叫端拆成多層護盾各自計算，
-                    // 才能還原「破盾即以同等量補上一層」的機制，而非一次性的加總大護盾
-                    total += Math.floor(healAmount * shieldRatio);
-                }
-            }
-            return total;
-        };
-
-        const isNeutralSectActive = (memberIndex, castTime) => {
-            const wins = neutralSectWindowsByMember.value.get(memberIndex);
-            if (!wins) return false;
-            return wins.some(w => castTime >= w.start && castTime <= w.end);
-        };
-
         const isNeutralSectShieldActiveForCell = (skill, internalIdx) => {
             if (!skill.neutralSectShield) return false;
+            const ctx = ledgerCtx.value;
             const rowTime = rowTimes.value[internalIdx];
-            const castTimes = castTimesCache.value.get(skill.instanceId) || [];
+            const enriched = ctx.skillsByInstance.get(skill.instanceId);
+            const casts = enriched?.casts || [];
             const nss = skill.neutralSectShield;
-            for (let ci = 0; ci < castTimes.length; ci++) {
-                const ct = castTimes[ci];
-                if (!isNeutralSectActive(skill.memberIndex, ct)) continue;
+            for (let ci = 0; ci < casts.length; ci++) {
+                const ct = casts[ci].time;
+                if (!ledgerIsNeutralSectActive(ctx, skill.memberIndex, ct)) continue;
                 if (rowTime < ct || rowTime > ct + nss.duration) continue;
-                const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-nss-${ci}`);
+                const depletionIdx = ctx.shieldCoverage.depletionAt.get(`${skill.instanceId}-nss-${ci}`);
                 if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) continue;
                 return true;
             }
@@ -779,25 +734,6 @@ createApp({
         const isNeutralSectShieldOnlyActive = (skill, internalIdx) => {
             if (!isNeutralSectShieldActiveForCell(skill, internalIdx)) return false;
             return !isSkillActive(skill.instanceId, internalIdx, skill);
-        };
-
-        // 計算施放者在指定時間點的治療量提升倍率（累乘）
-        // personal 技能只對自己成員有效；非 personal 技能對全隊有效
-        const getHealOutMult = (memberIndex, castTime) => {
-            let mult = 1.0;
-            for (const skill of activeSkills.value) {
-                if (!skill.effects?.length) continue;
-                if (skill.personal === true && skill.memberIndex !== memberIndex) continue;
-                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
-                const isActive = castTimes.some(ct => castTime >= ct && castTime <= ct + skill.duration);
-                if (!isActive) continue;
-                for (const eff of skill.effects) {
-                    if (eff.type === 'heal_out_magic' && eff.val != null) {
-                        mult *= (1 + eff.val);
-                    }
-                }
-            }
-            return mult;
         };
 
         const _getCurrentDutyCategory = () => {
@@ -964,19 +900,6 @@ createApp({
             return map;
         });
 
-        // 預建「中間學派生效窗口」Map，避免 isNeutralSectActive 每次掃全部 activeSkills
-        const neutralSectWindowsByMember = computed(() => {
-            const result = new Map(); // memberIndex -> [{start, end}]
-            for (const s of activeSkills.value) {
-                if (s.id !== 'ast_netl_S') continue;
-                const cts = castTimesCache.value.get(s.instanceId) || [];
-                if (!cts.length) continue;
-                if (!result.has(s.memberIndex)) result.set(s.memberIndex, []);
-                const wins = result.get(s.memberIndex);
-                for (const ct of cts) wins.push({ start: ct, end: ct + s.duration });
-            }
-            return result;
-        });
 
         const currentTimeline = computed(() => {
             const rows = allRowsFlat.value
@@ -1292,73 +1215,6 @@ createApp({
             return null;
         };
 
-        // 檢查指定技能在特定施放時間點的護盾是否已被完全吸收
-        const isShieldDepleted = (skillInst, castTimeSecs) => {
-            const castTimes = castTimesCache.value.get(skillInst.instanceId) || [];
-            const ci = castTimes.indexOf(castTimeSecs);
-            if (ci < 0) return false;
-            return shieldCoverageByRow.value.depletionAt.get(`${skillInst.instanceId}-${ci}`) != null;
-        };
-
-        // 根據護盾是否耗盡自動計算 TPC 的有效 CD
-        // TPC 護盾耗盡 → 60s；TPG 護盾耗盡 → 90s；否則 → 120s（skill.cooldown）
-        const getTpcEffectiveCooldown = (tpcSkill, tpcCastTimeSecs) => {
-            if (isShieldDepleted(tpcSkill, tpcCastTimeSecs)) {
-                return tpcSkill.stateCooldowns?.[1] ?? 60;
-            }
-            if (tpcSkill.upgradeSkillId) {
-                const upgInst = activeSkillByKey.value.get(`${tpcSkill.upgradeSkillId}|${tpcSkill.memberIndex}`);
-                if (upgInst) {
-                    const tpgTime = findTpgTimeSecs(tpcSkill, tpcCastTimeSecs);
-                    if (tpgTime != null && isShieldDepleted(upgInst, tpgTime)) {
-                        return tpcSkill.cooldown - 30;
-                    }
-                }
-            }
-            return tpcSkill.cooldown;
-        };
-
-        // 根據 TPC 的施放時間與 TPG 是否存在，計算 TPC 的有效持續時間（TPG 施放時截斷）
-        const getTpcEffectiveDuration = (tpcSkill, tpcCastTimeSecs) => {
-            if (!tpcSkill.upgradeSkillId) return tpcSkill.duration;
-            const tpgTime = findTpgTimeSecs(tpcSkill, tpcCastTimeSecs);
-            return tpgTime != null ? (tpgTime - tpcCastTimeSecs) : tpcSkill.duration;
-        };
-
-        // 活化（sge_Zoe）消耗紀錄：每次活化施放後，找出 30 秒內最早施放的合格治療魔法
-        // （effects 上標記 zoeHealMult 的技能都算治療魔法，根素除外）。
-        // key: `${memberIndex}-${zoeCastTime}` → consumedAt（最早合格施放時間）
-        const zoeConsumptionByMember = computed(() => {
-            const result = new Map();
-            const zoeSkillByMember = new Map();
-            for (const s of activeSkills.value) {
-                if (s.id === 'sge_Zoe') zoeSkillByMember.set(s.memberIndex, s);
-            }
-            for (const skill of activeSkills.value) {
-                if (skill.zoeHealMult == null) continue;
-                const zoeSkill = zoeSkillByMember.get(skill.memberIndex);
-                if (!zoeSkill) continue;
-                const zoeCastTimes = castTimesCache.value.get(zoeSkill.instanceId) || [];
-                const zoeDuration = zoeSkill.duration ?? 30;
-                for (const ct of (castTimesCache.value.get(skill.instanceId) || [])) {
-                    const zt = zoeCastTimes.find(z => ct >= z && ct <= z + zoeDuration);
-                    if (zt === undefined) continue;
-                    const key = `${skill.memberIndex}-${zt}`;
-                    if (!result.has(key) || ct < result.get(key)) {
-                        result.set(key, ct);
-                    }
-                }
-            }
-            return result;
-        });
-
-        // 根據活化的施放時間，計算其有效持續時間（被第一個合格的治療魔法消耗時截斷）
-        const getZoeEffectiveDuration = (zoeSkill, zoeCastTimeSecs) => {
-            const consumedAt = zoeConsumptionByMember.value.get(`${zoeSkill.memberIndex}-${zoeCastTimeSecs}`);
-            if (consumedAt == null) return zoeSkill.duration;
-            return Math.min(zoeSkill.duration, consumedAt - zoeCastTimeSecs);
-        };
-
         // 根據已排序的施放時間點，計算每次施放後充能恢復的時刻
         // 邏輯：每次恢復時間 = max(上次恢復時間, 施放時間) + 充能冷卻
         const computeChargeRestoreTimes = (sortedCastTimes, rechargeTime) => {
@@ -1426,7 +1282,7 @@ createApp({
                     const existingActiveEnd = existingTime + skill.duration;
                     if (rowTime < existingTime || rowTime > existingActiveEnd) return false;
                     if (isPureShieldSkill(skill)) {
-                        const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skill.instanceId}-${existingCi}`);
+                        const depletionIdx = ledgerCtx.value.shieldCoverage.depletionAt.get(`${skill.instanceId}-${existingCi}`);
                         if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) return false;
                     }
                 }
@@ -1442,119 +1298,24 @@ createApp({
             });
         };
 
+        // 減傷帳本（src/mitigationLedger.js）的查詢函式，這裡只是保留原本的呼叫簽章，
+        // 實際計算已抽到獨立模組（可用 node --test 測試），細節見 CONTEXT.md「減傷帳本」。
         const isSkillActive = (skillInstanceId, internalIdx, skill) => {
-            if (skill.passive) return true;
-            const castTimes = castTimesCache.value.get(skillInstanceId);
-            if (!castTimes || !castTimes.length) return false;
-            const rowTime = rowTimes.value[internalIdx];
-            const pureShield = isPureShieldSkill(skill);
-            return castTimes.some((ct, ci) => {
-                const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct)
-                    : skill.id === 'sge_Zoe' ? getZoeEffectiveDuration(skill, ct)
-                    : skill.duration;
-                // upgradeSkillId 技能（TPC）被 TPG 施放時立即消耗，用嚴格小於避免邊界重疊
-                const inWindow = skill.upgradeSkillId
-                    ? (rowTime >= ct && rowTime < ct + dur)
-                    : (rowTime >= ct && rowTime <= ct + dur);
-                if (!inWindow) return false;
-                if (pureShield) {
-                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) return false;
-                }
-                return true;
-            });
+            const ctx = ledgerCtx.value;
+            const enriched = ctx.skillsByInstance.get(skillInstanceId);
+            return enriched ? ledgerIsSkillActive(ctx, skillInstanceId, internalIdx, enriched) : false;
         };
 
-        // duration > cooldown 的技能（如陽星合相），在冷卻結束後但效果仍在時允許重新施放以延長
         const isSkillRecastable = (skillInstanceId, internalIdx, skill) => {
-            if (skill.passive || skill.multiState || skill.charges > 1 || skill.togglesWithId || skill.conditionOnce) return false;
-            if (!skill.duration || !skill.cooldown || skill.duration <= skill.cooldown) return false;
-            const castTimes = castTimesCache.value.get(skillInstanceId) || [];
-            if (!castTimes.length) return false;
-            const rowTime = rowTimes.value[internalIdx];
-            return castTimes.some(ct => {
-                const diff = rowTime - ct;
-                return diff >= skill.cooldown && diff <= skill.duration;
-            });
+            const ctx = ledgerCtx.value;
+            const enriched = ctx.skillsByInstance.get(skillInstanceId);
+            return enriched ? ledgerIsSkillRecastable(ctx, skillInstanceId, internalIdx, enriched) : false;
         };
 
-        // 判斷技能在指定列是否處於冷卻中，需處理多種複雜情境：
-        //   - togglesWithId：成對技能的冷卻狀態需參照配對技能的施放時間
-        //   - sharedCooldownId：共享冷卻時間的技能（如任何一個在冷卻中則判定為冷卻）
-        //   - conditionOnce：在條件技能的時間窗內只允許施放一次
-        //   - charges > 1：多充能技能，充能歸零才算冷卻
         const isSkillOnCooldown = (skillInstanceId, internalIdx, skill) => {
-            const myCastTimes = castTimesCache.value.get(skillInstanceId) || [];
-            const rowTime = rowTimes.value[internalIdx];
-
-            if (skill.togglesWithId) {
-                const pairedSkill = activeSkillByKey.value.get(`${skill.togglesWithId}|${skill.memberIndex}`);
-                const ownOnCooldown = myCastTimes.some(ct => {
-                    const diff = rowTime - ct;
-                    return diff > skill.duration && diff < skill.cooldown;
-                });
-                if (ownOnCooldown) return true;
-                const myCount = myCastTimes.filter(ct => ct < rowTime).length;
-                const pairedCastTimes = pairedSkill
-                    ? (castTimesCache.value.get(pairedSkill.instanceId) || []).filter(t => t < rowTime)
-                    : [];
-                let parityCorrect;
-                if (skill.isFirstToggle) {
-                    parityCorrect = myCount === pairedCastTimes.length;
-                } else {
-                    parityCorrect = myCount < pairedCastTimes.length;
-                }
-                if (!parityCorrect) return false;
-                if (pairedCastTimes.length > 0) {
-                    const lastPaired = Math.max(...pairedCastTimes);
-                    const pairedCooldown = pairedSkill?.cooldown ?? skill.cooldown;
-                    return rowTime < lastPaired + pairedCooldown;
-                }
-                return false;
-            }
-
-            if (skill.sharedCooldownId) {
-                const pairedSkill = activeSkillByKey.value.get(`${skill.sharedCooldownId}|${skill.memberIndex}`);
-                if (pairedSkill) {
-                    const pairedCastTimes = castTimesCache.value.get(pairedSkill.instanceId) || [];
-                    const sharedOnCooldown = pairedCastTimes.some(ct => {
-                        const diff = rowTime - ct;
-                        return diff >= 0 && diff < pairedSkill.cooldown;
-                    });
-                    if (sharedOnCooldown) return true;
-                }
-            }
-
-            if (!myCastTimes.length) return false;
-
-            if (skill.charges > 1) {
-                if (isSkillActive(skillInstanceId, internalIdx, skill)) return false;
-                return chargesAvailableAt(skillInstanceId, rowTime, skill) === 0;
-            }
-
-            if (skill.multiState && skill.upgradeSkillId) {
-                return myCastTimes.some((ct, ci) => {
-                    const diff = rowTime - ct;
-                    if (diff < 0) return false;
-                    const effectiveDuration = getTpcEffectiveDuration(skill, ct);
-                    const effectiveCd = getTpcEffectiveCooldown(skill, ct);
-                    if (diff >= effectiveDuration && diff < effectiveCd) return true;
-                    // 護盾耗盡後，在 CD 結束前也顯示為冷卻中
-                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    return depletionIdx != null && rowTime > rowTimes.value[depletionIdx] && diff < effectiveCd;
-                });
-            }
-
-            return myCastTimes.some((ct, ci) => {
-                const diff = rowTime - ct;
-                const effDuration = skill.id === 'sge_Zoe' ? getZoeEffectiveDuration(skill, ct) : skill.duration;
-                if (diff > effDuration && diff < skill.cooldown) return true;
-                if (isPureShieldSkill(skill)) {
-                    const depletionIdx = shieldCoverageByRow.value.depletionAt.get(`${skillInstanceId}-${ci}`);
-                    return depletionIdx != null && rowTime > rowTimes.value[depletionIdx] && diff >= 0 && diff < skill.cooldown;
-                }
-                return false;
-            });
+            const ctx = ledgerCtx.value;
+            const enriched = ctx.skillsByInstance.get(skillInstanceId);
+            return enriched ? ledgerIsSkillOnCooldown(ctx, skillInstanceId, internalIdx, enriched) : false;
         };
 
         const isSkillCastOrigin = (skillInstanceId, internalIdx) => {
@@ -2217,293 +1978,27 @@ createApp({
         });
 
         // ── Damage calculation ────────────────────────────────
-        // 預先計算每列的剩餘傷害，並快取為陣列；僅在 mitMap／activeSkills／timeline 變動時重算
-        // 同名技能只計算一次（appliedNames 去重）；效果有 duration 限制時需檢查是否仍在效果窗內
-        // 支援 bonusVal（如配對技能同時生效時的額外減傷加成）
-        const damageByRow = computed(() => {
-            if (!selectedDutyKey.value) return [];
-            const flat = allRowsFlat.value;
-            const result = new Array(flat.length).fill(0);
-            const skills = activeSkills.value;
-
-            // Passive 技能不依賴時間，預先合算一次，避免在每個 row×hit 裡重複掃描
-            const passiveMult = { '物理': 1, '魔法': 1, _other: 1 };
-            const passiveAppliedNames = new Set();
-            const nonPassiveSkills = [];
-            for (const skill of skills) {
-                if (!skill.passive) { nonPassiveSkills.push(skill); continue; }
-                if (passiveAppliedNames.has(skill.name)) continue;
-                let applied = false;
-                for (const effect of skill.effects) {
-                    if (effect.val == null) continue;
-                    const f = 1 - effect.val;
-                    if (effect.type === 'mit_all') {
-                        passiveMult['物理'] *= f; passiveMult['魔法'] *= f; passiveMult._other *= f;
-                        applied = true;
-                    } else if (effect.type === 'mit_physical') {
-                        passiveMult['物理'] *= f; applied = true;
-                    } else if (effect.type === 'mit_magic') {
-                        passiveMult['魔法'] *= f; applied = true;
-                    }
-                }
-                if (applied) passiveAppliedNames.add(skill.name);
-            }
-
-            for (let internalIdx = 0; internalIdx < flat.length; internalIdx++) {
-                const row = flat[internalIdx];
-                if (row._isCustom) continue;
-                const damages = getEffectiveVariant(row, internalIdx).damage;
-                if (!damages || !damages.length) continue;
-                const rowTime = rowTimes.value[internalIdx];
-                let totalRemaining = 0;
-                for (const hit of damages) {
-                    const mitigates = (t) =>
-                        t === 'mit_all' ||
-                        (t === 'mit_physical' && hit.type === '物理') ||
-                        (t === 'mit_magic'    && hit.type === '魔法');
-                    let dmg = hit.amount * (passiveMult[hit.type] ?? passiveMult._other);
-                    // 以 passiveAppliedNames 為初始值，確保 passive/active 同名去重的行為不變
-                    const appliedNames = new Set(passiveAppliedNames);
-                    for (const skill of nonPassiveSkills) {
-                        const castTimes = castTimesCache.value.get(skill.instanceId);
-                        if (!castTimes || !castTimes.length) continue;
-                        if (appliedNames.has(skill.name)) continue;
-                        const activeCastTime = castTimes.find(ct => rowTime >= ct && rowTime <= ct + skill.duration);
-                        if (activeCastTime == null) continue;
-                        let applied = false;
-                        for (const effect of skill.effects) {
-                            if (effect.duration != null && rowTime > activeCastTime + effect.duration) continue;
-                            if (mitigates(effect.type) && effect.val != null) {
-                                let effectVal = effect.val;
-                                if (effect.bonusVal != null && effect.bonusRequiresIds?.length) {
-                                    const conditionMet = effect.bonusRequiresIds.some(reqId => {
-                                        const s = activeSkillByKey.value.get(`${reqId}|${skill.memberIndex}`);
-                                        return s && isSkillActive(s.instanceId, internalIdx, s);
-                                    });
-                                    if (conditionMet) effectVal += effect.bonusVal;
-                                }
-                                dmg *= (1 - effectVal);
-                                applied = true;
-                            }
-                        }
-                        if (applied) appliedNames.add(skill.name);
-                    }
-                    totalRemaining += dmg;
-                }
-                result[internalIdx] = Math.floor(totalRemaining);
-            }
-            return result;
+        // 減傷帳本：把技能實例（含施放時間/rowIndex）、時間軸各列傷害、團隊參數
+        // 轉成 src/mitigationLedger.js 要的形狀，交給獨立模組計算。
+        // 技能實例的等級限制（levelRestrictions）已在 activeSkillsByMember 套用完畢，
+        // 帳本模組不需要知道 levelCap；輸血/泛輸血這類多層護盾、坦培拉塗層同秒消耗等機制，
+        // 全部原封不動搬進帳本模組——main.js 這裡只負責組裝輸入、不重算任何邏輯。
+        const ledgerCtx = computed(() => {
+            const skills = activeSkills.value.map(s => ({
+                ...s,
+                casts: getCastRows(s.instanceId).map(rowIndex => ({ time: rowTimes.value[rowIndex], rowIndex })),
+            }));
+            const rows = allRowsFlat.value.map((row, idx) => ({
+                time: rowTimes.value[idx],
+                isCustom: !!row._isCustom,
+                isTargeted: isTargetedAttack(row, idx),
+                damage: getEffectiveVariant(row, idx).damage || [],
+            }));
+            return createLedgerContext({ activeSkills: skills, rows, raidParams: raidParams.value, hideTargeted: hideTargeted.value });
         });
 
-        const isPureShieldSkill = (skill) => {
-            if (!skill?.effects?.length) return false;
-            const hasShield = skill.effects.some(e => SHIELD_EFFECT_TYPES.has(e.type));
-            const hasMit    = skill.effects.some(e => MIT_EFFECT_TYPES.has(e.type));
-            return hasShield && !hasMit;
-        };
-
-        const shieldCoverageByRow = computed(() => {
-            if (!selectedDutyKey.value) return { absorption: [], depletionAt: new Map() };
-            const flat = allRowsFlat.value;
-            const times = rowTimes.value;
-            const postMitDmg = damageByRow.value;
-            const absorption = new Array(flat.length).fill(0);
-            const depletionAt = new Map();
-            const shields = [];
-            const nssShields = []; // 僅含 NSS 護盾的參考陣列，供快速過濾用
-
-            // 秘策（sch_rec）是一次性消耗：同一窗口內，四招（鼓舞、意氣、不屈、深謀）中
-            // 任何一招的第一次施放就消耗掉效果，後續施放不再套爆擊。
-            // 這裡先跨技能掃描，找出每個秘策窗口內最早的合格施放時間。
-            // key: `${memberIndex}-${recWindowStartTime}` → earliest eligible cast time
-            const recSkillByMember = new Map();
-            for (const s of activeSkills.value) {
-                if (s.id === 'sch_rec') recSkillByMember.set(s.memberIndex, s);
-            }
-
-            const recWindowFirstCast = new Map();
-            for (const skill of activeSkills.value) {
-                if (skill.recitationCritMult == null) continue;
-                const recSkill = recSkillByMember.get(skill.memberIndex);
-                if (!recSkill) continue;
-                const recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
-                const recDuration = recSkill.duration ?? 1;
-                for (const ct of (castTimesCache.value.get(skill.instanceId) || [])) {
-                    const rt = recCastTimes.find(r => ct >= r && ct <= r + recDuration);
-                    if (rt === undefined) continue;
-                    const key = `${skill.memberIndex}-${rt}`;
-                    if (!recWindowFirstCast.has(key) || ct < recWindowFirstCast.get(key)) {
-                        recWindowFirstCast.set(key, ct);
-                    }
-                }
-            }
-
-            // 活化（sge_Zoe）是一次性消耗：套用 zoeConsumptionByMember 算出的「最早合格施放時間」
-            const zoeSkillByMember = new Map();
-            for (const s of activeSkills.value) {
-                if (s.id === 'sge_Zoe') zoeSkillByMember.set(s.memberIndex, s);
-            }
-            const zoeWindowFirstCast = zoeConsumptionByMember.value;
-
-            for (const skill of activeSkills.value) {
-                if (!skill.effects?.some(e => SHIELD_EFFECT_TYPES.has(e.type))) continue;
-                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
-                if (!castTimes.length) continue;
-                const critMult = skill.recitationCritMult ?? null;
-                let recCastTimes = [];
-                let recDuration = 1;
-                if (critMult !== null) {
-                    const recSkill = recSkillByMember.get(skill.memberIndex);
-                    if (recSkill) {
-                        recCastTimes = castTimesCache.value.get(recSkill.instanceId) || [];
-                        recDuration = recSkill.duration ?? 1;
-                    }
-                }
-                for (let ci = 0; ci < castTimes.length; ci++) {
-                    const ct = castTimes[ci];
-                    const dur = skill.upgradeSkillId ? getTpcEffectiveDuration(skill, ct) : skill.duration;
-                    if (dur <= 0) continue; // TPC 被同秒 TPG 立即消耗，跳過
-                    const endTime = ct + dur;
-                    let healOutMult = getHealOutMult(skill.memberIndex, ct);
-                    if (skill.zoeHealMult != null) {
-                        const zoeSkill = zoeSkillByMember.get(skill.memberIndex);
-                        const zoeCastTimes = zoeSkill ? (castTimesCache.value.get(zoeSkill.instanceId) || []) : [];
-                        const zoeDuration = zoeSkill?.duration ?? 30;
-                        const zt = zoeCastTimes.find(z => ct >= z && ct <= z + zoeDuration);
-                        if (zt !== undefined && zoeWindowFirstCast.get(`${skill.memberIndex}-${zt}`) === ct) {
-                            healOutMult *= skill.zoeHealMult;
-                        }
-                    }
-                    let shieldVal = calcShieldValue(skill, healOutMult, ct);
-                    if (shieldVal <= 0) continue;
-                    if (critMult !== null) {
-                        const recWindowStart = recCastTimes.find(rt => ct >= rt && ct <= rt + recDuration);
-                        if (recWindowStart !== undefined) {
-                            // 只有四招中「最先施放」的那一個才套爆擊（跨技能判斷）
-                            const windowKey = `${skill.memberIndex}-${recWindowStart}`;
-                            if (recWindowFirstCast.get(windowKey) === ct) {
-                                shieldVal = Math.floor(shieldVal * critMult);
-                            }
-                        }
-                    }
-                    const exclusiveEnd = !!skill.upgradeSkillId;
-                    // 血印/泛血印（stacks > 1）：初始護盾是額外的一層，另外附加 stacks 階血印狀態；
-                    // 每次判定只跟「當前這一層」的剩餘值比較，傷害超過護盾剩餘值才會破盾，
-                    // 且破盾當下只吸收該層剩餘的量（超出部分直接穿透），破盾後消耗 1 階血印原地補滿供下一擊使用，
-                    // 直到 stacks 階血印全部用完或效果時間（15秒）結束為止（初始層 + stacks 層血印 = 共 1+stacks 次護盾）。
-                    // 用 layersLeft 記錄「破盾後還能再補滿幾次」，在下方吸收迴圈中原地補血、不新增陣列項目，
-                    // 也不會讓同一擊傷害連續穿透好幾層。
-                    const stackCount = skill.effects.find(e => e.type === 'shield_potency')?.stacks || 1;
-                    shields.push({
-                        key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal,
-                        depletionRowIdx: null, exclusiveEnd,
-                        layerAmount: stackCount > 1 ? shieldVal : null,
-                        layersLeft: stackCount > 1 ? stackCount : 0,
-                    });
-                }
-            }
-            // 中間學派護盾（吉星相位 / 陽星合相 在中間學派效果內施放時附加的護盾）
-            for (const skill of activeSkills.value) {
-                if (!skill.neutralSectShield) continue;
-                const castTimes = castTimesCache.value.get(skill.instanceId) || [];
-                if (!castTimes.length) continue;
-                const healerMnd = getHealerMnd(skill);
-                if (!healerMnd) continue;
-                const nss = skill.neutralSectShield;
-                for (let ci = 0; ci < castTimes.length; ci++) {
-                    const ct = castTimes[ci];
-                    if (!isNeutralSectActive(skill.memberIndex, ct)) continue;
-                    const healOutMult = getHealOutMult(skill.memberIndex, ct);
-                    const healAmount = Math.floor(nss.val * (healerMnd * HEALER_MIND_SCALING) * healOutMult);
-                    const shieldVal = Math.floor(healAmount * nss.shieldRatio);
-                    if (shieldVal <= 0) continue;
-                    const endTime = ct + nss.duration;
-                    const nssEntry = { key: `${skill.instanceId}-nss-${ci}`, castTime: ct, endTime, remaining: shieldVal, depletionRowIdx: null, exclusiveEnd: false, isNSS: true, memberIndex: skill.memberIndex, initialShieldVal: shieldVal };
-                    shields.push(nssEntry);
-                    nssShields.push(nssEntry);
-                }
-            }
-            for (let i = 0; i < flat.length; i++) {
-                if (flat[i]._isCustom) continue;
-                if (hideTargeted.value && isTargetedAttack(flat[i], i)) continue;
-                const rowTime = times[i];
-                const rowDmg = postMitDmg[i];
-                if (!rowDmg) continue;
-                let remainingDmg = rowDmg;
-                // 中間學派護盾不疊加：同成員的 NSS 護盾僅取初始值最高者（吉星相位優先於陽星合相）
-                const nssMaxByMember = new Map();
-                for (const sh of nssShields) {
-                    if (sh.depletionRowIdx !== null) continue;
-                    if (rowTime < sh.castTime || rowTime > sh.endTime) continue;
-                    const cur = nssMaxByMember.get(sh.memberIndex);
-                    if (!cur || sh.initialShieldVal > cur.initialShieldVal) nssMaxByMember.set(sh.memberIndex, sh);
-                }
-                for (const sh of shields) {
-                    if (sh.depletionRowIdx !== null || remainingDmg <= 0) continue;
-                    if (rowTime < sh.castTime || (sh.exclusiveEnd ? rowTime >= sh.endTime : rowTime > sh.endTime)) continue;
-                    if (sh.isNSS && nssMaxByMember.get(sh.memberIndex) !== sh) continue;
-                    const absorbed = Math.min(sh.remaining, remainingDmg);
-                    sh.remaining -= absorbed;
-                    remainingDmg -= absorbed;
-                    absorption[i] += absorbed;
-                    if (sh.remaining <= 0) {
-                        // 血印/泛血印：破盾當下只吸收該層剩餘的量（超出部分已在上面直接穿透到 remainingDmg），
-                        // 若還有血印可用就原地補滿供下一擊使用，不會讓同一擊繼續吃到新補的層
-                        if (sh.layersLeft > 0) {
-                            sh.layersLeft -= 1;
-                            sh.remaining = sh.layerAmount;
-                            continue;
-                        }
-                        sh.depletionRowIdx = i;
-                        // NSS 護盾破盾時，同成員且當下同樣生效中的其他 NSS 護盾一併消除（不疊加規則）
-                        if (sh.isNSS) {
-                            for (const other of nssShields) {
-                                if (other.memberIndex === sh.memberIndex && other !== sh
-                                    && other.depletionRowIdx === null
-                                    && rowTime >= other.castTime && rowTime <= other.endTime) {
-                                    other.depletionRowIdx = i;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            for (const sh of shields) depletionAt.set(sh.key, sh.depletionRowIdx);
-            return { absorption, depletionAt };
-        });
-
-        const calculateDamage = (_row, internalIdx) => {
-            const base = damageByRow.value[internalIdx] ?? 0;
-            const absorbed = shieldCoverageByRow.value.absorption[internalIdx] ?? 0;
-            return Math.max(0, base - absorbed);
-        };
-
-        // 未套用任何減傷技能前的原始傷害（僅加總命中傷害，不套用 mit_* 效果）
-        const rawDamageByRow = computed(() => {
-            if (!selectedDutyKey.value) return [];
-            const flat = allRowsFlat.value;
-            const result = new Array(flat.length).fill(0);
-            for (let internalIdx = 0; internalIdx < flat.length; internalIdx++) {
-                const row = flat[internalIdx];
-                if (row._isCustom) continue;
-                const damages = getEffectiveVariant(row, internalIdx).damage;
-                if (!damages || !damages.length) continue;
-                let total = 0;
-                for (const hit of damages) total += hit.amount;
-                result[internalIdx] = Math.floor(total);
-            }
-            return result;
-        });
-
-        // 預計傷害欄懸浮卡片用：原始傷害 × 減傷率 − 護盾 = 預計傷害
-        const getDamageBreakdown = (row, internalIdx) => {
-            const raw = rawDamageByRow.value[internalIdx] ?? 0;
-            const mitigated = damageByRow.value[internalIdx] ?? 0;
-            const absorbed = shieldCoverageByRow.value.absorption[internalIdx] ?? 0;
-            const final = calculateDamage(row, internalIdx);
-            const mitMultiplier = raw > 0 ? mitigated / raw : 1;
-            return { raw, mitigated, absorbed, final, mitRate: 1 - mitMultiplier, mitMultiplier };
-        };
+        const calculateDamage = (_row, internalIdx) => ledgerCalculateDamage(ledgerCtx.value, internalIdx);
+        const getDamageBreakdown = (_row, internalIdx) => ledgerGetDamageBreakdown(ledgerCtx.value, internalIdx);
 
         // ── Variant switching ─────────────────────────────────
         const switchVariant = (internalIdx, variantIdx) => {

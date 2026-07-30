@@ -8,6 +8,7 @@ FFXIV 團隊減傷規劃工具。以下詞彙在架構討論、commit、程式�
 - **技能實例（skill instance）** — 某個隊伍成員在特定時間點施放的某個技能，帶有 `instanceId`（`p{隊員index}-{技能id}`）。已套用等級限制（`levelRestrictions`）後的最終版本，才算「技能實例」。
 - **減傷帳本（mitigation ledger）** — 給定一組已解析的技能實例、時間軸、團隊參數，計算每個時間點的實際傷害、護盾吸收量、技能啟用/冷卻狀態的模組。原本以 `damageByRow`/`shieldCoverageByRow`/`isSkillActive` 等函式形式散落在 `main.js` 的 `setup()` 內，已抽成獨立模組 `src/mitigationLedger.js`。
 - **計畫快照（plan snapshot）** — 一份減傷計畫在「本機儲存 / 分享連結（legacy Cloudflare Worker `?s=`、Supabase edit/view token）/ 匯出匯入 JSON」之間傳遞時共用的統一資料形狀：`duty`、`party`、`mits`、`notes`、`selectedVariants`、`customRowsByDuty`、`skillStateMap` 七個欄位。不含 `hideNonDmg`/`hideTargeted`——那兩個是純 client 端顯示開關，靠 URL 參數記憶，不屬於計畫的一部分。序列化／還原邏輯在 `src/planSnapshot.js`：`serializePlanSnapshot`/`applyPlanSnapshot` 為純函式，`applyPlanSnapshot` 內建自動跑 legacy mitMap 格式轉換，並同時接受本機 localStorage 舊欄位命名（`selectedDutyKey`/`mitMap`）與可攜格式（`duty`/`mits`），確保既有使用者資料能正常還原。**不處理**存到 Supabase「範本」的 `buildPayload`（main.js）——那條路徑目前刻意維持獨立，未收斂進本模組。
+- **施放紀錄重新索引（cast record reindex）** — `mitMap`/`skillStateMap`/`notesMap` 這三個以「技能實例 + 位置」為 key 的紀錄，在**隊伍成員**增刪/拖曳重排、或**自訂列**被刪除時，key 內嵌的位置片段（member 軸的 `-p{index}-`、row 軸的列索引尾段）都要跟著整批重寫，否則紀錄會錯位到別的成員/別的列。這段重映射邏輯收在 `src/castRecordReindex.js`（純函式，`reindexCastRecordsByMember`/`reindexCastRecordsByRemovedRow`），成員增刪/重排與自訂列刪除各自呼叫，不再各自重寫一份。
 
 ## 容易混淆的技能／狀態命名
 

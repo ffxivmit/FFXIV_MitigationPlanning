@@ -12,6 +12,12 @@ import {
     isNeutralSectActive as ledgerIsNeutralSectActive,
 } from './src/mitigationLedger.js';
 import { serializePlanSnapshot, applyPlanSnapshot } from './src/planSnapshot.js';
+import {
+    buildMemberRemovalMapping,
+    buildMemberSwapMapping,
+    reindexCastRecordsByMember,
+    reindexCastRecordsByRemovedRow,
+} from './src/castRecordReindex.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -945,7 +951,8 @@ createApp({
             });
         };
 
-        // 刪除自訂列，並修正 mitMap 中所有受影響的 internalIdx（大於被刪除索引的都要 -1）
+        // 刪除自訂列，並修正 mitMap 中所有受影響的 internalIdx（大於被刪除索引的都要 -1），
+        // 同步修正 notesMap（key 尾段內嵌列索引）——先前這裡遺漏了 notesMap，會讓便條錯位。
         const removeCustomRow = (customId) => {
             if (isReadOnly.value) return;
             const rows = customRowsByDuty.value[selectedDutyKey.value];
@@ -954,20 +961,12 @@ createApp({
             if (crIdx < 0) return;
             const dutyLen = (dutyDb.value[selectedDutyKey.value]?.timeline || []).length;
             const removedIdx = dutyLen + crIdx;
-            const prefix = selectedDutyKey.value + '-';
-            const newMap = { ...mitMap.value };
-            for (const [key, castArr] of Object.entries(newMap)) {
-                if (!key.startsWith(prefix)) continue;
-                const updated = castArr
-                    .filter(i => i !== removedIdx)
-                    .map(i => i > removedIdx ? i - 1 : i);
-                if (!updated.length) {
-                    delete newMap[key];
-                } else {
-                    newMap[key] = updated;
-                }
-            }
-            mitMap.value = newMap;
+            const reindexed = reindexCastRecordsByRemovedRow({
+                mitMap: mitMap.value,
+                notesMap: notesMap.value,
+            }, { dutyPrefix: selectedDutyKey.value + '-', removedRowIdx: removedIdx });
+            mitMap.value = reindexed.mitMap;
+            notesMap.value = reindexed.notesMap;
             rows.splice(crIdx, 1);
         };
 
@@ -1748,27 +1747,15 @@ createApp({
 
         const removeFromParty = (index) => {
             if (isReadOnly.value) return;
-            const n = party.value.length;
-            const oldToNew = Array.from({ length: n }, (_, i) => i);
-            oldToNew[index] = -1; // 被刪除的隊員，其資料應丟棄
-            for (let i = index + 1; i < n; i++) oldToNew[i] = i - 1;
-            const remapKeys = (map) => {
-                const out = {};
-                for (const [key, val] of Object.entries(map)) {
-                    const m = key.match(/-p(\d+)-/);
-                    if (!m) {
-                        out[key] = val;
-                        continue;
-                    }
-                    const ni = oldToNew[parseInt(m[1])];
-                    if (ni === -1) continue;
-                    out[key.replace(/-p(\d+)-/, `-p${ni}-`)] = val;
-                }
-                return out;
-            };
-            mitMap.value = remapKeys(mitMap.value);
-            skillStateMap.value = remapKeys(skillStateMap.value);
-            notesMap.value = remapKeys(notesMap.value);
+            const oldToNew = buildMemberRemovalMapping(party.value.length, index);
+            const reindexed = reindexCastRecordsByMember({
+                mitMap: mitMap.value,
+                skillStateMap: skillStateMap.value,
+                notesMap: notesMap.value,
+            }, oldToNew);
+            mitMap.value = reindexed.mitMap;
+            skillStateMap.value = reindexed.skillStateMap;
+            notesMap.value = reindexed.notesMap;
             party.value.splice(index, 1);
         };
 
@@ -1781,30 +1768,17 @@ createApp({
             e.dataTransfer.effectAllowed = 'move';
         };
 
-        // Shared: perform one reorder step (party array + mitMap/skillStateMap remapping)
+        // Shared: perform one reorder step (party array + mitMap/skillStateMap/notesMap remapping)
         const _applyPartySwap = (fromIdx, toIdx) => {
-            const n = party.value.length;
-            const oldToNew = Array.from({ length: n }, (_, i) => i);
-            if (fromIdx < toIdx) {
-                oldToNew[fromIdx] = toIdx;
-                for (let i = fromIdx + 1; i <= toIdx; i++) oldToNew[i] = i - 1;
-            } else {
-                oldToNew[fromIdx] = toIdx;
-                for (let i = toIdx; i < fromIdx; i++) oldToNew[i] = i + 1;
-            }
-            const remapKeys = (map) => {
-                const out = {};
-                for (const [key, val] of Object.entries(map)) {
-                    out[key.replace(/-p(\d+)-/, (_, p) => {
-                        const ni = oldToNew[parseInt(p)];
-                        return ni !== undefined ? `-p${ni}-` : `-p${p}-`;
-                    })] = val;
-                }
-                return out;
-            };
-            mitMap.value = remapKeys(mitMap.value);
-            skillStateMap.value = remapKeys(skillStateMap.value);
-            notesMap.value = remapKeys(notesMap.value);
+            const oldToNew = buildMemberSwapMapping(party.value.length, fromIdx, toIdx);
+            const reindexed = reindexCastRecordsByMember({
+                mitMap: mitMap.value,
+                skillStateMap: skillStateMap.value,
+                notesMap: notesMap.value,
+            }, oldToNew);
+            mitMap.value = reindexed.mitMap;
+            skillStateMap.value = reindexed.skillStateMap;
+            notesMap.value = reindexed.notesMap;
             const arr = [...party.value];
             const [moved] = arr.splice(fromIdx, 1);
             arr.splice(toIdx, 0, moved);

@@ -17,6 +17,39 @@ const MIT_EFFECT_TYPES = new Set(['mit_all', 'mit_physical', 'mit_magic', 'invin
 const HEALER_JOB_MAP = { whm: 'WHM', sch: 'SCH', ast: 'AST', sge: 'SGE' };
 const TANK_JOB_PREFIXES = new Set(['pld', 'war', 'drk', 'gnb']);
 
+// 護盾同時覆蓋同一擊時的扣除優先序（數字小＝優先被扣除），來源為遊戲內護盾優先序攻略。
+// 同一組內視為並列，改依施放時間排序；不在表中的技能（含尚未實作對應機制、或攻略未列出的技能）
+// 一律視為最低優先。'__NSS__' 代表中間學派衍生護盾（吉星相位/陽星合相），不分技能本體。
+const SHIELD_PRIORITY_GROUPS = [
+    ['pct_tpc', 'rpr_arc'],
+    ['pct_tpg'],
+    ['drk_tbn'],
+    ['sge_haima'],
+    ['sge_panha'],
+    ['pld_grd'],
+    ['whm_divi'],
+    ['blm_manaw', 'nin_shad'],
+    ['whm_db'],
+    ['ast_ci'],
+    ['sge_ep2'],
+    ['sge_holos'],
+    ['smn_radi'],
+    ['war_sio'],
+    ['pld_div'],
+    ['__NSS__'],
+    ['dnc_impr'],
+    ['sch_adl', 'sch_con', 'sch_csl'],
+];
+// 匯出供測試比對 skills.json 的護盾技能是否都有登記優先序（見 test/mitigationLedger.test.js）
+export const SHIELD_PRIORITY_RANK = new Map();
+SHIELD_PRIORITY_GROUPS.forEach((ids, rank) => {
+    for (const id of ids) SHIELD_PRIORITY_RANK.set(id, rank);
+});
+const SHIELD_DEFAULT_PRIORITY = SHIELD_PRIORITY_GROUPS.length;
+
+const getShieldPriority = (sh) =>
+    SHIELD_PRIORITY_RANK.get(sh.isNSS ? '__NSS__' : sh.skillId) ?? SHIELD_DEFAULT_PRIORITY;
+
 const getJobPrefix = (skill) => (skill.id || '').split('_')[0];
 
 export function createLedgerContext({ activeSkills, rows, raidParams, hideTargeted = false }) {
@@ -94,8 +127,27 @@ export const isNeutralSectActive = (ctx, memberIndex, castTime) => {
     return wins.some(w => castTime >= w.start && castTime <= w.end);
 };
 
+// 中間學派衍生護盾（吉星相位／陽星合相 在中間學派效果內施放時附加的護盾）是否仍覆蓋指定列：
+// 逐一檢查該技能每次施放，中間學派需在施放當下生效、目前列需落在施放後的護盾時間窗內，
+// 且該次護盾尚未被打破（打破當下那一列仍算覆蓋，之後才算失效）。
+export const isNeutralSectShieldActiveAt = (ctx, skill, internalIdx) => {
+    if (!skill.neutralSectShield) return false;
+    const enriched = ctx.skillsByInstance.get(skill.instanceId);
+    const casts = enriched?.casts || [];
+    const nss = skill.neutralSectShield;
+    const rowTime = ctx.rows[internalIdx].time;
+    return casts.some((cast, ci) => {
+        if (!isNeutralSectActive(ctx, skill.memberIndex, cast.time)) return false;
+        if (rowTime < cast.time || rowTime > cast.time + nss.duration) return false;
+        return isShieldCoverageActiveAt(ctx, `${skill.instanceId}-nss-${ci}`, internalIdx);
+    });
+};
+
 // 計算施放者在指定時間點的治療量提升倍率（累乘）
-// personal 技能只對自己成員有效；非 personal 技能對全隊有效
+// skill.personal 技能只對自己成員有效；非 personal 技能對全隊有效。
+// eff.selfOnly 是更細的 effect 層級旗標：技能本身不算 personal（例如中間學派/節制還有
+// 別的全隊效果、UI 收合預設也要維持全隊技能的行為），但 heal_out_magic 這個效果只對
+// 「施放者自己」發動的治療生效，不會被同職業的另一名成員蹭到（也不會反過來影響對方）。
 const getHealOutMult = (ctx, memberIndex, castTime) => {
     let mult = 1.0;
     for (const skill of ctx.activeSkills) {
@@ -105,9 +157,9 @@ const getHealOutMult = (ctx, memberIndex, castTime) => {
         const isActive = castTimes.some(ct => castTime >= ct && castTime <= ct + skill.duration);
         if (!isActive) continue;
         for (const eff of skill.effects) {
-            if (eff.type === 'heal_out_magic' && eff.val != null) {
-                mult *= (1 + eff.val);
-            }
+            if (eff.type !== 'heal_out_magic' || eff.val == null) continue;
+            if (eff.selfOnly && skill.memberIndex !== memberIndex) continue;
+            mult *= (1 + eff.val);
         }
     }
     return mult;
@@ -418,7 +470,7 @@ function buildShieldCoverage(ctx) {
             const stackCount = skill.effects.find(e => e.type === 'shield_potency')?.stacks || 1;
             shields.push({
                 key: `${skill.instanceId}-${ci}`, castTime: ct, endTime, remaining: shieldVal,
-                depletionRowIdx: null, exclusiveEnd,
+                depletionRowIdx: null, exclusiveEnd, skillId: skill.id,
                 layerAmount: stackCount > 1 ? shieldVal : null,
                 layersLeft: stackCount > 1 ? stackCount : 0,
             });
@@ -445,6 +497,12 @@ function buildShieldCoverage(ctx) {
             nssShields.push(nssEntry);
         }
     }
+    // 同一擊同時被多個護盾覆蓋時，依優先序表扣除（並列則依施放時間），而非任意的建立順序
+    shields.sort((a, b) => {
+        const diff = getShieldPriority(a) - getShieldPriority(b);
+        return diff !== 0 ? diff : a.castTime - b.castTime;
+    });
+
     for (let i = 0; i < flat.length; i++) {
         if (flat[i].isCustom) continue;
         if (ctx.hideTargeted && flat[i].isTargeted) continue;
@@ -512,6 +570,14 @@ export const getDamageBreakdown = (ctx, internalIdx) => {
 
 // ── 技能啟用 / 冷卻狀態 ───────────────────────────────────────
 
+// 護盾覆蓋（shieldCoverage.depletionAt）在指定列是否仍算生效：沒有破盾紀錄，
+// 或破盾當下那一列本身，都算仍在覆蓋；只有「破盾之後」的列才算失效。
+// depletionKey 由呼叫端決定（一般施放用 `${instanceId}-${ci}`，中間學派衍生護盾另加 `-nss-` 區段）。
+export const isShieldCoverageActiveAt = (ctx, depletionKey, internalIdx) => {
+    const depletionIdx = ctx.shieldCoverage.depletionAt.get(depletionKey);
+    return !(depletionIdx != null && ctx.rows[internalIdx].time > ctx.rows[depletionIdx].time);
+};
+
 export const isSkillActive = (ctx, skillInstanceId, internalIdx, skill) => {
     if (skill.passive) return true;
     const casts = skill.casts || [];
@@ -527,10 +593,7 @@ export const isSkillActive = (ctx, skillInstanceId, internalIdx, skill) => {
             ? (rowTime >= cast.time && rowTime < cast.time + dur)
             : (rowTime >= cast.time && rowTime <= cast.time + dur);
         if (!inWindow) return false;
-        if (pureShield) {
-            const depletionIdx = ctx.shieldCoverage.depletionAt.get(`${skillInstanceId}-${ci}`);
-            if (depletionIdx != null && rowTime > ctx.rows[depletionIdx].time) return false;
-        }
+        if (pureShield && !isShieldCoverageActiveAt(ctx, `${skillInstanceId}-${ci}`, internalIdx)) return false;
         return true;
     });
 };

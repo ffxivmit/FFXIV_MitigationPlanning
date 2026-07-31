@@ -9,7 +9,8 @@ import {
     isPureShieldSkill,
     getHealerMnd as ledgerGetHealerMnd,
     getMaxHpForSkill as ledgerGetMaxHpForSkill,
-    isNeutralSectActive as ledgerIsNeutralSectActive,
+    isNeutralSectShieldActiveAt as ledgerIsNeutralSectShieldActiveAt,
+    isShieldCoverageActiveAt as ledgerIsShieldCoverageActiveAt,
 } from './src/mitigationLedger.js';
 import { serializePlanSnapshot, applyPlanSnapshot } from './src/planSnapshot.js';
 import {
@@ -720,23 +721,9 @@ createApp({
             return results;
         };
 
-        const isNeutralSectShieldActiveForCell = (skill, internalIdx) => {
-            if (!skill.neutralSectShield) return false;
-            const ctx = ledgerCtx.value;
-            const rowTime = rowTimes.value[internalIdx];
-            const enriched = ctx.skillsByInstance.get(skill.instanceId);
-            const casts = enriched?.casts || [];
-            const nss = skill.neutralSectShield;
-            for (let ci = 0; ci < casts.length; ci++) {
-                const ct = casts[ci].time;
-                if (!ledgerIsNeutralSectActive(ctx, skill.memberIndex, ct)) continue;
-                if (rowTime < ct || rowTime > ct + nss.duration) continue;
-                const depletionIdx = ctx.shieldCoverage.depletionAt.get(`${skill.instanceId}-nss-${ci}`);
-                if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) continue;
-                return true;
-            }
-            return false;
-        };
+        // 邏輯已收進 mitigationLedger.js（見 CONTEXT.md「減傷帳本」），這裡只是保留原本呼叫簽章。
+        const isNeutralSectShieldActiveForCell = (skill, internalIdx) =>
+            ledgerIsNeutralSectShieldActiveAt(ledgerCtx.value, skill, internalIdx);
 
         const isNeutralSectShieldOnlyActive = (skill, internalIdx) => {
             if (!isNeutralSectShieldActiveForCell(skill, internalIdx)) return false;
@@ -1281,9 +1268,8 @@ createApp({
                     const existingTime = myCastTimes[existingCi];
                     const existingActiveEnd = existingTime + skill.duration;
                     if (rowTime < existingTime || rowTime > existingActiveEnd) return false;
-                    if (isPureShieldSkill(skill)) {
-                        const depletionIdx = ledgerCtx.value.shieldCoverage.depletionAt.get(`${skill.instanceId}-${existingCi}`);
-                        if (depletionIdx != null && rowTime > rowTimes.value[depletionIdx]) return false;
+                    if (isPureShieldSkill(skill) && !ledgerIsShieldCoverageActiveAt(ledgerCtx.value, `${skill.instanceId}-${existingCi}`, internalIdx)) {
+                        return false;
                     }
                 }
             }

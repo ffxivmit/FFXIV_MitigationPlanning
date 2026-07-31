@@ -688,7 +688,7 @@
             { 
                 "id": "rdm_kera", "name": "抗死", "tags": ["減傷", "補量up"],
                 "title": "15秒內，令自身和周圍隊員所受到的魔法傷害減輕10%，並且所受的HP恢復效果提高5%", 
-                "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "heal_in", "val": 0.05 }], 
+                "effects": [{ "type": "mit_magic", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.05 }],
                 "duration": 10, "cooldown": 120, 
                 "icon": "src/Skill_icons/16_RDM/Magick_Barrier.png", 
                 "levelRestrictions": {
@@ -735,8 +735,8 @@
         "skills": [
             { 
                 "id": "whm_tmp",  "name": "節制",  "tags": ["減傷", "補量up"],
-                "title": "15秒內，自身發動治癒魔法的治療量提高20%，自身與50米以內的隊員受到的傷害減輕10%", 
-                "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.20 }], 
+                "title": "15秒內，自身發動治癒魔法的治療量提高20%，自身與50米以內的隊員受到的傷害減輕10%",
+                "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "heal_out_magic", "val": 0.20, "selfOnly": true }],
                 "duration": 20, "cooldown": 120, 
                 "icon": "src/Skill_icons/18_WHM/Temperance.png", 
                 "levelRestrictions": {
@@ -948,8 +948,8 @@
             { "id": "ast_colt", "name": "命運之輪", "tags": ["減傷", "HOT"], "title": "以自身為中心產生覆蓋範圍8米的命運之輪，持續18秒\n使用時自身及周圍30米內的隊員所受到的傷害減輕10%，持續5秒\n同時，範圍內的自身及隊員還會附加HP持續恢復的效果，持續15秒", "effects": [{ "type": "mit_all", "val": 0.10 }, { "type": "hot", "val": 100, "duration": 5 }], "duration": 5, "cooldown": 60, "icon": "src/Skill_icons/20_AST/Collective_Unconscious.png" },
             { 
                 "id": "ast_netl_S", "name": "中間學派", "tags": ["補量up"],
-                "title": "20秒內，自身發動治療魔法的治療量提高20%\n追加效果：使用吉星相位及陽星合相時，附加能夠抵禦一定傷害的防護罩\n吉星相位效果量：抵消相當於治療量250%的傷害\n陽星合相效果量：抵消相當於治療量125%的傷害\n持續時間：30秒\n追加效果：太陽星座預備，持續時間：30秒", 
-                "effects": [{ "type": "heal_out_magic", "val": 0.20 }], 
+                "title": "20秒內，自身發動治療魔法的治療量提高20%\n追加效果：使用吉星相位及陽星合相時，附加能夠抵禦一定傷害的防護罩\n吉星相位效果量：抵消相當於治療量250%的傷害\n陽星合相效果量：抵消相當於治療量125%的傷害\n持續時間：30秒\n追加效果：太陽星座預備，持續時間：30秒",
+                "effects": [{ "type": "heal_out_magic", "val": 0.20, "selfOnly": true }],
                 "duration": 20, "cooldown": 120, 
                 "icon": "src/Skill_icons/20_AST/Neutral_Sect.png", 
                 "levelRestrictions": {

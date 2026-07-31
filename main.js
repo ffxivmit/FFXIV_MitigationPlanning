@@ -721,7 +721,7 @@ createApp({
             return results;
         };
 
-        // 邏輯已收進 mitigationLedger.js（見 CONTEXT.md「減傷帳本」），這裡只是保留原本呼叫簽章。
+        // 邏輯已收進 mitigationLedger.js（見 docs/CONTEXT.md「減傷帳本」），這裡只是保留原本呼叫簽章。
         const isNeutralSectShieldActiveForCell = (skill, internalIdx) =>
             ledgerIsNeutralSectShieldActiveAt(ledgerCtx.value, skill, internalIdx);
 
@@ -1285,7 +1285,7 @@ createApp({
         };
 
         // 減傷帳本（src/mitigationLedger.js）的查詢函式，這裡只是保留原本的呼叫簽章，
-        // 實際計算已抽到獨立模組（可用 node --test 測試），細節見 CONTEXT.md「減傷帳本」。
+        // 實際計算已抽到獨立模組（可用 node --test 測試），細節見 docs/CONTEXT.md「減傷帳本」。
         const isSkillActive = (skillInstanceId, internalIdx, skill) => {
             const ctx = ledgerCtx.value;
             const enriched = ctx.skillsByInstance.get(skillInstanceId);

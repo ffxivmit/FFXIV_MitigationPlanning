@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FFXIV 團減模擬器</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style-tw.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script type="module" src="main.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -90,7 +90,7 @@
                          class="w-7 h-7 object-contain rounded hover:scale-110 transition-transform" :title="jobDb[jobKey].name">
                     <span class="absolute -bottom-0.5 -right-1 text-white text-[7px] px-0.5 rounded-full font-extrabold leading-tight"
                           :style="`background:${MEMBER_COLORS[pIdx % 8].border}`">P{{ pIdx+1 }}</span>
-                    <div class="absolute inset-0 bg-red-500 bg-opacity-0 group-hover:bg-opacity-60 rounded flex items-center justify-center transition-all">
+                    <div class="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/60 rounded flex items-center justify-center transition-all">
                         <span class="text-white text-[10px] font-black opacity-0 group-hover:opacity-100">×</span>
                     </div>
                 </div>

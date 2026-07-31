@@ -1,6 +1,6 @@
 // 減傷帳本（mitigation ledger）：純函式模組，計算每列傷害、護盾吸收、技能啟用/冷卻狀態。
 // 介面只接收「已解析完成的技能實例」（已套用等級限制），不處理 duty/party/mitMap 原始資料，
-// 也不處理任何顯示格式（tooltip 字串留在 main.js）。詳見 CONTEXT.md「減傷帳本」。
+// 也不處理任何顯示格式（tooltip 字串留在 main.js）。詳見 docs/CONTEXT.md「減傷帳本」。
 //
 // 技能實例形狀：
 //   { instanceId, id, memberIndex, duration, cooldown, effects, personal, passive,

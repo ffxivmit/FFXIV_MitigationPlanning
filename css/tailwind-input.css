@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Tailwind v3 Preflight 有這條規則、v4 拿掉了：全站 button 預設要有 cursor:pointer，
+   補回來才會跟原本用 cdn.tailwindcss.com（v3）時的行為一致。見 docs/CONTEXT.md「部署與快取版本」。 */
+@layer base {
+  button, [role="button"] {
+    cursor: pointer;
+  }
+}

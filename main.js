@@ -22,17 +22,16 @@ import {
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(reg => {
-        reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // 有舊版 SW 在控制中，代表這是「更新」而非初次安裝，直接刷新
-                    window.location.reload();
-                }
-            });
-        });
-    }).catch(() => {});
+    // 頁面載入時已經有 controller，代表這是舊訪客回訪，才需要在換成新 SW 時自動刷新；
+    // 首次安裝（沒有舊 controller）不用刷新，避免打斷剛載入好的畫面
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+        }, { once: true });
+    }
+    // updateViaCache: 'none'：每次都強制重新檢查 sw.js 本體有沒有變，
+    // 不吃瀏覽器/CDN 的 HTTP 快取，避免卡在舊版 SW 偵測不到更新
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 }
 
 const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;

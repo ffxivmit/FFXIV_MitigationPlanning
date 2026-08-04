@@ -2733,7 +2733,7 @@ createApp({
                 }
                 const rowGroup = document.querySelector('thead tr.row-group');
                 if (!rowGroup) return;
-                const h = Math.ceil(rowGroup.getBoundingClientRect().height);
+                const h = Math.floor(rowGroup.getBoundingClientRect().height);
                 if (h < 20) return;
                 ths.forEach(th => { th.style.top = h + 'px'; });
             });

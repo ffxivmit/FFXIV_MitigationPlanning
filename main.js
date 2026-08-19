@@ -175,8 +175,14 @@ createApp({
         const compactMode = ref(true);
         const selectedVariants = ref({});
         const expandedPersonalMembers = ref([]);
-        const shareToastVisible = ref(false);
-        const shareToastMessage = ref('連結已複製到剪貼簿！');
+        // 畫面下方浮動的一次性 toast（複製連結／存檔結果等），跟 realtimeNotif（工具列裡的持續性共編狀態指示器）是不同東西
+        const toast = ref({ visible: false, message: '', icon: 'check' });
+        let _toastTimer = null;
+        const showToast = (message, { icon = 'check', duration = 2000 } = {}) => {
+            if (_toastTimer) clearTimeout(_toastTimer);
+            toast.value = { visible: true, message, icon };
+            _toastTimer = setTimeout(() => { toast.value.visible = false; }, duration);
+        };
         const shareLoading = ref(false);
         const isViewingSharedPlan = ref(false);
         const tokenMode = ref(null);    // null | 'edit' | 'read'
@@ -188,9 +194,6 @@ createApp({
         const tokenSaving  = ref(false);
         const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
-        // 儲存／立即載入時偵測到「這次沒有真正衝突的欄位，但合併後套用了其他人版本」時顯示的提示
-        const autoSyncNotice = ref(false);
-        let _autoSyncNoticeTimer = null;
         const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
         const previewMode = ref(null); // null | { label, snapshot, entry }
         const isReadOnly = computed(() => tokenMode.value === 'read' || previewMode.value !== null);
@@ -2195,7 +2198,6 @@ createApp({
             history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
         };
 
-        let _toastTimer = null;
         const copyShareUrl = async () => {
             if (shareLoading.value) return;
             shareLoading.value = true;
@@ -2222,10 +2224,7 @@ createApp({
                 } catch {
                     prompt('複製以下連結：', url);
                 }
-                if (_toastTimer) clearTimeout(_toastTimer);
-                shareToastMessage.value = '連結已複製到剪貼簿！';
-                shareToastVisible.value = true;
-                _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2500);
+                showToast('連結已複製到剪貼簿！');
             } catch (e) {
                 alert('分享連結產生失敗，請確認 Worker 是否已部署。');
             } finally {
@@ -2325,10 +2324,7 @@ createApp({
                     payload: { data: dataToSave, updatedAt: saved.updated_at },
                 });
             }
-            if (_toastTimer) clearTimeout(_toastTimer);
-            shareToastMessage.value = '已將修改儲存到資料庫';
-            shareToastVisible.value = true;
-            _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
+            showToast('已將修改儲存到資料庫');
         };
 
         const saveByEditToken = async () => {
@@ -2355,17 +2351,12 @@ createApp({
                     }
                     if (!_deepEqual(autoMerged, local)) {
                         // 沒有真正的欄位衝突，但合併結果跟本機不同——代表這次是「本機沒改、直接套用他人版本」
-                        if (_autoSyncNoticeTimer) clearTimeout(_autoSyncNoticeTimer);
-                        autoSyncNotice.value = true;
-                        _autoSyncNoticeTimer = setTimeout(() => { autoSyncNotice.value = false; }, 3000);
+                        showToast('已同步套用其他人的最新修改', { icon: 'sync' });
                     }
                     await _commitSave(autoMerged);
                 } else if (_deepEqual(local, tokenBaseData.value || {})) {
                     // 沒有人動過 DB、本機也沒有新修改，不需要浪費一次寫入/履歷/廣播
-                    if (_toastTimer) clearTimeout(_toastTimer);
-                    shareToastMessage.value = '沒有異動可儲存';
-                    shareToastVisible.value = true;
-                    _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
+                    showToast('沒有異動可儲存');
                 } else {
                     await _commitSave(local);
                 }
@@ -2511,9 +2502,7 @@ createApp({
                 );
                 if (rawConflicts.length === 0) {
                     if (!_deepEqual(merged, local)) {
-                        if (_autoSyncNoticeTimer) clearTimeout(_autoSyncNoticeTimer);
-                        autoSyncNotice.value = true;
-                        _autoSyncNoticeTimer = setTimeout(() => { autoSyncNotice.value = false; }, 3000);
+                        showToast('已同步套用其他人的最新修改', { icon: 'sync' });
                     }
                     _applySharedData(merged);
                     tokenLoadedAt.value = latest.updated_at;
@@ -2543,10 +2532,7 @@ createApp({
             } catch {
                 prompt('複製以下連結：', url);
             }
-            if (_toastTimer) clearTimeout(_toastTimer);
-            shareToastMessage.value = '連結已複製到剪貼簿！';
-            shareToastVisible.value = true;
-            _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
+            showToast('連結已複製到剪貼簿！');
         };
 
         const copyEditLink = (doc) => _copyToClipboard(buildEditUrl(doc.edit_token));
@@ -3032,7 +3018,7 @@ createApp({
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage, getDamageBreakdown, isInstantDeathDamage,
             draggedPartyIdx, partyDragStart, partyDragOverItem, partyDragEnd, handlePartyClick,
-            exportData, importData, copyShareUrl, shareToastVisible, shareToastMessage, shareLoading,
+            exportData, importData, copyShareUrl, toast, shareLoading,
             isViewingSharedPlan, saveSharedPlanToLocal,
             hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
@@ -3064,7 +3050,7 @@ createApp({
             copyEditLink, copyReadLink, shareLinksDocId, toggleShareLinks,
             tokenMode, tokenDocName, tokenSaving, isReadOnly, saveByEditToken, pullLatest,
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
-            realtimeNotif, autoSyncNotice,
+            realtimeNotif,
             historyPanel, openHistoryPanel, closeHistoryPanel, restoreFromHistory, formatHistoryTime,
             previewMode, previewDiffRows, previewDiffCells, mitKeyForSkill, enterHistoryPreview, exitHistoryPreview, restoreFromPreview,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,

@@ -19,6 +19,7 @@ import {
     reindexCastRecordsByMember,
     reindexCastRecordsByRemovedRow,
 } from './src/castRecordReindex.js';
+import { mergePayloads, applyConflictChoices } from './src/planMerge.js';
 
 // Service Worker 註冊：偵測到新版本時自動重新載入頁面
 if ('serviceWorker' in navigator) {
@@ -131,6 +132,16 @@ const getEffectiveSkill = (skill, levelCap) => {
     return { ...skill, ...restriction };
 };
 
+// 判斷自動合併結果是否帶進了「本機沒有的修改」（即這次存檔沒有真正的欄位衝突，
+// 但合併後仍套用了其他人的版本）——用來決定要不要提示使用者畫面被同步更新了。
+const _deepEqual = (a, b) => {
+    if (a === b) return true;
+    if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+    const aKeys = Object.keys(a), bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return false;
+    return aKeys.every(k => _deepEqual(a[k], b[k]));
+};
+
 let _crCounter = 0;
 const newCustomId = () => `cr${Date.now()}${_crCounter++}`;
 
@@ -143,167 +154,7 @@ const WORKER_URL = 'https://mit-planner.ffxivmit.workers.dev';
 let _realtimeChannel = null;
 let _realtimeNotifTimer = null;
 
-// ── 三向 diff merge helpers（純函式，不依賴 Vue）────────────────
-
-// 比較兩個施放索引陣列是否相同（忽略順序）
-const _arrEq = (a, b) => {
-    if ((a?.length ?? 0) !== (b?.length ?? 0)) return false;
-    const sa = [...(a || [])].sort((x, y) => x - y);
-    const sb = [...(b || [])].sort((x, y) => x - y);
-    return sa.every((v, i) => v === sb[i]);
-};
-
-/**
- * 三向合併：base（我載入時的快照）、dbData（DB 目前版本）、local（我要儲存的版本）
- * 回傳 { merged, conflicts }
- * conflicts 是陣列，每個元素描述一個衝突欄位
- */
-function mergePayloads(base, dbData, local) {
-    const conflicts = [];
-    const merged = {};
-
-    merged.duty = local.duty || dbData.duty || base.duty;
-
-    // ── mitMap ────────────────────────────────────────────────
-    const bm = base.mits || {};
-    const dm = dbData.mits || {};
-    const lm = local.mits || {};
-    const allMitKeys = new Set([...Object.keys(bm), ...Object.keys(dm), ...Object.keys(lm)]);
-    const mergedMits = {};
-
-    for (const key of allMitKeys) {
-        const bv = bm[key] || [];
-        const dv = dm[key] || [];
-        const lv = lm[key] || [];
-        const lChg = !_arrEq(lv, bv);
-        const dChg = !_arrEq(dv, bv);
-
-        if (lChg && dChg && !_arrEq(lv, dv)) {
-            conflicts.push({ type: 'skill', key });
-            if (dv.length) mergedMits[key] = dv;       // 衝突：保留 DB（他人）版本
-        } else if (lChg) {
-            if (lv.length) mergedMits[key] = lv;        // 只有我改：用我的
-        } else {
-            if (dv.length) mergedMits[key] = dv;        // 只有他改或都沒改：用 DB
-        }
-    }
-    merged.mits = mergedMits;
-
-    // ── selectedVariants ──────────────────────────────────────
-    const bsv = base.selectedVariants || {};
-    const dsv = dbData.selectedVariants || {};
-    const lsv = local.selectedVariants || {};
-    const allSVKeys = new Set([...Object.keys(bsv), ...Object.keys(dsv), ...Object.keys(lsv)]);
-    const mergedSV = {};
-
-    for (const key of allSVKeys) {
-        const bv = bsv[key], dv = dsv[key], lv = lsv[key];
-        const lChg = lv !== bv, dChg = dv !== bv;
-        if (lChg && dChg && lv !== dv) {
-            conflicts.push({ type: 'variant', key });
-            if (dv !== undefined) mergedSV[key] = dv;
-        } else if (lChg) {
-            if (lv !== undefined) mergedSV[key] = lv;
-        } else {
-            if (dv !== undefined) mergedSV[key] = dv;
-        }
-    }
-    merged.selectedVariants = mergedSV;
-
-    // ── party ─────────────────────────────────────────────────
-    const bp = base.party || [];
-    const dp = dbData.party || [];
-    const lp = local.party || [];
-    const _partyEq = (x, y) => x.length === y.length && x.every((v, i) => v === y[i]);
-    const lPartyChg = !_partyEq(lp, bp);
-    const dPartyChg = !_partyEq(dp, bp);
-
-    if (lPartyChg && dPartyChg && !_partyEq(lp, dp)) {
-        conflicts.push({ type: 'party' });
-        merged.party = dp;
-    } else if (lPartyChg) {
-        merged.party = lp;
-    } else {
-        merged.party = dp;
-    }
-
-    // ── customRowsByDuty ──────────────────────────────────────
-    const bc = base.customRowsByDuty || {};
-    const dc = dbData.customRowsByDuty || {};
-    const lc = local.customRowsByDuty || {};
-    const allDuties = new Set([...Object.keys(bc), ...Object.keys(dc), ...Object.keys(lc)]);
-    const mergedCR = {};
-
-    for (const duty of allDuties) {
-        const bById = Object.fromEntries((bc[duty] || []).map(r => [r.id, r]));
-        const dById = Object.fromEntries((dc[duty] || []).map(r => [r.id, r]));
-        const lById = Object.fromEntries((lc[duty] || []).map(r => [r.id, r]));
-        const allIds = new Set([...Object.keys(bById), ...Object.keys(dById), ...Object.keys(lById)]);
-        const rows = [];
-
-        for (const id of allIds) {
-            const bSer = JSON.stringify(bById[id]);
-            const dSer = JSON.stringify(dById[id]);
-            const lSer = JSON.stringify(lById[id]);
-            const lChg = lSer !== bSer, dChg = dSer !== bSer;
-
-            if (lChg && dChg && lSer !== dSer) {
-                conflicts.push({ type: 'customRow', duty, id });
-                if (dById[id]) rows.push(dById[id]);
-            } else if (lChg) {
-                if (lById[id]) rows.push(lById[id]);
-            } else {
-                if (dById[id]) rows.push(dById[id]);
-            }
-        }
-
-        if (rows.length > 0) {
-            rows.sort((a, b) => timeToSeconds(a.hitTime) - timeToSeconds(b.hitTime));
-            mergedCR[duty] = rows;
-        }
-    }
-    merged.customRowsByDuty = mergedCR;
-
-    // ── 顯示設定（boolean）────────────────────────────────────
-    for (const field of ['hideNonDmg', 'hideTargeted']) {
-        const bv = base[field], dv = dbData[field], lv = local[field];
-        if (lv !== bv && dv !== bv && lv !== dv) {
-            conflicts.push({ type: field });
-            merged[field] = dv;
-        } else if (lv !== bv) {
-            merged[field] = lv;
-        } else {
-            merged[field] = dv !== undefined ? dv : bv;
-        }
-    }
-
-    // ── notes ─────────────────────────────────────────────────
-    // 三向合併：key 為 "p{idx}-{skillInstId}-{rowIdx}"
-    // 同一 key 兩人都修改 → 保留 local（備註為個人操作，不開衝突提示）
-    {
-        const bn = base.notes || {};
-        const dn = dbData.notes || {};
-        const ln = local.notes || {};
-        const allNoteKeys = new Set([...Object.keys(bn), ...Object.keys(dn), ...Object.keys(ln)]);
-        const mergedNotes = {};
-        for (const key of allNoteKeys) {
-            const bv = bn[key], dv = dn[key], lv = ln[key];
-            const lChg = lv !== bv;
-            if (lChg) {
-                if (lv !== undefined && lv !== '') mergedNotes[key] = lv;
-            } else {
-                if (dv !== undefined && dv !== '') mergedNotes[key] = dv;
-            }
-        }
-        merged.notes = mergedNotes;
-    }
-
-    // ── skillStateMap ─────────────────────────────────────────
-    merged.skillStateMap = local.skillStateMap || {};
-
-    return { merged, conflicts };
-}
-
+// 三向合併（mergePayloads/applyConflictChoices）已抽到 src/planMerge.js，見 docs/CONTEXT.md「三向合併」。
 
 createApp({
     setup() {
@@ -325,6 +176,7 @@ createApp({
         const selectedVariants = ref({});
         const expandedPersonalMembers = ref([]);
         const shareToastVisible = ref(false);
+        const shareToastMessage = ref('連結已複製到剪貼簿！');
         const shareLoading = ref(false);
         const isViewingSharedPlan = ref(false);
         const tokenMode = ref(null);    // null | 'edit' | 'read'
@@ -336,6 +188,9 @@ createApp({
         const tokenSaving  = ref(false);
         const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
+        // 儲存／立即載入時偵測到「這次沒有真正衝突的欄位，但合併後套用了其他人版本」時顯示的提示
+        const autoSyncNotice = ref(false);
+        let _autoSyncNoticeTimer = null;
         const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
         const previewMode = ref(null); // null | { label, snapshot, entry }
         const isReadOnly = computed(() => tokenMode.value === 'read' || previewMode.value !== null);
@@ -2368,6 +2223,7 @@ createApp({
                     prompt('複製以下連結：', url);
                 }
                 if (_toastTimer) clearTimeout(_toastTimer);
+                shareToastMessage.value = '連結已複製到剪貼簿！';
                 shareToastVisible.value = true;
                 _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2500);
             } catch (e) {
@@ -2470,6 +2326,7 @@ createApp({
                 });
             }
             if (_toastTimer) clearTimeout(_toastTimer);
+            shareToastMessage.value = '已將修改儲存到資料庫';
             shareToastVisible.value = true;
             _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
         };
@@ -2496,7 +2353,19 @@ createApp({
                         };
                         return; // 等 user 在 modal 決定後再繼續
                     }
+                    if (!_deepEqual(autoMerged, local)) {
+                        // 沒有真正的欄位衝突，但合併結果跟本機不同——代表這次是「本機沒改、直接套用他人版本」
+                        if (_autoSyncNoticeTimer) clearTimeout(_autoSyncNoticeTimer);
+                        autoSyncNotice.value = true;
+                        _autoSyncNoticeTimer = setTimeout(() => { autoSyncNotice.value = false; }, 3000);
+                    }
                     await _commitSave(autoMerged);
+                } else if (_deepEqual(local, tokenBaseData.value || {})) {
+                    // 沒有人動過 DB、本機也沒有新修改，不需要浪費一次寫入/履歷/廣播
+                    if (_toastTimer) clearTimeout(_toastTimer);
+                    shareToastMessage.value = '沒有異動可儲存';
+                    shareToastVisible.value = true;
+                    _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
                 } else {
                     await _commitSave(local);
                 }
@@ -2510,30 +2379,7 @@ createApp({
 
         const resolveConflictDialog = async () => {
             const { enriched, autoMerged, dbData, dbUpdatedAt, localData } = conflictDialog.value;
-            const final = JSON.parse(JSON.stringify(autoMerged));
-
-            for (const c of enriched) {
-                if (c.choice !== 'local') continue;
-                if (c.type === 'skill') {
-                    const lv = localData.mits?.[c.key] || [];
-                    if (lv.length) final.mits[c.key] = lv; else delete final.mits[c.key];
-                } else if (c.type === 'party') {
-                    final.party = localData.party || [];
-                } else if (c.type === 'variant') {
-                    const lv = localData.selectedVariants?.[c.key];
-                    if (lv !== undefined) final.selectedVariants[c.key] = lv;
-                    else delete final.selectedVariants[c.key];
-                } else if (c.type === 'customRow') {
-                    const lr = (localData.customRowsByDuty?.[c.duty] || []).find(r => r.id === c.id);
-                    const rows = final.customRowsByDuty[c.duty] || [];
-                    const ei = rows.findIndex(r => r.id === c.id);
-                    if (lr) { if (ei >= 0) rows[ei] = lr; else rows.push(lr); }
-                    else if (ei >= 0) rows.splice(ei, 1);
-                    if (rows.length) final.customRowsByDuty[c.duty] = rows;
-                    else delete final.customRowsByDuty[c.duty];
-                } else if (c.type === 'hideNonDmg')   { final.hideNonDmg   = localData.hideNonDmg; }
-                  else if (c.type === 'hideTargeted') { final.hideTargeted = localData.hideTargeted; }
-            }
+            const final = applyConflictChoices(autoMerged, enriched, localData);
 
             conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
             tokenSaving.value = true;
@@ -2664,6 +2510,11 @@ createApp({
                     tokenBaseData.value || {}, latest.data || {}, local
                 );
                 if (rawConflicts.length === 0) {
+                    if (!_deepEqual(merged, local)) {
+                        if (_autoSyncNoticeTimer) clearTimeout(_autoSyncNoticeTimer);
+                        autoSyncNotice.value = true;
+                        _autoSyncNoticeTimer = setTimeout(() => { autoSyncNotice.value = false; }, 3000);
+                    }
                     _applySharedData(merged);
                     tokenLoadedAt.value = latest.updated_at;
                     tokenBaseData.value = JSON.parse(JSON.stringify(merged));
@@ -2693,6 +2544,7 @@ createApp({
                 prompt('複製以下連結：', url);
             }
             if (_toastTimer) clearTimeout(_toastTimer);
+            shareToastMessage.value = '連結已複製到剪貼簿！';
             shareToastVisible.value = true;
             _toastTimer = setTimeout(() => { shareToastVisible.value = false; }, 2000);
         };
@@ -3180,7 +3032,7 @@ createApp({
             currentTimeline, activeSkills, activeSkillsByMember,
             addToParty, removeFromParty, calculateDamage, getDamageBreakdown, isInstantDeathDamage,
             draggedPartyIdx, partyDragStart, partyDragOverItem, partyDragEnd, handlePartyClick,
-            exportData, importData, copyShareUrl, shareToastVisible, shareLoading,
+            exportData, importData, copyShareUrl, shareToastVisible, shareToastMessage, shareLoading,
             isViewingSharedPlan, saveSharedPlanToLocal,
             hasOriginalDamage, isTargetedAttack,
             MEMBER_COLORS,
@@ -3212,7 +3064,7 @@ createApp({
             copyEditLink, copyReadLink, shareLinksDocId, toggleShareLinks,
             tokenMode, tokenDocName, tokenSaving, isReadOnly, saveByEditToken, pullLatest,
             conflictDialog, resolveConflictDialog, cancelConflictDialog, setAllConflictChoices,
-            realtimeNotif,
+            realtimeNotif, autoSyncNotice,
             historyPanel, openHistoryPanel, closeHistoryPanel, restoreFromHistory, formatHistoryTime,
             previewMode, previewDiffRows, previewDiffCells, mitKeyForSkill, enterHistoryPreview, exitHistoryPreview, restoreFromPreview,
             isDocOwner, isBookmarked, bookmarkLoading, bookmarkedDocuments, bookmarksByDuty,

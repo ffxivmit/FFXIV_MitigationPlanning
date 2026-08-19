@@ -10,6 +10,7 @@ FFXIV 團隊減傷規劃工具。以下詞彙在架構討論、commit、程式�
 
 - **計畫快照（plan snapshot）** — 一份減傷計畫在「本機儲存 / 分享連結（legacy Cloudflare Worker `?s=`、Supabase edit/view token）/ 匯出匯入 JSON」之間傳遞時共用的統一資料形狀：`duty`、`party`、`mits`、`notes`、`selectedVariants`、`customRowsByDuty`、`skillStateMap` 七個欄位。不含 `hideNonDmg`/`hideTargeted`——那兩個是純 client 端顯示開關，靠 URL 參數記憶，不屬於計畫的一部分。序列化／還原邏輯在 `src/planSnapshot.js`：`serializePlanSnapshot`/`applyPlanSnapshot` 為純函式，`applyPlanSnapshot` 內建自動跑 legacy mitMap 格式轉換，並同時接受本機 localStorage 舊欄位命名（`selectedDutyKey`/`mitMap`）與可攜格式（`duty`/`mits`），確保既有使用者資料能正常還原。**不處理**存到 Supabase「範本」的 `buildPayload`（main.js）——那條路徑目前刻意維持獨立，未收斂進本模組。
 - **施放紀錄重新索引（cast record reindex）** — `mitMap`/`skillStateMap`/`notesMap` 這三個以「技能實例 + 位置」為 key 的紀錄，在**隊伍成員**增刪/拖曳重排、或**自訂列**被刪除時，key 內嵌的位置片段（member 軸的 `-p{index}-`、row 軸的列索引尾段）都要跟著整批重寫，否則紀錄會錯位到別的成員/別的列。這段重映射邏輯收在 `src/castRecordReindex.js`（純函式，`reindexCastRecordsByMember`/`reindexCastRecordsByRemovedRow`），成員增刪/重排與自訂列刪除各自呼叫，不再各自重寫一份。
+- **三向合併（three-way merge）** — 共同編輯（Supabase edit token）儲存時遇到別人也存過的情況，把 `base`（上次讀取的計畫快照）／`dbData`（伺服器目前版本）／`local`（本機未儲存版本）三份快照比對：不衝突的欄位自動合併，同一欄位雙方都改且結果不同才標記為衝突、交給使用者在對話框裡選。這段純函式邏輯收在 `src/planMerge.js`：`mergePayloads(base, dbData, local)` 算出自動合併結果與衝突清單，`applyConflictChoices(autoMerged, enriched, localData)` 把使用者在對話框對每個衝突欄位選的 `local`/`db` 套用上去、回傳最終版本（不 mutate 輸入）。**不處理**衝突的顯示格式化——把 `{ type, key }` 轉成中文標籤（技能名稱、職業名稱等）給對話框顯示的邏輯（`_enrichConflicts`）留在 main.js，跟減傷帳本「不處理顯示格式」是同一個原則。
 
 ## 容易混淆的技能／狀態命名
 

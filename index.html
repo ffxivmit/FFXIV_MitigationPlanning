@@ -1273,6 +1273,18 @@
                 <div v-if="historyPanel.loading" class="flex items-center justify-center py-14">
                     <div class="text-sm text-slate-400">載入中…</div>
                 </div>
+                <!-- Error：讀取失敗，不能顯示成「尚無修改紀錄」 -->
+                <div v-else-if="historyPanel.error" class="flex flex-col items-center py-14 text-center">
+                    <svg class="w-9 h-9 mb-3 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <div class="text-sm font-semibold text-red-500">履歷讀取失敗</div>
+                    <button @click="openHistoryPanel"
+                            class="mt-3 text-xs px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg font-semibold transition">
+                        重新載入
+                    </button>
+                </div>
                 <!-- Empty -->
                 <div v-else-if="historyPanel.list.length === 0" class="flex flex-col items-center py-14 text-center">
                     <div class="text-4xl mb-3 opacity-20">🕐</div>

@@ -197,7 +197,7 @@ createApp({
         const tokenSaving  = ref(false);
         const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null, dutyRowCounts: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
-        const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
+        const historyPanel = ref({ open: false, list: [], loading: false, previewId: null, error: false });
         const previewMode = ref(null); // null | { label, snapshot, entry }
         const isReadOnly = computed(() => tokenMode.value === 'read' || previewMode.value !== null);
         // 預覽模式：有差異的格子，key = "mitMapKey:rowIdx"；派生出有差異的列索引 Set
@@ -2482,10 +2482,12 @@ createApp({
         };
 
         const openHistoryPanel = async () => {
-            historyPanel.value = { open: true, list: [], loading: true, previewId: null };
+            historyPanel.value = { open: true, list: [], loading: true, previewId: null, error: false };
             const { data, error } = await getDocumentHistory(activeToken.value);
             if (error) console.warn('[history] 履歷讀取失敗:', error);
             historyPanel.value.loading = false;
+            // 讀取失敗與「真的沒有紀錄」要分開呈現，否則面板會顯示成「尚無修改紀錄」誤導使用者
+            historyPanel.value.error = !!error;
             if (!error && data) historyPanel.value.list = data;
         };
 

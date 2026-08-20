@@ -192,7 +192,7 @@ createApp({
         const tokenBaseData = ref(null); // 載入時的資料快照，用於三向 merge
         const tokenDocId   = ref('');
         const tokenSaving  = ref(false);
-        const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null });
+        const conflictDialog = ref({ open: false, enriched: [], autoMerged: null, dbData: null, localData: null, dutyRowCounts: null });
         const realtimeNotif = ref(null); // null | {type:'pending'} | {type:'auto'}
         const historyPanel = ref({ open: false, list: [], loading: false, previewId: null });
         const previewMode = ref(null); // null | { label, snapshot, entry }
@@ -1499,16 +1499,36 @@ createApp({
         };
 
         // ── Data loading ──────────────────────────────────────
+        const ensureDutyLoaded = async (key) => {
+            if (!key || dutyDb.value[key]) return;
+            const entry = dutyIndex.value.duties.find(d => d.key === key);
+            if (!entry) return;
+            const res = await fetch(`src/duty/${entry.file}`);
+            dutyDb.value[key] = await res.json();
+        };
+
+        // 三向合併要能分辨施放列索引裡哪些屬於自訂列（自訂列一律接在副本原始時間軸之後），
+        // 就必須知道每個副本原始時間軸的長度——這個數字不在計畫快照裡，只能由這裡提供。
+        // 先把三份快照提到的副本都載入，再回傳長度表；載入失敗的副本會缺項，
+        // planMerge 收到缺項時會保守地不換算那個副本（見 src/planMerge.js 的 _rebaseCastRecords）。
+        const buildDutyRowCounts = async (snapshots) => {
+            const dutyKeys = new Set();
+            for (const snap of snapshots) {
+                for (const key of Object.keys(snap?.customRowsByDuty || {})) dutyKeys.add(key);
+            }
+            await Promise.all([...dutyKeys].map(k => ensureDutyLoaded(k).catch(() => {})));
+            const counts = {};
+            for (const key of dutyKeys) {
+                const timeline = dutyDb.value[key]?.timeline;
+                if (timeline) counts[key] = timeline.length;
+            }
+            return counts;
+        };
+
         watch(selectedDutyKey, async (key) => {
             if (!key) return;
             loadRaidParamsForDuty(key);
-            if (!dutyDb.value[key]) {
-                const entry = dutyIndex.value.duties.find(d => d.key === key);
-                if (entry) {
-                    const res = await fetch(`src/duty/${entry.file}`);
-                    dutyDb.value[key] = await res.json();
-                }
-            }
+            await ensureDutyLoaded(key);
         });
 
         onMounted(async () => {
@@ -2232,8 +2252,11 @@ createApp({
             }
         };
 
-        // 將 rawConflicts 陣列加上可讀的顯示資訊，供 modal 使用
-        const _enrichConflicts = (rawConflicts, dbData, localData) => {
+        // 將 rawConflicts 陣列加上可讀的顯示資訊，供 modal 使用。
+        // dbData／localData 必須是 mergePayloads 回傳的 rebased 版本——conflicts 的 key
+        // 是合併後的座標系，拿原始快照會查不到值。mergedParty 同理：key 裡的 p{n} 指的是
+        // 合併後隊伍的第 n 位，要用它來查職業名稱才不會標錯人。
+        const _enrichConflicts = (rawConflicts, dbData, localData, mergedParty) => {
             const toTimes = (indices) =>
                 [...(indices || [])].sort((a, b) => a - b)
                     .map(i => allRowsFlat.value[i]?.hitTime || `#${i}`);
@@ -2248,13 +2271,26 @@ createApp({
                 return m ? { pIdx: parseInt(m[1]), skillInstId: m[2] } : null;
             };
 
+            // selectedVariants 的 key 是 "{副本}-{列索引}"（見 switchVariant），
+            // 副本代碼本身可能含底線與 &，但不會以 "-數字" 結尾，所以先比對已知副本前綴、
+            // 比不到才退回一般解析，避免日後新增副本時解錯。
+            const parseVariantKey = (key) => {
+                const known = dutyIndex.value.duties.find(d => key.startsWith(d.key + '-'));
+                const rest = known ? key.slice(known.key.length + 1) : null;
+                if (rest !== null && /^\d+$/.test(rest)) {
+                    return { duty: known.key, internalIdx: parseInt(rest, 10) };
+                }
+                const m = String(key).match(/^(.*)-(\d+)$/);
+                return m ? { duty: m[1], internalIdx: parseInt(m[2], 10) } : null;
+            };
+
             return rawConflicts.map(c => {
                 if (c.type === 'skill') {
                     const parsed = parseMitKey(c.key);
                     const pIdx = parsed?.pIdx ?? 0;
                     const skillId = (parsed?.skillInstId ?? c.key).replace(/-v\d+$/, '');
                     const skillName = skillNameById.value[skillId] || skillId;
-                    const jobKey = localData.party?.[pIdx] || dbData.party?.[pIdx];
+                    const jobKey = mergedParty?.[pIdx] || localData.party?.[pIdx] || dbData.party?.[pIdx];
                     const jobName = jobKey ? (jobDb.value[jobKey]?.name || jobKey) : '';
                     return {
                         ...c,
@@ -2275,12 +2311,27 @@ createApp({
                     };
                 }
                 if (c.type === 'variant') {
-                    const row = allRowsFlat.value[parseInt(c.key)];
+                    const parsed = parseVariantKey(c.key);
+                    // allRowsFlat 只含目前選中的副本，key 指向其他副本時一律不解析名稱：
+                    // 硬拿列索引去查會撈到別的副本的同編號列，顯示出一個看起來正常、實際上錯的招式名。
+                    const row = parsed?.duty === selectedDutyKey.value
+                        ? allRowsFlat.value[parsed.internalIdx]
+                        : null;
                     const vars = row?.variants || [];
-                    const n = idx => vars[idx]?.skill || `選項 ${idx}`;
+                    // 沒有紀錄等於選用第一個變體（與 getSelectedVariantIdx 的 ?? 0 一致）
+                    const n = (idx) => {
+                        const i = idx ?? 0;
+                        return vars[i]?.skill || `選項 ${i + 1}`;
+                    };
+                    // isRandom 的列沒有 skill 欄位（招式名只存在於各 variant 內），
+                    // 所以用判定時間當識別——那也正是使用者在表格上找得到這一列的依據。
+                    const rowLabel = row
+                        ? ([row.hitTime && `[${row.hitTime}]`, row.skill].filter(Boolean).join(' ')
+                            || `列 #${parsed.internalIdx}`)
+                        : (parsed ? `${getDutyDisplayName(parsed.duty)}（列 #${parsed.internalIdx}）` : c.key);
                     return {
                         ...c,
-                        label: `招式變體：${row?.skill || `列 #${c.key}`}`,
+                        label: `招式變體：${rowLabel}`,
                         dbDisplay:    [n(dbData.selectedVariants?.[c.key])],
                         localDisplay: [n(localData.selectedVariants?.[c.key])],
                         choice: 'db',
@@ -2335,21 +2386,23 @@ createApp({
                 if (fetchErr || !latest) throw new Error('無法取得文件資訊');
                 const local = buildPayload();
                 if (latest.updated_at !== tokenLoadedAt.value) {
-                    const { merged: autoMerged, conflicts: rawConflicts } = mergePayloads(
-                        tokenBaseData.value || {}, latest.data || {}, local
+                    const dutyRowCounts = await buildDutyRowCounts([tokenBaseData.value, latest.data, local]);
+                    const { merged: autoMerged, conflicts: rawConflicts, rebased } = mergePayloads(
+                        tokenBaseData.value || {}, latest.data || {}, local, { dutyRowCounts }
                     );
                     if (rawConflicts.length > 0) {
                         conflictDialog.value = {
                             open: true,
-                            enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
+                            enriched: _enrichConflicts(rawConflicts, rebased.db, rebased.local, autoMerged.party),
                             autoMerged,
                             dbData:      latest.data || {},
                             dbUpdatedAt: latest.updated_at,
-                            localData:   local,
+                            localData:   rebased.local,
+                            dutyRowCounts,
                         };
                         return; // 等 user 在 modal 決定後再繼續
                     }
-                    if (!_deepEqual(autoMerged, local)) {
+                    if (!_deepEqual(autoMerged, rebased.local)) {
                         // 沒有真正的欄位衝突，但合併結果跟本機不同——代表這次是「本機沒改、直接套用他人版本」
                         showToast('已同步套用其他人的最新修改', { icon: 'sync' });
                     }
@@ -2369,10 +2422,10 @@ createApp({
         };
 
         const resolveConflictDialog = async () => {
-            const { enriched, autoMerged, dbData, dbUpdatedAt, localData } = conflictDialog.value;
-            const final = applyConflictChoices(autoMerged, enriched, localData);
+            const { enriched, autoMerged, dbData, dbUpdatedAt, localData, dutyRowCounts } = conflictDialog.value;
+            const final = applyConflictChoices(autoMerged, enriched, localData, { dutyRowCounts: dutyRowCounts || {} });
 
-            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null, dutyRowCounts: null };
             tokenSaving.value = true;
             try {
                 // 重新確認伺服器是否在對話框開啟期間再次被修改
@@ -2382,18 +2435,20 @@ createApp({
                 let toCommit = final;
                 if (nowLatest.updated_at !== dbUpdatedAt) {
                     // 對話框開啟期間有新的儲存，以 final 做為 local 再跑一次合併
-                    const { merged: reMerged, conflicts: reConflicts } = mergePayloads(
-                        dbData, nowLatest.data || {}, final
+                    const reCounts = await buildDutyRowCounts([dbData, nowLatest.data, final]);
+                    const { merged: reMerged, conflicts: reConflicts, rebased: reRebased } = mergePayloads(
+                        dbData, nowLatest.data || {}, final, { dutyRowCounts: reCounts }
                     );
                     if (reConflicts.length > 0) {
                         // 仍有衝突，重新開啟對話框
                         conflictDialog.value = {
                             open: true,
-                            enriched: _enrichConflicts(reConflicts, nowLatest.data || {}, final),
+                            enriched: _enrichConflicts(reConflicts, reRebased.db, reRebased.local, reMerged.party),
                             autoMerged: reMerged,
                             dbData:      nowLatest.data || {},
                             dbUpdatedAt: nowLatest.updated_at,
-                            localData:   final,
+                            localData:   reRebased.local,
+                            dutyRowCounts: reCounts,
                         };
                         return;
                     }
@@ -2406,7 +2461,7 @@ createApp({
         };
 
         const cancelConflictDialog = () => {
-            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null };
+            conflictDialog.value = { open: false, enriched: [], autoMerged: null, dbData: null, dbUpdatedAt: null, localData: null, dutyRowCounts: null };
         };
 
         // ── 修改履歷 ─────────────────────────────────────────────
@@ -2497,11 +2552,12 @@ createApp({
                     return;
                 }
                 const local = buildPayload();
-                const { merged, conflicts: rawConflicts } = mergePayloads(
-                    tokenBaseData.value || {}, latest.data || {}, local
+                const dutyRowCounts = await buildDutyRowCounts([tokenBaseData.value, latest.data, local]);
+                const { merged, conflicts: rawConflicts, rebased } = mergePayloads(
+                    tokenBaseData.value || {}, latest.data || {}, local, { dutyRowCounts }
                 );
                 if (rawConflicts.length === 0) {
-                    if (!_deepEqual(merged, local)) {
+                    if (!_deepEqual(merged, rebased.local)) {
                         showToast('已同步套用其他人的最新修改', { icon: 'sync' });
                     }
                     _applySharedData(merged);
@@ -2511,11 +2567,12 @@ createApp({
                 } else {
                     conflictDialog.value = {
                         open: true,
-                        enriched: _enrichConflicts(rawConflicts, latest.data || {}, local),
+                        enriched: _enrichConflicts(rawConflicts, rebased.db, rebased.local, merged.party),
                         autoMerged: merged,
                         dbData:      latest.data || {},
                         dbUpdatedAt: latest.updated_at,
-                        localData:   local,
+                        localData:   rebased.local,
+                        dutyRowCounts,
                     };
                 }
             } catch (e) {

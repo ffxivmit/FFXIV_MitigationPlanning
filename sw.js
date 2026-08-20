@@ -2,7 +2,7 @@
 // 換來的代價是「改了資料/圖示/程式碼後，使用者不會自動看到新版」——
 // 所以每次部署有異動同源靜態資源時，都必須手動把 CACHE_VERSION 往上加一版，
 // 讓下面的 activate 清掉舊快取。細節與判斷準則見 docs/CONTEXT.md「部署與快取版本」。
-const CACHE_VERSION = 'v15';
+const CACHE_VERSION = 'v16';
 const CACHE_NAME = `ffxiv-mit-${CACHE_VERSION}`;
 
 self.addEventListener('install', () => {

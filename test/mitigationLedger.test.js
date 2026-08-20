@@ -391,27 +391,27 @@ describe('isShieldCoverageActiveAt', () => {
 
     it('depletionAt 完全沒有這個 key（技能從未成立護盾）：視為仍生效', () => {
         const ctx = buildCtx([]);
-        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-x-0', 3), true);
+        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-pld_hs-0', 3), true);
     });
 
     it('depletionAt 有 key 但值為 null（護盾存在、從未被打破）：視為仍生效', () => {
-        const ctx = buildCtx([['p0-x-0', null]]);
-        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-x-0', 3), true);
+        const ctx = buildCtx([['p0-pld_hs-0', null]]);
+        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-pld_hs-0', 3), true);
     });
 
     it('查詢列的時間 = 破盾列的時間：破盾當下那一列仍算覆蓋', () => {
-        const ctx = buildCtx([['p0-x-0', 2]]); // 破盾於 row idx2（time=10）
-        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-x-0', 2), true);
+        const ctx = buildCtx([['p0-pld_hs-0', 2]]); // 破盾於 row idx2（time=10）
+        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-pld_hs-0', 2), true);
     });
 
     it('查詢列的時間 < 破盾列的時間：仍算覆蓋', () => {
-        const ctx = buildCtx([['p0-x-0', 3]]); // 破盾於 row idx3（time=15）
-        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-x-0', 1), true); // idx1 time=5 < 15
+        const ctx = buildCtx([['p0-pld_hs-0', 3]]); // 破盾於 row idx3（time=15）
+        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-pld_hs-0', 1), true); // idx1 time=5 < 15
     });
 
     it('查詢列的時間 > 破盾列的時間：破盾之後的列不再算覆蓋', () => {
-        const ctx = buildCtx([['p0-x-0', 1]]); // 破盾於 row idx1（time=5）
-        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-x-0', 3), false); // idx3 time=15 > 5
+        const ctx = buildCtx([['p0-pld_hs-0', 1]]); // 破盾於 row idx1（time=5）
+        assert.equal(isShieldCoverageActiveAt(ctx, 'p0-pld_hs-0', 3), false); // idx3 time=15 > 5
     });
 });
 

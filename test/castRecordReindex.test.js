@@ -33,30 +33,30 @@ describe('reindexCastRecordsByMember — 成員軸（回歸測試：commit 4a692
         const oldToNew = buildMemberRemovalMapping(3, 1);
         const result = reindexCastRecordsByMember({
             mitMap: {
-                'm5s-p0-pld_shield': [0],
-                'm5s-p1-whm_shield': [1],
-                'm5s-p2-sch_shield': [2],
+                'm5s-p0-pld_hs': [0],
+                'm5s-p1-whm_divi': [1],
+                'm5s-p2-sch_adl': [2],
             },
             skillStateMap: {
-                'm5s-p1-whm_shield': true,
-                'm5s-p2-sch_shield': true,
+                'm5s-p1-whm_divi': true,
+                'm5s-p2-sch_adl': true,
             },
             notesMap: {
-                'm5s-p0-pld_shield-0': '先開盾',
-                'm5s-p2-sch_shield-2': '記得補',
+                'm5s-p0-pld_hs-0': '先開盾',
+                'm5s-p2-sch_adl-2': '記得補',
             },
         }, oldToNew);
 
         assert.deepEqual(result.mitMap, {
-            'm5s-p0-pld_shield': [0],
-            'm5s-p1-sch_shield': [2],
+            'm5s-p0-pld_hs': [0],
+            'm5s-p1-sch_adl': [2],
         });
         assert.deepEqual(result.skillStateMap, {
-            'm5s-p1-sch_shield': true,
+            'm5s-p1-sch_adl': true,
         });
         assert.deepEqual(result.notesMap, {
-            'm5s-p0-pld_shield-0': '先開盾',
-            'm5s-p1-sch_shield-2': '記得補',
+            'm5s-p0-pld_hs-0': '先開盾',
+            'm5s-p1-sch_adl-2': '記得補',
         });
     });
 
@@ -74,17 +74,17 @@ describe('reindexCastRecordsByMember — 成員軸（回歸測試：commit 4a692
         const oldToNew = buildMemberSwapMapping(3, 0, 2);
         const result = reindexCastRecordsByMember({
             mitMap: {
-                'm5s-p0-a': [0],
-                'm5s-p1-b': [1],
-                'm5s-p2-c': [2],
+                'm5s-p0-pld_hs': [0],
+                'm5s-p1-whm_divi': [1],
+                'm5s-p2-sch_adl': [2],
             },
             skillStateMap: {},
             notesMap: {},
         }, oldToNew);
         assert.deepEqual(result.mitMap, {
-            'm5s-p2-a': [0],
-            'm5s-p0-b': [1],
-            'm5s-p1-c': [2],
+            'm5s-p2-pld_hs': [0],
+            'm5s-p0-whm_divi': [1],
+            'm5s-p1-sch_adl': [2],
         });
     });
 });
@@ -92,15 +92,15 @@ describe('reindexCastRecordsByMember — 成員軸（回歸測試：commit 4a692
 describe('reindexCastRecordsByRemovedRow — 列軸（發現的 bug：notesMap 先前完全沒有跟著重映射）', () => {
     it('mitMap：施放列索引陣列中，等於被刪列的濾除，大於的往前遞補一位', () => {
         const result = reindexCastRecordsByRemovedRow({
-            mitMap: { 'm5s-p0-pld_shield': [1, 3, 5] },
+            mitMap: { 'm5s-p0-pld_hs': [1, 3, 5] },
             notesMap: {},
         }, { dutyPrefix: 'm5s-', removedRowIdx: 3 });
-        assert.deepEqual(result.mitMap, { 'm5s-p0-pld_shield': [1, 4] });
+        assert.deepEqual(result.mitMap, { 'm5s-p0-pld_hs': [1, 4] });
     });
 
     it('mitMap：移除後陣列變空時整個 key 刪除', () => {
         const result = reindexCastRecordsByRemovedRow({
-            mitMap: { 'm5s-p0-pld_shield': [3] },
+            mitMap: { 'm5s-p0-pld_hs': [3] },
             notesMap: {},
         }, { dutyPrefix: 'm5s-', removedRowIdx: 3 });
         assert.deepEqual(result.mitMap, {});
@@ -110,41 +110,41 @@ describe('reindexCastRecordsByRemovedRow — 列軸（發現的 bug：notesMap �
         const result = reindexCastRecordsByRemovedRow({
             mitMap: {},
             notesMap: {
-                'm5s-p0-pld_shield-1': '前面的列，不受影響',
-                'm5s-p0-pld_shield-3': '被刪的那一列',
-                'm5s-p0-pld_shield-5': '後面的列，要往前補一位',
+                'm5s-p0-pld_hs-1': '前面的列，不受影響',
+                'm5s-p0-pld_hs-3': '被刪的那一列',
+                'm5s-p0-pld_hs-5': '後面的列，要往前補一位',
             },
         }, { dutyPrefix: 'm5s-', removedRowIdx: 3 });
         assert.deepEqual(result.notesMap, {
-            'm5s-p0-pld_shield-1': '前面的列，不受影響',
-            'm5s-p0-pld_shield-4': '後面的列，要往前補一位',
+            'm5s-p0-pld_hs-1': '前面的列，不受影響',
+            'm5s-p0-pld_hs-4': '後面的列，要往前補一位',
         });
     });
 
     it('只處理屬於指定 dutyPrefix 的 key，其他副本的資料原樣保留', () => {
         const result = reindexCastRecordsByRemovedRow({
-            mitMap: { 'm6s-p0-x': [3, 5] },
-            notesMap: { 'm6s-p0-x-5': '別的副本，不該被動到' },
+            mitMap: { 'm6s-p0-pld_hs': [3, 5] },
+            notesMap: { 'm6s-p0-pld_hs-5': '別的副本，不該被動到' },
         }, { dutyPrefix: 'm5s-', removedRowIdx: 3 });
-        assert.deepEqual(result.mitMap, { 'm6s-p0-x': [3, 5] });
-        assert.deepEqual(result.notesMap, { 'm6s-p0-x-5': '別的副本，不該被動到' });
+        assert.deepEqual(result.mitMap, { 'm6s-p0-pld_hs': [3, 5] });
+        assert.deepEqual(result.notesMap, { 'm6s-p0-pld_hs-5': '別的副本，不該被動到' });
     });
 
     it('刪除列索引 0（最早的一列）：其餘所有列都往前遞補一位', () => {
         const result = reindexCastRecordsByRemovedRow({
-            mitMap: { 'm5s-p0-x': [0, 1, 2] },
-            notesMap: { 'm5s-p0-x-0': '第一列', 'm5s-p0-x-2': '第三列' },
+            mitMap: { 'm5s-p0-pld_hs': [0, 1, 2] },
+            notesMap: { 'm5s-p0-pld_hs-0': '第一列', 'm5s-p0-pld_hs-2': '第三列' },
         }, { dutyPrefix: 'm5s-', removedRowIdx: 0 });
-        assert.deepEqual(result.mitMap, { 'm5s-p0-x': [0, 1] });
-        assert.deepEqual(result.notesMap, { 'm5s-p0-x-1': '第三列' });
+        assert.deepEqual(result.mitMap, { 'm5s-p0-pld_hs': [0, 1] });
+        assert.deepEqual(result.notesMap, { 'm5s-p0-pld_hs-1': '第三列' });
     });
 });
 
 describe('不變性與邊界情況', () => {
     it('reindexCastRecordsByMember 不會 mutate 傳入的原始 map（Vue 的 ref 要靠新物件識別變更）', () => {
-        const mitMap = { 'm5s-p0-a': [0] };
-        const skillStateMap = { 'm5s-p0-a': true };
-        const notesMap = { 'm5s-p0-a-0': '備註' };
+        const mitMap = { 'm5s-p0-pld_hs': [0] };
+        const skillStateMap = { 'm5s-p0-pld_hs': true };
+        const notesMap = { 'm5s-p0-pld_hs-0': '備註' };
         const frozen = {
             mitMap: JSON.parse(JSON.stringify(mitMap)),
             skillStateMap: JSON.parse(JSON.stringify(skillStateMap)),
@@ -157,8 +157,8 @@ describe('不變性與邊界情況', () => {
     });
 
     it('reindexCastRecordsByRemovedRow 不會 mutate 傳入的原始 map', () => {
-        const mitMap = { 'm5s-p0-a': [0, 2] };
-        const notesMap = { 'm5s-p0-a-2': '備註' };
+        const mitMap = { 'm5s-p0-pld_hs': [0, 2] };
+        const notesMap = { 'm5s-p0-pld_hs-2': '備註' };
         const frozen = {
             mitMap: JSON.parse(JSON.stringify(mitMap)),
             notesMap: JSON.parse(JSON.stringify(notesMap)),
@@ -186,16 +186,16 @@ describe('不變性與邊界情況', () => {
         const oldToNew = buildMemberRemovalMapping(3, 0);
         const result = reindexCastRecordsByMember({
             mitMap: {
-                'm5s-p0-a': [0],
-                'm5s-p1-b': [1],
-                'm5s-p2-c': [2],
+                'm5s-p0-pld_hs': [0],
+                'm5s-p1-whm_divi': [1],
+                'm5s-p2-sch_adl': [2],
             },
             skillStateMap: {},
             notesMap: {},
         }, oldToNew);
         assert.deepEqual(result.mitMap, {
-            'm5s-p0-b': [1],
-            'm5s-p1-c': [2],
+            'm5s-p0-whm_divi': [1],
+            'm5s-p1-sch_adl': [2],
         });
     });
 });

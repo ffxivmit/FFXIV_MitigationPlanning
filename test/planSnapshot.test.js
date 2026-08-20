@@ -7,8 +7,8 @@ describe('serializePlanSnapshot', () => {
         const snap = serializePlanSnapshot({
             duty: 'm5s',
             party: ['pld', 'whm'],
-            mitMap: { 'm5s-p0-pld_shield': [0, 3] },
-            notesMap: { 'm5s-p0-pld_shield-0': '開頭先擋' },
+            mitMap: { 'm5s-p0-pld_hs': [0, 3] },
+            notesMap: { 'm5s-p0-pld_hs-0': '開頭先擋' },
             selectedVariants: { 'm5s-0': 1 },
             customRowsByDuty: { m5s: [{ id: 'r1', time: 12 }] },
             skillStateMap: { 'm5s-p0-drk_dmind-0': true },
@@ -16,8 +16,8 @@ describe('serializePlanSnapshot', () => {
         assert.deepEqual(snap, {
             duty: 'm5s',
             party: ['pld', 'whm'],
-            mits: { 'm5s-p0-pld_shield': [0, 3] },
-            notes: { 'm5s-p0-pld_shield-0': '開頭先擋' },
+            mits: { 'm5s-p0-pld_hs': [0, 3] },
+            notes: { 'm5s-p0-pld_hs-0': '開頭先擋' },
             selectedVariants: { 'm5s-0': 1 },
             customRowsByDuty: { m5s: [{ id: 'r1', time: 12 }] },
             skillStateMap: { 'm5s-p0-drk_dmind-0': true },
@@ -64,19 +64,19 @@ describe('applyPlanSnapshot', () => {
     it('對 legacy 格式的 mitMap 會自動跑 migrateLegacyMitMap 轉換', () => {
         const snap = applyPlanSnapshot({
             duty: 'm7s',
-            mits: { 'm7s-2-p0-pld_shield': true, 'm7s-5-p0-pld_shield': true },
+            mits: { 'm7s-2-p0-pld_hs': true, 'm7s-5-p0-pld_hs': true },
         });
-        assert.deepEqual(snap.mitMap, { 'm7s-p0-pld_shield': [2, 5] });
+        assert.deepEqual(snap.mitMap, { 'm7s-p0-pld_hs': [2, 5] });
     });
 
     it('同時接受本機 localStorage 格式（selectedDutyKey/mitMap）與可攜格式（duty/mits）', () => {
-        const fromLocal = applyPlanSnapshot({ selectedDutyKey: 'm8s', mitMap: { 'm8s-p0-x': [0] } });
+        const fromLocal = applyPlanSnapshot({ selectedDutyKey: 'm8s', mitMap: { 'm8s-p0-pld_hs': [0] } });
         assert.equal(fromLocal.duty, 'm8s');
-        assert.deepEqual(fromLocal.mitMap, { 'm8s-p0-x': [0] });
+        assert.deepEqual(fromLocal.mitMap, { 'm8s-p0-pld_hs': [0] });
 
-        const fromPortable = applyPlanSnapshot({ duty: 'm8s', mits: { 'm8s-p0-x': [0] } });
+        const fromPortable = applyPlanSnapshot({ duty: 'm8s', mits: { 'm8s-p0-pld_hs': [0] } });
         assert.equal(fromPortable.duty, 'm8s');
-        assert.deepEqual(fromPortable.mitMap, { 'm8s-p0-x': [0] });
+        assert.deepEqual(fromPortable.mitMap, { 'm8s-p0-pld_hs': [0] });
     });
 
     it('欄位缺漏時（例如舊版匯出檔沒有 notes/skillStateMap）回傳空物件，不丟例外', () => {
@@ -97,23 +97,23 @@ describe('applyPlanSnapshot', () => {
 
 describe('migrateLegacyMitMap', () => {
     it('陣列格式（新格式）原封不動保留', () => {
-        assert.deepEqual(migrateLegacyMitMap({ 'm5s-p0-x': [0, 1] }), { 'm5s-p0-x': [0, 1] });
+        assert.deepEqual(migrateLegacyMitMap({ 'm5s-p0-pld_hs': [0, 1] }), { 'm5s-p0-pld_hs': [0, 1] });
     });
 
     it('把「duty-rowIdx-skillInstanceId: true」的舊格式合併成「duty-skillInstanceId: [rowIdx,...]」', () => {
         const legacy = {
-            'm5s-0-p0-pld_shield': true,
-            'm5s-3-p0-pld_shield': true,
-            'm5s-1-p1-whm_shield': true,
+            'm5s-0-p0-pld_hs': true,
+            'm5s-3-p0-pld_hs': true,
+            'm5s-1-p1-whm_divi': true,
         };
         assert.deepEqual(migrateLegacyMitMap(legacy), {
-            'm5s-p0-pld_shield': [0, 3],
-            'm5s-p1-whm_shield': [1],
+            'm5s-p0-pld_hs': [0, 3],
+            'm5s-p1-whm_divi': [1],
         });
     });
 
     it('rowIdx 依數字排序，不是字串排序', () => {
-        const legacy = { 'm5s-10-p0-x': true, 'm5s-2-p0-x': true };
-        assert.deepEqual(migrateLegacyMitMap(legacy)['m5s-p0-x'], [2, 10]);
+        const legacy = { 'm5s-10-p0-pld_hs': true, 'm5s-2-p0-pld_hs': true };
+        assert.deepEqual(migrateLegacyMitMap(legacy)['m5s-p0-pld_hs'], [2, 10]);
     });
 });

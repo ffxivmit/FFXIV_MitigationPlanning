@@ -166,8 +166,11 @@ createApp({
         const selectedDutyKey = ref('');
         const party = ref([]);
         const mitMap = ref({});
-        // multiState 技能的每次施放狀態，格式：{ "dutyKey-skillInstId": { internalIdx: state } }
-        // state 0 = 普通施放，state 1 = 護盾吸收觸發
+        // multiState 技能（坦培拉塗層）每次施放的狀態，格式：{ "dutyKey-skillInstId": { internalIdx: state } }。
+        // ⚠ 目前已經沒有任何程式碼會寫入這個結構：破盾導致的 CD 縮短改由減傷帳本依
+        // shieldCoverage.depletionAt 自動判斷（見 mitigationLedger.js 的 getTpcEffectiveCooldown），
+        // 不再需要使用者手動切換破盾狀態。這裡保留欄位是為了讓既有存檔（localStorage／Supabase 文件／
+        // 分享連結／匯出的 JSON）讀進來再存回去時不會遺失資料，不代表這個功能還在運作。
         const skillStateMap = ref({});
         const hideNonDmg = ref(false);
         const hideTargeted = ref(false);
@@ -944,6 +947,9 @@ createApp({
 
         // 滑鼠在列上移動時，根據游標位置（上半／下半）決定插入按鈕顯示在列的上方或下方
         const onRowMouseMove = (row, displayIdx, event) => {
+            // 唯讀（分享連結唯讀模式／履歷預覽）時不浮出「+ 插入」按鈕：
+            // insertCustomRowBetween 本來就會擋下，但讓按鈕出現等於給了一個按了沒反應的死點擊
+            if (isReadOnly.value) return;
             if (!isRowVisible(row, row._internalIdx)) return;
             const active = document.activeElement;
             if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && event.currentTarget.contains(active)) return;
@@ -1588,6 +1594,10 @@ createApp({
             } finally {
                 authLoading.value = false;
             }
+            // 這裡的監聽器與下面的 ResizeObserver 都沒有對應的解除路徑，這是刻意的：
+            // 整個 app 只 mount 一次（createApp(...).mount('#app')），根元件的生命週期等同整個分頁，
+            // 沒有任何地方會 unmount，分頁關閉時瀏覽器本來就會全部回收。
+            // 除非日後真的把這段邏輯拆成可重複掛載的元件，否則不需要 onUnmounted。
             window.addEventListener('resize', onTutorialReposition);
             window.addEventListener('scroll', onTutorialReposition, true);
             nextTick(() => {
@@ -2474,7 +2484,7 @@ createApp({
         const openHistoryPanel = async () => {
             historyPanel.value = { open: true, list: [], loading: true, previewId: null };
             const { data, error } = await getDocumentHistory(activeToken.value);
-            console.log('[history] fetch result:', { data, error });
+            if (error) console.warn('[history] 履歷讀取失敗:', error);
             historyPanel.value.loading = false;
             if (!error && data) historyPanel.value.list = data;
         };

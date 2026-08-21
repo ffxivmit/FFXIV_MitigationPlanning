@@ -74,6 +74,9 @@ create trigger on_auth_user_created
 
 -- ── 5. Token-based RPC（繞過 RLS，讓未登入者可用分享連結）───
 -- 根據 edit_token 或 read_token 查詢 document，並回傳 token 類型
+-- 安全性：token 欄位一律回傳 NULL，避免唯讀連結（read_token）把 edit_token
+--         一併送回前端造成權限提升。前端本來就持有網址上的 token，不需要 RPC 再回傳。
+--         search_path 固定為 public，避免 security definer 函式被 search_path 劫持。
 create or replace function public.get_document_by_token(p_token text)
 returns table (
     id          uuid,
@@ -87,10 +90,13 @@ returns table (
     updated_at  timestamptz,
     token_type  text        -- 'edit' | 'read'
 )
-language sql security definer as $$
+language sql security definer
+set search_path = public
+as $$
     select
         d.id, d.owner_id, d.duty_key, d.name, d.data,
-        d.edit_token, d.read_token, d.created_at, d.updated_at,
+        null::text, null::text,          -- 不外洩 edit_token / read_token
+        d.created_at, d.updated_at,
         case when d.edit_token = p_token then 'edit' else 'read' end
     from public.documents d
     where d.edit_token = p_token or d.read_token = p_token
@@ -137,6 +143,9 @@ create index bookmarks_user_id_idx     on public.bookmarks(user_id);
 create index bookmarks_document_id_idx on public.bookmarks(document_id);
 
 -- RPC：取得指定使用者的所有書籤文件（security definer 繞過 documents RLS）
+-- 安全性：一律以 auth.uid()（登入者本人）為查詢條件，忽略傳入的 p_user_id，
+--         避免任何人帶別人的 uuid 就能撈到對方書籤與其中的 edit_token（IDOR）。
+--         p_user_id 參數保留只為維持 RPC 簽章，讓前端呼叫方式不需變動。
 create or replace function public.fetch_bookmarked_documents(p_user_id uuid)
 returns table (
     document_id uuid,
@@ -148,7 +157,9 @@ returns table (
     updated_at  timestamptz,
     owner_id    uuid
 )
-language sql security definer as $$
+language sql security definer
+set search_path = public
+as $$
     select
         d.id,
         d.duty_key,
@@ -160,6 +171,6 @@ language sql security definer as $$
         d.owner_id
     from public.bookmarks b
     join public.documents d on d.id = b.document_id
-    where b.user_id = p_user_id
+    where b.user_id = auth.uid()          -- 不信任傳入的 p_user_id
     order by d.updated_at desc;
 $$;

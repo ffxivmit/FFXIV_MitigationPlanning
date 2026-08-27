@@ -2,8 +2,12 @@
 // 換來的代價是「改了資料/圖示/程式碼後，使用者不會自動看到新版」——
 // 所以每次部署有異動同源靜態資源時，都必須手動把 CACHE_VERSION 往上加一版，
 // 讓下面的 activate 清掉舊快取。細節與判斷準則見 docs/CONTEXT.md「部署與快取版本」。
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v17';
 const CACHE_NAME = `ffxiv-mit-${CACHE_VERSION}`;
+
+// 本機開發（localhost / 127.0.0.1）一律不攔截：cache-first 會讓改過的 .json / .js / .css
+// 抓到舊快取，開發時得每次手動清快取才看得到新資料。正式站不受影響。
+const IS_LOCAL_DEV = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
 
 self.addEventListener('install', () => {
     self.skipWaiting();
@@ -19,6 +23,8 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+    if (IS_LOCAL_DEV) return;  // 不呼叫 respondWith，交回瀏覽器直接走網路
+
     const { request } = e;
     if (request.method !== 'GET') return;
 

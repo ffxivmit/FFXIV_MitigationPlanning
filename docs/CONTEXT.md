@@ -27,6 +27,7 @@ FFXIV 團隊減傷規劃工具。以下詞彙在架構討論、commit、程式�
 專案沒有 build tool，`sw.js` 是純手寫的 Service Worker，沒有自動化的版號管理，**修改人（含 AI）必須自己意識到要不要動版號**，否則使用者端會吃到舊快取。
 
 - **`sw.js` 是 cache-first**：同源 GET 請求（`main.js`、`css/*.css`、`src/**/*.json`、技能圖示等）優先吃瀏覽器快取。**任何一次部署，只要動到這些同源靜態資源的內容，都要把 `sw.js` 開頭的 `CACHE_VERSION` 往上加一版**，下次啟用時才會清掉舊快取。
+- **本機開發不受此快取影響**：`sw.js` 的 `fetch` 監聽在 `localhost` / `127.0.0.1` 會直接 `return` 不攔截，一律走網路，所以改 `.json` / `.js` / `.css` 存檔後重新整理就會生效，不需要清快取或動 `CACHE_VERSION`（版號規則只對正式站有意義）。
 - **`css/style-tw.css` 是手動產生的靜態檔**，取代原本會拖慢載入的 `cdn.tailwindcss.com` 瀏覽器即時編譯，用 [Tailwind 官方 standalone CLI](https://github.com/tailwindlabs/tailwindcss/releases)（不需要 Node/npm）掃描 `index.html` 產生：
   ```
   tailwindcss -i css/tailwind-input.css -o css/style-tw.css --minify

@@ -88,6 +88,30 @@ const DAMAGE_TYPE_ICONS = {
 
 const TARGETED_LABELS = new Set(['普通攻擊', '點名', '死刑']);
 
+// 資源存量指示器（學者乙太超流、賢者蛇膽）
+// 這些不是 skills.json 裡的技能，而是表格中額外插入的「存量計數器」欄位，
+// 但它們的收合顯示與否要跟一般技能共用同一套設定組機制，所以在這裡定義成偽技能。
+// `personal: true` 是刻意的：讓 isSkillVisibleWhenCollapsed 既有的 `!skill.personal`
+// fallback 直接算出「預設收合時隱藏」（＝原本的行為），不必為它們寫特例分支。
+// 注意：這份清單只餵給「顯示設定」相關邏輯，絕不可併入 jobDb.skills——
+// 那會讓它們流進減傷帳本、等級限制、施放勾選、匯出、拖曳排序等所有吃技能表的路徑。
+const RESOURCE_INDICATORS = {
+    SCH: {
+        id: '_aether',
+        name: '乙太超流存量',
+        icon: 'src/Skill_icons/19_SCH/Aether.png',
+        personal: true,
+        flag: '_isAetherIndicator',
+    },
+    SGE: {
+        id: '_addersgall',
+        name: '蛇膽存量',
+        icon: 'src/Skill_icons/21_SGE/Addersgall.png',
+        personal: true,
+        flag: '_isAddersgallIndicator',
+    },
+};
+
 const _timeCache = Object.create(null);
 const timeToSeconds = (t) => {
     if (!t) return 0;
@@ -384,12 +408,21 @@ createApp({
             skillDisplayDialog.value.open = false;
         };
 
+        // 顯示設定組可勾選的項目＝該職業的技能 ＋ 它的資源存量指示器（若有）。
+        // 建立草稿、存檔比對、對話框清單、批次按鈕全部走這兩支，避免其中一處漏掉指示器。
+        const _jobDisplayToggleableSkills = (jobKey) => {
+            const skills = jobDb.value[jobKey]?.skills || [];
+            const indicator = RESOURCE_INDICATORS[jobKey];
+            return indicator ? [...skills, indicator] : skills;
+        };
+
+        const _displayToggleableSkills = () =>
+            Object.keys(jobDb.value).flatMap(jobKey => _jobDisplayToggleableSkills(jobKey));
+
         const _buildDraftSkills = (profile) => {
             const draft = {};
-            for (const job of Object.values(jobDb.value)) {
-                for (const s of (job.skills || [])) {
-                    draft[s.id] = profile ? (profile.skills?.[s.id] ?? !s.personal) : !s.personal;
-                }
+            for (const s of _displayToggleableSkills()) {
+                draft[s.id] = profile ? (profile.skills?.[s.id] ?? !s.personal) : !s.personal;
             }
             return draft;
         };
@@ -397,11 +430,9 @@ createApp({
         // 只保留跟系統預設不同的技能，未記錄的技能讀取時會自動 fallback 到預設值（見 isSkillVisibleWhenCollapsed）
         const _diffSkillsFromDefault = (draftSkills) => {
             const diff = {};
-            for (const job of Object.values(jobDb.value)) {
-                for (const s of (job.skills || [])) {
-                    const v = draftSkills[s.id];
-                    if (v !== undefined && v !== !s.personal) diff[s.id] = v;
-                }
+            for (const s of _displayToggleableSkills()) {
+                const v = draftSkills[s.id];
+                if (v !== undefined && v !== !s.personal) diff[s.id] = v;
             }
             return diff;
         };
@@ -501,7 +532,7 @@ createApp({
                 const jobs = (cat.links || []).map(link => {
                     const jobEntry = jobDb.value[link.id];
                     if (!jobEntry?.skills?.length) return null;
-                    return { key: link.id, name: jobEntry.name, icon: jobEntry.icon, skills: jobEntry.skills };
+                    return { key: link.id, name: jobEntry.name, icon: jobEntry.icon, skills: _jobDisplayToggleableSkills(link.id) };
                 }).filter(Boolean);
                 if (jobs.length) groups.push({ name: cat.name, roleIcon: SKILL_DISPLAY_ROLE_ICONS[catKey], jobs });
             }
@@ -510,13 +541,13 @@ createApp({
 
         const setSkillDisplayDraftForJob = (jobKey, val) => {
             const draft = { ...skillDisplayDialog.value.draftSkills };
-            for (const s of (jobDb.value[jobKey]?.skills || [])) draft[s.id] = val;
+            for (const s of _jobDisplayToggleableSkills(jobKey)) draft[s.id] = val;
             skillDisplayDialog.value.draftSkills = draft;
         };
 
         const setSkillDisplayDraftForJobToDefault = (jobKey) => {
             const draft = { ...skillDisplayDialog.value.draftSkills };
-            for (const s of (jobDb.value[jobKey]?.skills || [])) draft[s.id] = !s.personal;
+            for (const s of _jobDisplayToggleableSkills(jobKey)) draft[s.id] = !s.personal;
             skillDisplayDialog.value.draftSkills = draft;
         };
 
@@ -1707,9 +1738,18 @@ createApp({
                 // 預設組維持原始行為：沒有任何非個人技能的職業一律展開；
                 // 自訂組允許全部不選：收合後只顯示職業圖示（佔位欄），展開才顯示全部技能。
                 const usingCustomProfile = !!activeSkillDisplayProfile.value;
+                // 資源存量指示器（學者乙太超流、賢者蛇膽）與一般技能共用同一套收合顯示設定
+                const indicator = RESOURCE_INDICATORS[jobKey] || null;
+                const indicatorVisibleWhenCollapsed = !!indicator && isSkillVisibleWhenCollapsed(indicator);
+                // 指示器刻意不納入 hasCollapsedVisibleSkills：forceExpand 只在預設組生效，
+                // 而預設組下指示器必定隱藏（personal: true），加進來只會是永遠為 false 的死項
                 const hasCollapsedVisibleSkills = effectiveSkills.some(isSkillVisibleWhenCollapsed);
                 const forceExpand = !usingCustomProfile && !hasCollapsedVisibleSkills;
-                const hasPersonalSkills = !forceExpand && effectiveSkills.some(s => !isSkillVisibleWhenCollapsed(s));
+                // 收合時只要還有東西被藏著（含指示器）就保留展開按鈕，
+                // 否則「真技能全勾、指示器沒勾」會讓職業圖示變成不可點，指示器再也叫不出來
+                const hasPersonalSkills = !forceExpand
+                    && (effectiveSkills.some(s => !isSkillVisibleWhenCollapsed(s))
+                        || (!!indicator && !indicatorVisibleWhenCollapsed));
                 const showPersonal = forceExpand || expandedPersonalMembers.value.includes(pIdx);
                 const filteredSkills = effectiveSkills.filter(s => showPersonal || isSkillVisibleWhenCollapsed(s));
                 const mappedSkills = filteredSkills.map((s, sIdx) => ({
@@ -1726,29 +1766,18 @@ createApp({
                     _pIdx: pIdx,
                     _sIdx: sIdx,
                 }));
-                if (jobKey === 'SCH' && showPersonal) {
+                // 指示器固定釘在該成員最右邊（不參與 customSkillOrder 拖曳排序）。
+                // 收合時只剩指示器一欄的情況，isFirstInGroup 要落在它身上，成員分隔線才不會消失。
+                if (indicator && (showPersonal || indicatorVisibleWhenCollapsed)) {
                     mappedSkills.push({
-                        id: '_aether',
-                        instanceId: `p${pIdx}-_aether`,
-                        name: '乙太存量',
-                        _isAetherIndicator: true,
+                        id: indicator.id,
+                        instanceId: `p${pIdx}-${indicator.id}`,
+                        name: indicator.name,
+                        [indicator.flag]: true,
                         _pIdx: pIdx,
                         memberBg,
                         memberBorder,
-                        isFirstInGroup: false,
-                        effects: [],
-                    });
-                }
-                if (jobKey === 'SGE' && showPersonal) {
-                    mappedSkills.push({
-                        id: '_addersgall',
-                        instanceId: `p${pIdx}-_addersgall`,
-                        name: '蛇膽存量',
-                        _isAddersgallIndicator: true,
-                        _pIdx: pIdx,
-                        memberBg,
-                        memberBorder,
-                        isFirstInGroup: false,
+                        isFirstInGroup: !mappedSkills.length,
                         effects: [],
                     });
                 }

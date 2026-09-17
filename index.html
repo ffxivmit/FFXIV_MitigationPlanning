@@ -381,11 +381,11 @@
                             :class="['p-1 text-center min-w-[85px] compact-skill-th relative group/skill', (!isReadOnly && skill._sIdx !== undefined) ? 'cursor-grab active:cursor-grabbing' : '']">
                             <div v-if="skill._isAetherIndicator" class="flex flex-col items-center gap-1 pb-1">
                                 <img src="src/Skill_icons/19_SCH/Aether.png" class="w-14 h-10 object-contain">
-                                <span class="text-xs font-bold text-sky-600 leading-tight">乙太超流</span>
+                                <span class="text-xs font-bold text-sky-600 leading-tight">乙太超流存量</span>
                             </div>
                             <div v-else-if="skill._isAddersgallIndicator" class="flex flex-col items-center gap-1 pb-1">
                                 <img src="src/Skill_icons/21_SGE/Addersgall.png" class="w-14 h-10 object-contain">
-                                <span class="text-xs font-bold text-yellow-600 leading-tight">蛇膽</span>
+                                <span class="text-xs font-bold text-yellow-600 leading-tight">蛇膽存量</span>
                             </div>
                             <!-- 收合佔位欄：此職業在收合狀態下沒有可顯示的技能 -->
                             <div v-else-if="skill._isCollapsedPlaceholder" class="flex flex-col items-center justify-end gap-1 pb-1 min-h-[60px]" title="點擊職業圖示可展開技能">
@@ -549,7 +549,7 @@
                                 @contextmenu="openNoteEditor($event, skill.instanceId, row._internalIdx, skill, row)">
                                 <div v-if="skill._isAetherIndicator"
                                      class="flex items-center justify-center gap-0.5 py-0.5"
-                                     :title="`乙太存量：${getAetherStacksAt(skill._pIdx, row._internalIdx)}/3`">
+                                     :title="`乙太超流存量：${getAetherStacksAt(skill._pIdx, row._internalIdx)}/3`">
                                     <div v-for="i in 3" :key="i"
                                          :class="['w-3 h-3 rounded-full border-2', i <= getAetherStacksAt(skill._pIdx, row._internalIdx) ? 'bg-green-400 border-green-500' : 'bg-slate-100 border-slate-300']"></div>
                                 </div>
@@ -603,7 +603,7 @@
                                     </template>
                                     <div v-else-if="!isSkillConditionMet(skill, row._internalIdx)" class="skill-cond" title="條件未滿足"></div>
                                     <div v-else-if="isSkillBlocked(skill, row._internalIdx)" class="skill-blocked" title="互斥技能持續中"></div>
-                                    <div v-else-if="isSkillAetherDepleted(skill, row._internalIdx)" class="skill-cond" title="乙太存量不足"></div>
+                                    <div v-else-if="isSkillAetherDepleted(skill, row._internalIdx)" class="skill-cond" title="乙太超流存量不足"></div>
                                     <div v-else-if="isSkillAddersgallDepleted(skill, row._internalIdx)" class="skill-cond" title="蛇膽存量不足"></div>
                                     <button v-else class="skill-btn" @click="toggleSkillCast(skill.instanceId, row._internalIdx, skill)" title="點擊施放"></button>
                                 </div>
